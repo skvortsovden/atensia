@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'package:flutter_timezone/flutter_timezone.dart';
 import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
+
+const _tzChannel = MethodChannel('com.texapp.atensia/timezone');
 
 class NotificationService {
   NotificationService._();
@@ -15,7 +17,7 @@ class NotificationService {
 
   Future<void> init() async {
     tz.initializeTimeZones();
-    final tzName = await FlutterTimezone.getLocalTimezone();
+    final tzName = await _tzChannel.invokeMethod<String>('getLocalTimezone') ?? 'UTC';
     tz.setLocalLocation(tz.getLocation(tzName));
 
     const android = AndroidInitializationSettings('@mipmap/ic_launcher');
