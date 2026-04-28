@@ -136,8 +136,15 @@ class AppProvider extends ChangeNotifier {
   // ── Export ────────────────────────────────────────────────────────────────
 
   String buildCsv() {
+    final habitNames = DailyEntry.defaultHabits;
     final buf = StringBuffer();
-    buf.writeln('date,mood,health,habits');
+
+    // Header
+    final headerCells = [
+      'date', 'mood', 'sick', 'pain',
+      ...habitNames.map((h) => _csvCell(h)),
+    ];
+    buf.writeln(headerCells.join(','));
 
     final sorted = _entries.values.toList()
       ..sort((a, b) => a.date.compareTo(b.date));
@@ -147,18 +154,14 @@ class AppProvider extends ChangeNotifier {
           '${entry.date.year.toString().padLeft(4, '0')}-'
           '${entry.date.month.toString().padLeft(2, '0')}-'
           '${entry.date.day.toString().padLeft(2, '0')}';
-      final mood = _csvCell(entry.mood);
-      final healthParts = [
-        if (entry.isSick) 'хвороба',
-        if (entry.hasPain) 'біль',
+      final cells = [
+        date,
+        _csvCell(entry.mood),
+        entry.isSick ? 'true' : 'false',
+        entry.hasPain ? 'true' : 'false',
+        ...habitNames.map((h) => (entry.habits[h] ?? false) ? 'true' : 'false'),
       ];
-      final health = _csvCell(healthParts.join('; '));
-      final activeHabits = entry.habits.entries
-          .where((e) => e.value)
-          .map((e) => e.key)
-          .join('; ');
-      final habits = _csvCell(activeHabits);
-      buf.writeln('$date,$mood,$health,$habits');
+      buf.writeln(cells.join(','));
     }
 
     return buf.toString();
