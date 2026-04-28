@@ -192,7 +192,7 @@ class TrendChartCard extends StatelessWidget {
                         final v = value.round();
                         final label = switch (v) {
                           -2 => S.statsSickLabel,
-                          -1 => S.moodExhausted,
+                          -1 => '${S.moodExhausted} / ${S.statsPainLabel}',
                           0 => S.moodGood,
                           1 => S.moodEnergetic,
                           _ => '',
@@ -498,10 +498,17 @@ class HabitStreakCard extends StatelessWidget {
                       ),
                     ),
                     if (currentStreak >= 2)
-                      Text(
-                        '🔥 $currentStreak ${S.statsDaysSuffix}',
-                        style: const TextStyle(
-                            fontSize: 12, fontWeight: FontWeight.w700),
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(Icons.arrow_upward, size: 12),
+                          const SizedBox(width: 2),
+                          Text(
+                            '$currentStreak ${S.statsDaysSuffix}',
+                            style: const TextStyle(
+                                fontSize: 12, fontWeight: FontWeight.w700),
+                          ),
+                        ],
                       )
                     else if (maxStreak >= 2)
                       Text(
