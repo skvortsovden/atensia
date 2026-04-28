@@ -11,7 +11,7 @@
 
 ## Дизайн
 
-<img src="screenshots/Simulator%20Screenshot%20-%20iPhone%2014%20Plus%20-%202026-04-28%20at%2011.58.13.png" width="250">
-<img src="screenshots/Simulator%20Screenshot%20-%20iPhone%2014%20Plus%20-%202026-04-28%20at%2011.58.20.png" width="250">
-<img src="screenshots/Simulator%20Screenshot%20-%20iPhone%2014%20Plus%20-%202026-04-28%20at%2011.58.57.png" width="250">
-<img src="screenshots/Simulator%20Screenshot%20-%20iPhone%2014%20Plus%20-%202026-04-28%20at%2011.59.04.png" width="250">
+<img src="screenshots/Simulator%20Screenshot%20-%20iPhone%2014%20Plus%20-%202026-04-28%20at%2011.58.13.png" width="180">
+<img src="screenshots/Simulator%20Screenshot%20-%20iPhone%2014%20Plus%20-%202026-04-28%20at%2011.58.20.png" width="180">
+<img src="screenshots/Simulator%20Screenshot%20-%20iPhone%2014%20Plus%20-%202026-04-28%20at%2011.58.57.png" width="180">
+<img src="screenshots/Simulator%20Screenshot%20-%20iPhone%2014%20Plus%20-%202026-04-28%20at%2011.59.04.png" width="180">
