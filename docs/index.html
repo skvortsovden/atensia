@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Атенція — це увага до себе</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #fff;
+      color: #000;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 24px;
+    }
+
+    .logo {
+      width: 80px;
+      height: 80px;
+      border-radius: 20px;
+      margin-bottom: 24px;
+    }
+
+    h1 {
+      font-size: 28px;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+      margin-bottom: 8px;
+    }
+
+    .tagline {
+      font-size: 16px;
+      color: #555;
+      margin-bottom: 48px;
+    }
+
+    .buttons {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      width: 100%;
+      max-width: 280px;
+    }
+
+    .btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      padding: 16px 24px;
+      border-radius: 12px;
+      font-size: 15px;
+      font-weight: 600;
+      text-decoration: none;
+      transition: opacity 0.15s;
+    }
+
+    .btn:hover { opacity: 0.8; }
+
+    .btn-ios {
+      background: #000;
+      color: #fff;
+    }
+
+    .btn-android {
+      background: #fff;
+      color: #000;
+      border: 2px solid #000;
+    }
+
+    .btn svg {
+      flex-shrink: 0;
+    }
+
+    footer {
+      margin-top: 64px;
+      font-size: 13px;
+      color: #aaa;
+    }
+
+    .description {
+      margin-top: 48px;
+      max-width: 480px;
+      text-align: left;
+    }
+
+    .description h2 {
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 12px;
+    }
+
+    .description p {
+      font-size: 15px;
+      line-height: 1.6;
+      color: #333;
+      margin-bottom: 20px;
+    }
+
+    .description ul {
+      list-style: none;
+      padding: 0;
+    }
+
+    .description ul li {
+      font-size: 15px;
+      color: #333;
+      padding: 6px 0;
+      padding-left: 20px;
+      position: relative;
+    }
+
+    .description ul li::before {
+      content: "—";
+      position: absolute;
+      left: 0;
+      color: #aaa;
+    }
+  </style>
+</head>
+<body>
+
+  <img class="logo" src="icon.png" alt="Атенція" />
+  <h1>Атенція</h1>
+  <p class="tagline">це увага до себе</p>
+
+  <div class="buttons">
+    <a class="btn btn-ios" href="https://apps.apple.com/ua/app/id6746541956" target="_blank" rel="noopener">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/>
+      </svg>
+      App Store
+    </a>
+    <a class="btn btn-android" href="https://play.google.com/store/apps/details?id=com.texapp.atensia" target="_blank" rel="noopener">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M3.18 23.76c.3.17.64.22.98.15l12.09-6.98-2.54-2.54zm15.8-10.24L16.65 12l2.33-1.52L21 8.71a1.23 1.23 0 0 0 0-2.14l-2.33-1.27zm-2.54-7.27L4.16.07a1.16 1.16 0 0 0-1.17.1l9.67 9.67zm-12.08.92v17.66l9.2-8.83z"/>
+      </svg>
+      Google Play
+    </a>
+  </div>
+
+  <div class="description">
+    <h2>Простий. Уважний. Приватний.</h2>
+    <p>Атенція — це безкоштовний додаток для щоденних записів про твій настрій, самопочуття та дозвілля. Він допоможе тобі помічати зміни та краще розуміти себе. Усі дані зберігаються лише на твоєму пристрої. Додаток не вимагає реєстрації, не збирає жодних даних та не використовує інтернет.</p>
+    <ul>
+      <li>Щоденні записи про самопочуття та дозвілля</li>
+      <li>Нагадування, щоб не забувати робити записи</li>
+      <li>Календар для оновлення записів за минувші дні</li>
+      <li>Звіт для розуміння змін за певний період</li>
+      <li>Всі дані зберігаються лише на твоєму пристрої</li>
+    </ul>
+  </div>
