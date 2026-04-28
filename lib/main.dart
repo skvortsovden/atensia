@@ -8,6 +8,7 @@ import 'providers/app_provider.dart';
 import 'screens/history_view.dart';
 import 'screens/settings_view.dart';
 import 'screens/splash_screen.dart';
+import 'screens/stats_view.dart';
 import 'screens/today_view.dart';
 import 'services/notification_service.dart';
 
@@ -152,6 +153,7 @@ class _MainScreenState extends State<MainScreen> {
         children: [
           HistoryView(key: ValueKey(_historyKey)),
           const TodayView(),
+          const StatsView(),
           const SettingsView(),
         ],
       ),
@@ -169,6 +171,7 @@ class _MainScreenState extends State<MainScreen> {
             backgroundColor: Colors.white,
             selectedItemColor: Colors.black,
             unselectedItemColor: const Color(0xFF999999),
+            type: BottomNavigationBarType.fixed,
             elevation: 0,
             selectedLabelStyle: const TextStyle(
               fontFamily: 'FixelText',
@@ -189,6 +192,11 @@ class _MainScreenState extends State<MainScreen> {
                 icon: const Icon(Icons.wb_sunny_outlined),
                 activeIcon: const Icon(Icons.wb_sunny),
                 label: S.tabToday,
+              ),
+              BottomNavigationBarItem(
+                icon: const Icon(Icons.bar_chart_outlined),
+                activeIcon: const Icon(Icons.bar_chart),
+                label: S.tabStats,
               ),
               BottomNavigationBarItem(
                 icon: const Icon(Icons.tune_outlined),

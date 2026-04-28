@@ -85,12 +85,15 @@ class _SplashScreenState extends State<SplashScreen>
                 S.appTitle,
                 style: Theme.of(context).textTheme.headlineLarge?.copyWith(
                       fontSize: 42,
+                      color: Colors.black,
                     ),
               ),
               const SizedBox(height: 4),
               Text(
                 S.appTagline,
-                style: Theme.of(context).textTheme.headlineMedium,
+                style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                      color: Colors.black,
+                    ),
               ),
             ],
           ),

@@ -32,6 +32,7 @@ class S {
   // ── Navigation ──────────────────────────────────────────────────────────
   static String get tabCalendar => _s('tab_calendar');
   static String get tabToday => _s('tab_today');
+  static String get tabStats => _s('tab_stats');
   static String get tabSettings => _s('tab_settings');
 
   // ── Today view ──────────────────────────────────────────────────────────
@@ -72,6 +73,20 @@ class S {
   static String get settingsExportCancel => _s('settings_export_cancel');
   static String get settingsVersion => _s('settings_version');
   static String get settingsPrivacy => _s('settings_privacy');
+
+  // ── Stats ────────────────────────────────────────────────────────────────
+  static String get statsTitle => _s('stats_title');
+  static String get statsPeriodWeek => _s('stats_period_week');
+  static String get statsPeriodMonth => _s('stats_period_month');
+  static String get statsPeriodYear => _s('stats_period_year');
+  static String get statsSectionMood => _s('stats_section_mood');
+  static String get statsSectionHealth => _s('stats_section_health');
+  static String get statsSectionHabits => _s('stats_section_habits');
+  static String get statsSectionFill => _s('stats_section_fill');
+  static String get statsDaysSuffix => _s('stats_days_suffix');
+  static String get statsSickLabel => _s('stats_sick_label');
+  static String get statsPainLabel => _s('stats_pain_label');
+  static String get statsNoData => _s('stats_no_data');
 
   // ── Shared labels ────────────────────────────────────────────────────────
   static String get labelSick => _s('label_sick');
