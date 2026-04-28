@@ -15,6 +15,16 @@ class S {
 
   static String _s(String key) => _m[key] as String? ?? key;
 
+  // ── Onboarding ──────────────────────────────────────────────────────────
+  static String get onboardingNameTitle => _s('onboarding_name_title');
+  static String get onboardingNameHint => _s('onboarding_name_hint');
+  static String get onboardingNameBtn => _s('onboarding_name_btn');
+  static String get onboardingMottoTitle => _s('onboarding_motto_title');
+  static String get onboardingMottoBtn => _s('onboarding_motto_btn');
+  static String get onboardingGuideTitle => _s('onboarding_guide_title');
+  static String get onboardingGuideText => _s('onboarding_guide_text');
+  static String get onboardingGuideBtn => _s('onboarding_guide_btn');
+
   // ── App ─────────────────────────────────────────────────────────────────
   static String get appTitle => _s('app_title');
   static String get appTagline => _s('app_tagline');

@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../l10n/strings.dart';
 import '../providers/app_provider.dart';
 import '../main.dart';
+import 'onboarding_screen.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -30,22 +31,31 @@ class _SplashScreenState extends State<SplashScreen>
 
     final provider = context.read<AppProvider>();
     final isFirst = provider.isFirstLaunch;
-    // First launch: stay a bit longer so the user can read the motto
     final delay = isFirst
-        ? const Duration(milliseconds: 2200)
+        ? const Duration(milliseconds: 1800)
         : const Duration(milliseconds: 1400);
 
     Future.delayed(delay, () {
       if (!mounted) return;
-      provider.markLaunched();
-      Navigator.of(context).pushReplacement(
-        PageRouteBuilder(
-          pageBuilder: (_, __, ___) => const MainScreen(),
-          transitionsBuilder: (_, anim, __, child) =>
-              FadeTransition(opacity: anim, child: child),
-          transitionDuration: const Duration(milliseconds: 400),
-        ),
-      );
+      if (isFirst) {
+        Navigator.of(context).pushReplacement(
+          PageRouteBuilder(
+            pageBuilder: (_, __, ___) => const OnboardingScreen(),
+            transitionsBuilder: (_, anim, __, child) =>
+                FadeTransition(opacity: anim, child: child),
+            transitionDuration: const Duration(milliseconds: 400),
+          ),
+        );
+      } else {
+        Navigator.of(context).pushReplacement(
+          PageRouteBuilder(
+            pageBuilder: (_, __, ___) => const MainScreen(),
+            transitionsBuilder: (_, anim, __, child) =>
+                FadeTransition(opacity: anim, child: child),
+            transitionDuration: const Duration(milliseconds: 400),
+          ),
+        );
+      }
     });
   }
 
