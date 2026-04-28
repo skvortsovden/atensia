@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import '../l10n/strings.dart';
 import '../models/daily_entry.dart';
 import '../providers/app_provider.dart';
+import 'stats_charts.dart';
 
 enum _Period { week, month, year }
 
@@ -59,11 +60,13 @@ class _StatsViewState extends State<StatsView> {
             if (entries.isEmpty)
               _EmptyCard()
             else ...[
+              TrendChartCard(entries: entries, totalDays: _days),
+              const SizedBox(height: 16),
+              HabitStreakCard(entries: entries, totalDays: _days),
+              const SizedBox(height: 16),
               _MoodCard(entries: entries, total: _days),
               const SizedBox(height: 16),
               _HealthCard(entries: entries, total: _days),
-              const SizedBox(height: 16),
-              _HabitsCard(entries: entries, total: _days),
               const SizedBox(height: 16),
               _FillCard(entries: entries, period: _period, total: _days),
             ],

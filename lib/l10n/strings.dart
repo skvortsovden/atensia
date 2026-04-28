@@ -79,6 +79,7 @@ class S {
   static String get statsPeriodWeek => _s('stats_period_week');
   static String get statsPeriodMonth => _s('stats_period_month');
   static String get statsPeriodYear => _s('stats_period_year');
+  static String get statsSectionTrend => _s('stats_section_trend');
   static String get statsSectionMood => _s('stats_section_mood');
   static String get statsSectionHealth => _s('stats_section_health');
   static String get statsSectionHabits => _s('stats_section_habits');
@@ -86,6 +87,7 @@ class S {
   static String get statsDaysSuffix => _s('stats_days_suffix');
   static String get statsSickLabel => _s('stats_sick_label');
   static String get statsPainLabel => _s('stats_pain_label');
+  static String get statsMaxStreak => _s('stats_max_streak');
   static String get statsNoData => _s('stats_no_data');
 
   // ── Shared labels ────────────────────────────────────────────────────────
