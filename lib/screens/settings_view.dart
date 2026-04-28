@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
+import 'package:share_plus/share_plus.dart';
+import 'dart:io';
 
 import '../l10n/strings.dart';
 import '../providers/app_provider.dart';
@@ -25,6 +28,58 @@ class _SettingsViewState extends State<SettingsView> {
   void dispose() {
     _nameController.dispose();
     super.dispose();
+  }
+
+  Future<void> _showExportDialog(BuildContext context) async {
+    await showDialog<void>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+        title: Text(
+          S.settingsExportTitle,
+          style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 18),
+        ),
+        content: Text(
+          S.settingsExportMessage,
+          style: const TextStyle(fontSize: 14, height: 1.6, color: Colors.black87),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: Text(
+              S.settingsExportCancel,
+              style: const TextStyle(color: Colors.black54),
+            ),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              Navigator.of(ctx).pop();
+              await _saveCsv(context);
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.black,
+              foregroundColor: Colors.white,
+              elevation: 0,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+            child: Text(S.settingsExportSave),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _saveCsv(BuildContext context) async {
+    final csv = context.read<AppProvider>().buildCsv();
+    final dir = await getTemporaryDirectory();
+    final file = File('${dir.path}/atensia_export.csv');
+    await file.writeAsString(csv, flush: true);
+    await Share.shareXFiles(
+      [XFile(file.path, mimeType: 'text/csv')],
+    );
   }
 
   @override
@@ -229,6 +284,34 @@ class _SettingsViewState extends State<SettingsView> {
                     ),
                     const Spacer(),
                     const Icon(Icons.arrow_forward_ios, size: 14),
+                  ],
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 48),
+
+            // ── Export ───────────────────────────────────────────────────────
+            GestureDetector(
+              onTap: () => _showExportDialog(context),
+              child: Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                decoration: BoxDecoration(
+                  border: Border.all(color: Colors.black, width: 2),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  children: [
+                    Text(
+                      S.settingsExportBtn,
+                      style: Theme.of(context)
+                          .textTheme
+                          .bodyLarge
+                          ?.copyWith(fontWeight: FontWeight.w600),
+                    ),
+                    const Spacer(),
+                    const Icon(Icons.download_outlined, size: 18),
                   ],
                 ),
               ),

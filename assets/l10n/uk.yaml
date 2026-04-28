@@ -47,6 +47,11 @@ settings_name_label: "Як до тебе звертатися?"
 settings_name_hint: "Введи ім'я тут…"
 settings_reminders: Нагадування
 settings_reminder_time: Час нагадування
+settings_export_btn: Експортувати дані
+settings_export_title: Експорт даних
+settings_export_message: "Приватність перш за все. Всі твої дані зберігаються лише на твоєму телефоні, за допомогою експорту ти можеш отримати доступ до цих даних та використати у власних цілях. Дані буде збережено у форматі CSV."
+settings_export_save: Зберегти
+settings_export_cancel: Скасувати
 settings_version: Версія 1.0.0
 settings_privacy: Усі дані зберігаються лише на цьому пристрої.
 

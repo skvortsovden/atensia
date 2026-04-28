@@ -65,6 +65,11 @@ class S {
   static String get settingsNameHint => _s('settings_name_hint');
   static String get settingsReminders => _s('settings_reminders');
   static String get settingsReminderTime => _s('settings_reminder_time');
+  static String get settingsExportBtn => _s('settings_export_btn');
+  static String get settingsExportTitle => _s('settings_export_title');
+  static String get settingsExportMessage => _s('settings_export_message');
+  static String get settingsExportSave => _s('settings_export_save');
+  static String get settingsExportCancel => _s('settings_export_cancel');
   static String get settingsVersion => _s('settings_version');
   static String get settingsPrivacy => _s('settings_privacy');
 

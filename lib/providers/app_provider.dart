@@ -133,6 +133,44 @@ class AppProvider extends ChangeNotifier {
 
   void updateEntry(DailyEntry entry) => _saveEntry(entry);
 
+  // ── Export ────────────────────────────────────────────────────────────────
+
+  String buildCsv() {
+    final buf = StringBuffer();
+    buf.writeln('date,mood,health,habits');
+
+    final sorted = _entries.values.toList()
+      ..sort((a, b) => a.date.compareTo(b.date));
+
+    for (final entry in sorted) {
+      final date =
+          '${entry.date.year.toString().padLeft(4, '0')}-'
+          '${entry.date.month.toString().padLeft(2, '0')}-'
+          '${entry.date.day.toString().padLeft(2, '0')}';
+      final mood = _csvCell(entry.mood);
+      final healthParts = [
+        if (entry.isSick) 'хвороба',
+        if (entry.hasPain) 'біль',
+      ];
+      final health = _csvCell(healthParts.join('; '));
+      final activeHabits = entry.habits.entries
+          .where((e) => e.value)
+          .map((e) => e.key)
+          .join('; ');
+      final habits = _csvCell(activeHabits);
+      buf.writeln('$date,$mood,$health,$habits');
+    }
+
+    return buf.toString();
+  }
+
+  static String _csvCell(String value) {
+    if (value.contains(',') || value.contains('"') || value.contains('\n')) {
+      return '"${value.replaceAll('"', '""')}"';
+    }
+    return value;
+  }
+
   // ── Persistence ───────────────────────────────────────────────────────────
 
   Future<void> _persistEntries() async {
