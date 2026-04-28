@@ -16,6 +16,7 @@ class SettingsView extends StatefulWidget {
 
 class _SettingsViewState extends State<SettingsView> {
   late TextEditingController _nameController;
+  final _exportKey = GlobalKey();
 
   @override
   void initState() {
@@ -75,10 +76,18 @@ class _SettingsViewState extends State<SettingsView> {
   Future<void> _saveCsv(BuildContext context) async {
     final csv = context.read<AppProvider>().buildCsv();
     final dir = await getTemporaryDirectory();
-    final file = File('${dir.path}/atensia_export.csv');
+    final timestamp = DateTime.now().millisecondsSinceEpoch;
+    final file = File('${dir.path}/atensia-user-data-$timestamp.csv');
     await file.writeAsString(csv, flush: true);
+
+    final box = _exportKey.currentContext?.findRenderObject() as RenderBox?;
+    final origin = box != null
+        ? box.localToGlobal(Offset.zero) & box.size
+        : const Rect.fromLTWH(0, 0, 1, 1);
+
     await Share.shareXFiles(
       [XFile(file.path, mimeType: 'text/csv')],
+      sharePositionOrigin: origin,
     );
   }
 
@@ -293,6 +302,7 @@ class _SettingsViewState extends State<SettingsView> {
 
             // ── Export ───────────────────────────────────────────────────────
             GestureDetector(
+              key: _exportKey,
               onTap: () => _showExportDialog(context),
               child: Container(
                 padding:
