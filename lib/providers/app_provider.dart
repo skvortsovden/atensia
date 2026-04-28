@@ -29,6 +29,33 @@ class AppProvider extends ChangeNotifier {
   TimeOfDay get reminderTime => _reminderTime;
   bool get isFirstLaunch => !(_prefs.getBool(_launchedKey) ?? false);
 
+  int get currentStreak {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    int streak = 0;
+    for (int i = 0; ; i++) {
+      final day = today.subtract(Duration(days: i));
+      final entry = _entries[dateKey(day)];
+      if (entry == null) break;
+      final filled = entry.mood.isNotEmpty ||
+          entry.isSick ||
+          entry.hasPain ||
+          entry.habits.values.any((v) => v);
+      if (filled) {
+        streak++;
+      } else {
+        break;
+      }
+    }
+    return streak;
+  }
+
+  int get totalFilledDays => _entries.values.where((e) =>
+      e.mood.isNotEmpty ||
+      e.isSick ||
+      e.hasPain ||
+      e.habits.values.any((v) => v)).length;
+
   // ── Init ─────────────────────────────────────────────────────────────────
 
   Future<void> init() async {

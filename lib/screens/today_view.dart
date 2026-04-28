@@ -18,6 +18,8 @@ class TodayView extends StatelessWidget {
     final greeting = provider.username.isNotEmpty
         ? S.greetingNamed(provider.username)
         : S.greetingDefault;
+    final streak = provider.currentStreak;
+    final displayN = streak >= 2 ? streak : provider.totalFilledDays.clamp(1, double.maxFinite).toInt();
 
     return SafeArea(
       child: SingleChildScrollView(
@@ -31,11 +33,34 @@ class TodayView extends StatelessWidget {
             ),
             const SizedBox(height: 4),
             Text(
-              '${S.todayDatePrefix} ${DateFormat('d MMMM', 'uk').format(today)}',
+              '${S.todayDatePrefix} ${DateFormat('d MMMM', 'uk').format(today)}.',
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                 color: Colors.black54,
               ),
             ),
+            if (displayN >= 1) ...[
+              const SizedBox(height: 2),
+              Text.rich(
+                TextSpan(
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: Colors.black54,
+                  ),
+                  children: [
+                    const TextSpan(text: 'Твій '),
+                    TextSpan(
+                      text: '$displayN-й день',
+                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    TextSpan(
+                      text: streak >= 2
+                          ? ' записів поспіль.'
+                          : ' записів.',
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 8),
+            ],
             const SizedBox(height: 6),
             Text(
               S.todaySubtitle,
