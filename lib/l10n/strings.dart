@@ -38,6 +38,7 @@ class S {
   static String greetingNamed(String name) =>
       _s('today_greeting_named').replaceFirst('{name}', name);
   static String get greetingDefault => _s('today_greeting_default');
+  static String get todayDatePrefix => _s('today_date_prefix');
   static String get todaySubtitle => _s('today_subtitle');
   static String get todaySectionHealth => _s('today_section_health');
   static String get todaySectionLeisure => _s('today_section_leisure');

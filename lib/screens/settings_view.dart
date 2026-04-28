@@ -153,6 +153,89 @@ class _SettingsViewState extends State<SettingsView> {
 
             const SizedBox(height: 48),
 
+            // ── Guide ───────────────────────────────────────────────────────
+            GestureDetector(
+              onTap: () => showModalBottomSheet(
+                context: context,
+                isScrollControlled: true,
+                backgroundColor: Colors.white,
+                shape: const RoundedRectangleBorder(
+                  borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+                ),
+                builder: (_) => Padding(
+                  padding: const EdgeInsets.fromLTRB(24, 28, 24, 40),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        S.onboardingGuideTitle,
+                        style: const TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        S.onboardingGuideText,
+                        style: const TextStyle(
+                          fontSize: 15,
+                          height: 1.6,
+                          color: Colors.black87,
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+                      SizedBox(
+                        width: double.infinity,
+                        height: 52,
+                        child: ElevatedButton(
+                          onPressed: () => Navigator.of(context).pop(),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.black,
+                            foregroundColor: Colors.white,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(14),
+                            ),
+                            elevation: 0,
+                          ),
+                          child: Text(
+                            S.onboardingGuideBtn,
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              child: Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                decoration: BoxDecoration(
+                  border: Border.all(color: Colors.black, width: 2),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  children: [
+                    Text(
+                      S.onboardingGuideTitle,
+                      style: Theme.of(context)
+                          .textTheme
+                          .bodyLarge
+                          ?.copyWith(fontWeight: FontWeight.w600),
+                    ),
+                    const Spacer(),
+                    const Icon(Icons.arrow_forward_ios, size: 14),
+                  ],
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 48),
+
             // ── App info ────────────────────────────────────────────────────
             Center(
               child: Column(

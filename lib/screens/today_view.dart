@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 import '../l10n/strings.dart';
@@ -27,6 +28,13 @@ class TodayView extends StatelessWidget {
             Text(
               greeting,
               style: Theme.of(context).textTheme.headlineMedium,
+            ),
+            const SizedBox(height: 4),
+            Text(
+              '${S.todayDatePrefix} ${DateFormat('d MMMM', 'uk').format(today)}',
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: Colors.black54,
+              ),
             ),
             const SizedBox(height: 6),
             Text(

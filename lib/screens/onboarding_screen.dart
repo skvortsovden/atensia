@@ -18,6 +18,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   int _currentPage = 0;
 
   void _nextPage() {
+    FocusScope.of(context).unfocus();
     _pageController.nextPage(
       duration: const Duration(milliseconds: 350),
       curve: Curves.easeInOut,
@@ -169,6 +170,8 @@ class _MottoPage extends StatelessWidget {
             style: const TextStyle(
               fontSize: 36,
               fontWeight: FontWeight.w800,
+              fontStyle: FontStyle.italic,
+              color: Colors.black,
               height: 1.3,
               letterSpacing: -0.5,
             ),
