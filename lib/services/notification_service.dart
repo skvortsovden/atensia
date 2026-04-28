@@ -52,13 +52,13 @@ class NotificationService {
     await _plugin.zonedSchedule(
       _notifId,
       'Атенція',
-      'час звернути увагу на себе 🌿',
+      'час звернути увагу на себе',
       scheduled,
       const NotificationDetails(
         android: AndroidNotificationDetails(
           _channelId,
           'Щоденне нагадування',
-          channelDescription: 'Нагадування звернути увагу на себе 🌿',
+          channelDescription: 'Нагадування звернути увагу на себе',
           importance: Importance.high,
           priority: Priority.high,
         ),
