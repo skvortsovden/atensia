@@ -15,8 +15,8 @@ double _moodY(String mood) {
 }
 
 double _healthY(DailyEntry e) {
-  if (e.isSick) return -2;
-  if (e.hasPain) return -1;
+  if (e.isSick) return -3;
+  if (e.hasPain) return -2;
   return 0;
 }
 
@@ -163,7 +163,7 @@ class TrendChartCard extends StatelessWidget {
             height: 160,
             child: LineChart(
               LineChartData(
-                minY: -2.5,
+                minY: -3.5,
                 maxY: 1.5,
                 minX: 0,
                 maxX: (xCount - 1).toDouble(),
@@ -191,8 +191,9 @@ class TrendChartCard extends StatelessWidget {
                       getTitlesWidget: (value, meta) {
                         final v = value.round();
                         final label = switch (v) {
-                          -2 => S.statsSickLabel,
-                          -1 => '${S.moodExhausted} / ${S.statsPainLabel}',
+                          -3 => S.statsSickLabel,
+                          -2 => S.statsPainLabel,
+                          -1 => S.moodExhausted,
                           0 => S.moodGood,
                           1 => S.moodEnergetic,
                           _ => '',
@@ -309,9 +310,9 @@ class TrendChartCard extends StatelessWidget {
               const SizedBox(width: 8),
               _YKeyChip(label: S.moodExhausted, value: '−1'),
               const SizedBox(width: 8),
-              _YKeyChip(label: S.statsPainLabel, value: '−1'),
+              _YKeyChip(label: S.statsPainLabel, value: '−2'),
               const SizedBox(width: 8),
-              _YKeyChip(label: S.statsSickLabel, value: '−2'),
+              _YKeyChip(label: S.statsSickLabel, value: '−3'),
             ],
           ),
         ],
@@ -530,9 +531,7 @@ class HabitStreakCard extends StatelessWidget {
                       height: dotSize,
                       decoration: BoxDecoration(
                         color: filled ? Colors.black : Colors.black12,
-                        // streak days → square, isolated days → circle
-                        borderRadius: BorderRadius.circular(
-                            inStreak ? 2 : dotSize / 2),
+                        borderRadius: BorderRadius.circular(dotSize / 2),
                       ),
                     );
                   }),
