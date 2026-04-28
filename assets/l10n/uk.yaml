@@ -1,0 +1,56 @@
+# ── App ───────────────────────────────────────────────────────────────────────
+app_title: Атенція
+app_tagline: це увага до себе
+
+# ── Navigation tabs ───────────────────────────────────────────────────────────
+tab_calendar: Календар
+tab_today: Сьогодні
+tab_settings: Налаштування
+
+# ── Today view ────────────────────────────────────────────────────────────────
+today_greeting_named: "Вітаю, {name}!"
+today_greeting_default: "Вітаю, друже!"
+today_subtitle: Як ся маєш?
+today_section_health: Щось турбує?
+today_section_leisure: Дозвілля
+
+# ── Edit day screen (past tense) ──────────────────────────────────────────────
+edit_subtitle: Як ся мав?
+edit_section_health: Щось турбувало?
+edit_section_leisure: Дозвілля
+edit_btn_save: Зберегти
+
+# ── Calendar / History view ───────────────────────────────────────────────────
+calendar_title: Календар
+calendar_future_day: Цей день ще не настав
+calendar_no_data: Дані за цей день відсутні
+calendar_btn_add: Додати
+calendar_btn_edit: Змінити
+calendar_row_feel: Почуваюсь
+calendar_row_health: Турбує
+calendar_row_leisure: Дозвілля
+
+# ── Settings view ─────────────────────────────────────────────────────────────
+settings_title: Налаштування
+settings_name_label: "Як до тебе звертатися?"
+settings_name_hint: "Введи ім'я тут…"
+settings_reminders: Нагадування
+settings_reminder_time: Час нагадування
+settings_version: Версія 1.0.0
+settings_privacy: Усі дані зберігаються лише на цьому пристрої.
+
+# ── Shared labels ─────────────────────────────────────────────────────────────
+label_sick: Хвороба
+label_pain: Біль
+
+# ── Moods ─────────────────────────────────────────────────────────────────────
+mood_exhausted: Виснажено
+mood_good: Добре
+mood_energetic: Бадьоро
+
+# ── Default habits ────────────────────────────────────────────────────────────
+habits:
+  - Прогулянка
+  - Фізична активність
+  - Читання
+  - Творчість

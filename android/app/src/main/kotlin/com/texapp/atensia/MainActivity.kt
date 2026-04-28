@@ -1,4 +1,4 @@
-package com.example.proso
+package com.texapp.atensia
 
 import io.flutter.embedding.android.FlutterActivity
 

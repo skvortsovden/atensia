@@ -18,12 +18,14 @@ dependencies:
   flutter_local_notifications: ^18.0.0
   timezone: ^0.9.4
   flutter_timezone: ^1.0.8
+  yaml: ^3.1.2
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^3.0.0
   flutter_launcher_icons: ^0.14.3
+  flutter_native_splash: ^2.4.3
 
 flutter_launcher_icons:
   android: true
@@ -38,12 +40,21 @@ flutter_launcher_icons:
   remove_alpha_ios: true
   background_color: "#ffffff"
 
+flutter_native_splash:
+  color: "#ffffff"
+  image: assets/atensia-logo.png
+  ios: true
+  android: false
+  web: false
+  ios_content_mode: center
+
 flutter:
   uses-material-design: true
 
   assets:
     - assets/atensia-logo.png
     - assets/fonts/
+    - assets/l10n/uk.yaml
 
   fonts:
     - family: FixelDisplay

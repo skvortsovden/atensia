@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../l10n/strings.dart';
 import '../providers/app_provider.dart';
 
 class SettingsView extends StatefulWidget {
@@ -37,14 +38,14 @@ class _SettingsViewState extends State<SettingsView> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Налаштування',
+              S.settingsTitle,
               style: Theme.of(context).textTheme.headlineLarge,
             ),
             const SizedBox(height: 36),
 
             // ── Username ────────────────────────────────────────────────────
             Text(
-              "Як до тебе звертатися?".toUpperCase(),
+              S.settingsNameLabel.toUpperCase(),
               style: const TextStyle(
                 fontSize: 11,
                 fontWeight: FontWeight.w700,
@@ -59,7 +60,7 @@ class _SettingsViewState extends State<SettingsView> {
               textCapitalization: TextCapitalization.words,
               style: Theme.of(context).textTheme.bodyLarge,
               decoration: InputDecoration(
-                hintText: "Введи ім'я тут…",
+                hintText: S.settingsNameHint,
                 hintStyle:
                     const TextStyle(color: Colors.black38, fontSize: 15),
                 enabledBorder: OutlineInputBorder(
@@ -88,7 +89,7 @@ class _SettingsViewState extends State<SettingsView> {
               child: Row(
                 children: [
                   Text(
-                    'Нагадування',
+                    S.settingsReminders,
                     style: Theme.of(context)
                         .textTheme
                         .bodyLarge
@@ -132,7 +133,7 @@ class _SettingsViewState extends State<SettingsView> {
                   child: Row(
                     children: [
                       Text(
-                        'Час нагадування',
+                        S.settingsReminderTime,
                         style: Theme.of(context).textTheme.bodyLarge,
                       ),
                       const Spacer(),
@@ -157,26 +158,26 @@ class _SettingsViewState extends State<SettingsView> {
               child: Column(
                 children: [
                   Text(
-                    'Атенція',
+                    S.appTitle,
                     style: Theme.of(context)
                         .textTheme
                         .titleMedium
                         ?.copyWith(fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 2),
-                  const Text(
-                    'це увага до себе',
-                    style: TextStyle(color: Colors.black54, fontSize: 13),
+                  Text(
+                    S.appTagline,
+                    style: const TextStyle(color: Colors.black54, fontSize: 13),
                   ),
                   const SizedBox(height: 4),
-                  const Text(
-                    'Версія 1.0.0',
-                    style: TextStyle(color: Colors.black38, fontSize: 13),
+                  Text(
+                    S.settingsVersion,
+                    style: const TextStyle(color: Colors.black38, fontSize: 13),
                   ),
                   const SizedBox(height: 4),
-                  const Text(
-                    'Усі дані зберігаються лише на цьому пристрої.',
-                    style: TextStyle(color: Colors.black38, fontSize: 12),
+                  Text(
+                    S.settingsPrivacy,
+                    style: const TextStyle(color: Colors.black38, fontSize: 12),
                     textAlign: TextAlign.center,
                   ),
                 ],

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
+import '../l10n/strings.dart';
 import '../models/daily_entry.dart';
 import '../providers/app_provider.dart';
 
@@ -14,8 +15,8 @@ class TodayView extends StatelessWidget {
     final today = _today();
     final entry = provider.getOrCreateEntry(today);
     final greeting = provider.username.isNotEmpty
-        ? 'Вітаю, ${provider.username}!'
-        : 'Вітаю, друже!';
+        ? S.greetingNamed(provider.username)
+        : S.greetingDefault;
 
     return SafeArea(
       child: SingleChildScrollView(
@@ -29,7 +30,7 @@ class TodayView extends StatelessWidget {
             ),
             const SizedBox(height: 6),
             Text(
-              'Як ся маєш?',
+              S.todaySubtitle,
               style: Theme.of(context).textTheme.headlineLarge,
             ),
 
@@ -37,12 +38,12 @@ class TodayView extends StatelessWidget {
             _MoodSelector(entry: entry, date: today),
 
             const SizedBox(height: 28),
-            _SectionLabel('Щось турбує?'),
+            _SectionLabel(S.todaySectionHealth),
             const SizedBox(height: 10),
             _HealthToggles(entry: entry, date: today),
 
             const SizedBox(height: 28),
-            _SectionLabel('Дозвілля'),
+            _SectionLabel(S.todaySectionLeisure),
             const SizedBox(height: 10),
             _HabitList(entry: entry, date: today),
           ],
@@ -80,11 +81,7 @@ class _MoodSelector extends StatelessWidget {
 
   const _MoodSelector({required this.entry, required this.date});
 
-  static const _moods = [
-    'Виснажено',
-    'Добре',
-    'Бадьоро',
-  ];
+  static List<String> get _moods => S.moods;
 
   @override
   Widget build(BuildContext context) {
@@ -151,7 +148,7 @@ class _HealthToggles extends StatelessWidget {
       children: [
         Expanded(
           child: _ToggleButton(
-            label: 'Хвороба',
+            label: S.labelSick,
             isActive: entry.isSick,
             onTap: () {
               HapticFeedback.mediumImpact();
@@ -162,7 +159,7 @@ class _HealthToggles extends StatelessWidget {
         const SizedBox(width: 8),
         Expanded(
           child: _ToggleButton(
-            label: 'Біль',
+            label: S.labelPain,
             isActive: entry.hasPain,
             onTap: () {
               HapticFeedback.mediumImpact();

@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:table_calendar/table_calendar.dart';
 
+import '../l10n/strings.dart';
 import '../models/daily_entry.dart';
 import '../providers/app_provider.dart';
 import 'edit_day_screen.dart';
@@ -253,7 +254,7 @@ class _DayDetail extends StatelessWidget {
             ),
             const SizedBox(height: 20),
             Text(
-              'Цей день ще не настав',
+              S.calendarFutureDay,
               textAlign: TextAlign.center,
               style: Theme.of(context)
                   .textTheme
@@ -283,7 +284,7 @@ class _DayDetail extends StatelessWidget {
             ),
             const SizedBox(height: 20),
             Text(
-              'Дані за цей день відсутні',
+              S.calendarNoData,
               textAlign: TextAlign.center,
               style: Theme.of(context)
                   .textTheme
@@ -300,8 +301,8 @@ class _DayDetail extends StatelessWidget {
                   border: Border.all(color: Colors.black, width: 2),
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: const Text(
-                  'Додати',
+                child: Text(
+                  S.calendarBtnAdd,
                   style: TextStyle(
                     color: Colors.black,
                     fontWeight: FontWeight.w700,
@@ -318,8 +319,8 @@ class _DayDetail extends StatelessWidget {
     final e = entry!;
 
     final healthItems = [
-      if (e.isSick) 'Хвороба',
-      if (e.hasPain) 'Біль',
+      if (e.isSick) S.labelSick,
+      if (e.hasPain) S.labelPain,
     ];
     final doneHabits = e.habits.entries
         .where((h) => h.value)
@@ -327,11 +328,11 @@ class _DayDetail extends StatelessWidget {
         .toList();
 
     final rows = <_InfoRow>[
-      if (e.mood.isNotEmpty) _InfoRow('Почуваюсь', e.mood),
+      if (e.mood.isNotEmpty) _InfoRow(S.calendarRowFeel, e.mood),
       if (healthItems.isNotEmpty)
-        _InfoRow('Турбує', healthItems.join(', ')),
+        _InfoRow(S.calendarRowHealth, healthItems.join(', ')),
       if (doneHabits.isNotEmpty)
-        _InfoRow('Дозвілля', doneHabits.join(', ')),
+        _InfoRow(S.calendarRowLeisure, doneHabits.join(', ')),
     ];
 
     final dateLabel = DateFormat('d MMMM yyyy', 'uk_UA').format(date);
@@ -397,9 +398,9 @@ class _DayDetail extends StatelessWidget {
                 border: Border.all(color: Colors.black, width: 2),
                 borderRadius: BorderRadius.circular(10),
               ),
-              child: const Text(
-                'Змінити',
-                style: TextStyle(
+              child: Text(
+                S.calendarBtnEdit,
+                style: const TextStyle(
                   color: Colors.black,
                   fontWeight: FontWeight.w700,
                   fontSize: 14,
@@ -417,20 +418,4 @@ class _InfoRow {
   final String key;
   final String value;
   const _InfoRow(this.key, this.value);
-}
-
-class _SectionLabel extends StatelessWidget {
-  final String text;
-  const _SectionLabel(this.text);
-
-  @override
-  Widget build(BuildContext context) => Text(
-        text.toUpperCase(),
-        style: const TextStyle(
-          fontSize: 11,
-          fontWeight: FontWeight.w700,
-          letterSpacing: 1.4,
-          color: Colors.black54,
-        ),
-      );
 }

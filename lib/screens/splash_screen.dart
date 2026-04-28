@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../l10n/strings.dart';
 import '../providers/app_provider.dart';
 import '../main.dart';
 
@@ -71,14 +72,14 @@ class _SplashScreenState extends State<SplashScreen>
               ),
               const SizedBox(height: 20),
               Text(
-                'Атенція',
+                S.appTitle,
                 style: Theme.of(context).textTheme.headlineLarge?.copyWith(
                       fontSize: 42,
                     ),
               ),
               const SizedBox(height: 4),
               Text(
-                'це увага до себе',
+                S.appTagline,
                 style: Theme.of(context).textTheme.headlineMedium,
               ),
             ],

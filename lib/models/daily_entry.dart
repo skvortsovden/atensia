@@ -1,5 +1,7 @@
 import 'dart:convert';
 
+import '../l10n/strings.dart';
+
 class DailyEntry {
   final DateTime date;
   final Map<String, bool> habits;
@@ -7,12 +9,7 @@ class DailyEntry {
   final bool isSick;
   final bool hasPain;
 
-  static const List<String> defaultHabits = [
-    'Прогулянка',
-    'Фізична активність',
-    'Читання',
-    'Творчість',
-  ];
+  static List<String> get defaultHabits => S.defaultHabits;
 
   DailyEntry({
     required this.date,

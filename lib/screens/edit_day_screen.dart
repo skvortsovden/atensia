@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
+import '../l10n/strings.dart';
 import '../models/daily_entry.dart';
 import '../providers/app_provider.dart';
 
@@ -97,7 +98,7 @@ class _EditDayScreenState extends State<EditDayScreen> {
                   Padding(
                     padding: const EdgeInsets.fromLTRB(16, 2, 0, 0),
                     child: Text(
-                      'Як ся мав?',
+                      S.editSubtitle,
                       style: Theme.of(context).textTheme.headlineLarge,
                     ),
                   ),
@@ -118,7 +119,7 @@ class _EditDayScreenState extends State<EditDayScreen> {
                     ),
 
                     const SizedBox(height: 28),
-                    _SectionLabel('Щось турбувало?'),
+                    _SectionLabel(S.editSectionHealth),
                     const SizedBox(height: 10),
                     _HealthToggles(
                       entry: localEntry,
@@ -127,7 +128,7 @@ class _EditDayScreenState extends State<EditDayScreen> {
                     ),
 
                     const SizedBox(height: 28),
-                    _SectionLabel('Дозвілля'),
+                    _SectionLabel(S.editSectionLeisure),
                     const SizedBox(height: 10),
                     _HabitList(
                       entry: localEntry,
@@ -153,9 +154,9 @@ class _EditDayScreenState extends State<EditDayScreen> {
                       color: Colors.black,
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    child: const Text(
-                      'Зберегти',
-                      style: TextStyle(
+                    child: Text(
+                      S.editBtnSave,
+                      style: const TextStyle(
                         color: Colors.white,
                         fontWeight: FontWeight.w700,
                         fontSize: 16,
@@ -194,7 +195,7 @@ class _MoodSelector extends StatelessWidget {
   const _MoodSelector(
       {required this.entry, required this.onMoodChanged});
 
-  static const _moods = ['Виснажено', 'Добре', 'Бадьоро'];
+  static List<String> get _moods => S.moods;
 
   @override
   Widget build(BuildContext context) {
@@ -262,7 +263,7 @@ class _HealthToggles extends StatelessWidget {
       children: [
         Expanded(
           child: _ToggleButton(
-            label: 'Хвороба',
+            label: S.labelSick,
             isActive: entry.isSick,
             onTap: () {
               HapticFeedback.mediumImpact();
@@ -273,7 +274,7 @@ class _HealthToggles extends StatelessWidget {
         const SizedBox(width: 8),
         Expanded(
           child: _ToggleButton(
-            label: 'Біль',
+            label: S.labelPain,
             isActive: entry.hasPain,
             onTap: () {
               HapticFeedback.mediumImpact();

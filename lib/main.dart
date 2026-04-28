@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:provider/provider.dart';
 
+import 'l10n/strings.dart';
 import 'providers/app_provider.dart';
 import 'screens/history_view.dart';
 import 'screens/settings_view.dart';
@@ -12,6 +13,7 @@ import 'services/notification_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await S.load();
 
   // Force portrait orientation
   await SystemChrome.setPreferredOrientations([
@@ -52,7 +54,7 @@ class AtensiaApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Атенція',
+      title: S.appTitle,
       debugShowCheckedModeBanner: false,
 
       // ── Localization ──────────────────────────────────────────────────────
@@ -177,21 +179,21 @@ class _MainScreenState extends State<MainScreen> {
               fontFamily: 'FixelText',
               fontSize: 11,
             ),
-            items: const [
+            items: [
               BottomNavigationBarItem(
-                icon: Icon(Icons.calendar_month_outlined),
-                activeIcon: Icon(Icons.calendar_month),
-                label: 'Календар',
+                icon: const Icon(Icons.calendar_month_outlined),
+                activeIcon: const Icon(Icons.calendar_month),
+                label: S.tabCalendar,
               ),
               BottomNavigationBarItem(
-                icon: Icon(Icons.wb_sunny_outlined),
-                activeIcon: Icon(Icons.wb_sunny),
-                label: 'Сьогодні',
+                icon: const Icon(Icons.wb_sunny_outlined),
+                activeIcon: const Icon(Icons.wb_sunny),
+                label: S.tabToday,
               ),
               BottomNavigationBarItem(
-                icon: Icon(Icons.tune_outlined),
-                activeIcon: Icon(Icons.tune),
-                label: 'Налаштування',
+                icon: const Icon(Icons.tune_outlined),
+                activeIcon: const Icon(Icons.tune),
+                label: S.tabSettings,
               ),
             ],
           ),
