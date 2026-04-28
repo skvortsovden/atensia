@@ -17,7 +17,8 @@ import '../providers/app_provider.dart';
 
 double _moodY(String mood) {
   if (mood == S.moodExhausted) return -1;
-  if (mood == S.moodEnergetic) return 1;
+  if (mood == S.moodGood) return 1;
+  if (mood == S.moodEnergetic) return 2;
   return 0;
 }
 
@@ -198,7 +199,7 @@ class TrendChartCard extends StatelessWidget {
             child: LineChart(
               LineChartData(
                 minY: -3.5,
-                maxY: 1.5,
+                maxY: 2.5,
                 minX: 0,
                 maxX: (xCount - 1).toDouble(),
                 clipData: const FlClipData.all(),
@@ -206,6 +207,7 @@ class TrendChartCard extends StatelessWidget {
                   show: true,
                   drawVerticalLine: false,
                   horizontalInterval: 1,
+                  checkToShowHorizontalLine: (v) => v != 0,
                   getDrawingHorizontalLine: (_) => const FlLine(
                     color: Colors.black12,
                     strokeWidth: 1,
@@ -228,8 +230,9 @@ class TrendChartCard extends StatelessWidget {
                           -3 => S.statsSickLabel,
                           -2 => S.statsPainLabel,
                           -1 => S.moodExhausted,
-                          0 => S.moodGood,
-                          1 => S.moodEnergetic,
+                          0 => '',
+                          1 => S.moodGood,
+                          2 => S.moodEnergetic,
                           _ => '',
                         };
                         if (label.isEmpty) return const SizedBox.shrink();
@@ -331,22 +334,6 @@ class TrendChartCard extends StatelessWidget {
                   color: Colors.black54,
                   dashed: true,
                   label: S.statsSectionHealth),
-            ],
-          ),
-          const SizedBox(height: 6),
-          // Y-axis key
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              _YKeyChip(label: S.moodEnergetic, value: '+1'),
-              const SizedBox(width: 8),
-              _YKeyChip(label: S.moodGood, value: '0'),
-              const SizedBox(width: 8),
-              _YKeyChip(label: S.moodExhausted, value: '−1'),
-              const SizedBox(width: 8),
-              _YKeyChip(label: S.statsPainLabel, value: '−2'),
-              const SizedBox(width: 8),
-              _YKeyChip(label: S.statsSickLabel, value: '−3'),
             ],
           ),
         ],
@@ -509,10 +496,18 @@ class _HabitStreakCardState extends State<HabitStreakCard> {
                           ],
                         )
                       else if (maxStreak >= 2)
-                        Text(
-                          '${S.statsMaxStreak} $maxStreak ${S.statsDaysSuffix}',
-                          style: const TextStyle(
-                              fontSize: 12, color: Colors.black45),
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(Icons.arrow_upward,
+                                size: 12, color: Colors.black45),
+                            const SizedBox(width: 2),
+                            Text(
+                              '$maxStreak ${S.statsDaysSuffix}',
+                              style: const TextStyle(
+                                  fontSize: 12, color: Colors.black45),
+                            ),
+                          ],
                         ),
                     ],
                   ),
@@ -1001,6 +996,12 @@ class _HabitStoryRow extends StatelessWidget {
 
   /// Largest dot size where all [count] dots fit within [availW] × [availH].
   double _bestDotSize(double availW, double availH, int count) {
+    // For small counts force a single row sized to fill the width
+    if (count <= 7) {
+      const maxGap = 6.0;
+      final s = (availW - (count - 1) * maxGap) / count;
+      return s.clamp(4.0, 60.0);
+    }
     double best = 4.0;
     for (double s = 4.0; s <= 60.0; s += 0.5) {
       final g = (s * 0.25).clamp(1.5, 6.0);
@@ -1069,21 +1070,39 @@ class _HabitStoryRow extends StatelessWidget {
             ),
           ),
           const SizedBox(height: _nameGap),
-          Wrap(
-            spacing: gap,
-            runSpacing: gap,
-            children: dayKeys.map((k) {
-              final filled = filledKeys.contains(k);
-              return Container(
-                width: dotSize,
-                height: dotSize,
-                decoration: BoxDecoration(
-                  color: filled ? Colors.black : Colors.black12,
-                  borderRadius: BorderRadius.circular(dotSize / 2),
-                ),
-              );
-            }).toList(),
-          ),
+          if (dayKeys.length <= 7)
+            Row(
+              children: dayKeys.map((k) {
+                final filled = filledKeys.contains(k);
+                return Padding(
+                  padding: EdgeInsets.only(right: k != dayKeys.last ? gap : 0),
+                  child: Container(
+                    width: dotSize,
+                    height: dotSize,
+                    decoration: BoxDecoration(
+                      color: filled ? Colors.black : Colors.black12,
+                      borderRadius: BorderRadius.circular(dotSize / 2),
+                    ),
+                  ),
+                );
+              }).toList(),
+            )
+          else
+            Wrap(
+              spacing: gap,
+              runSpacing: gap,
+              children: dayKeys.map((k) {
+                final filled = filledKeys.contains(k);
+                return Container(
+                  width: dotSize,
+                  height: dotSize,
+                  decoration: BoxDecoration(
+                    color: filled ? Colors.black : Colors.black12,
+                    borderRadius: BorderRadius.circular(dotSize / 2),
+                  ),
+                );
+              }).toList(),
+            ),
         ],
       );
     });

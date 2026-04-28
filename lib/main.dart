@@ -7,7 +7,7 @@ import 'l10n/strings.dart';
 import 'providers/app_provider.dart';
 import 'screens/history_view.dart';
 import 'screens/settings_view.dart';
-import 'screens/splash_screen.dart';
+import 'screens/onboarding_screen.dart';
 import 'screens/stats_view.dart';
 import 'screens/today_view.dart';
 import 'services/notification_service.dart';
@@ -127,7 +127,9 @@ class AtensiaApp extends StatelessWidget {
         ),
       ),
 
-      home: const SplashScreen(),
+      home: context.read<AppProvider>().isFirstLaunch
+          ? const OnboardingScreen()
+          : const MainScreen(),
     );
   }
 }

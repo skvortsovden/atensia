@@ -298,7 +298,7 @@ class _SettingsViewState extends State<SettingsView> {
               ),
             ),
 
-            const SizedBox(height: 48),
+            const SizedBox(height: 8),
 
             // ── Export ───────────────────────────────────────────────────────
             GestureDetector(
@@ -338,14 +338,14 @@ class _SettingsViewState extends State<SettingsView> {
                     style: Theme.of(context)
                         .textTheme
                         .titleMedium
-                        ?.copyWith(fontWeight: FontWeight.bold),
+                        ?.copyWith(fontWeight: FontWeight.bold, height: 1.0),
                   ),
                   const SizedBox(height: 2),
                   Text(
                     S.appTagline,
                     style: const TextStyle(color: Colors.black54, fontSize: 13),
                   ),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: 16),
                   Text(
                     S.settingsVersion,
                     style: const TextStyle(color: Colors.black38, fontSize: 13),
@@ -355,6 +355,11 @@ class _SettingsViewState extends State<SettingsView> {
                     S.settingsPrivacy,
                     style: const TextStyle(color: Colors.black38, fontSize: 12),
                     textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    '© 2026 Denys Skvortsov',
+                    style: const TextStyle(color: Colors.black38, fontSize: 12),
                   ),
                 ],
               ),

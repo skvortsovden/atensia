@@ -164,19 +164,52 @@ class _MottoPage extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Spacer(flex: 3),
+          const SizedBox(height: 20),
+          // ── Logo + tagline lockup ──────────────────────────────────────
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Image.asset('assets/atensia-logo.png', width: 48),
+              const SizedBox(width: 12),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    S.appTitle,
+                    style: const TextStyle(
+                      fontFamily: 'FixelDisplay',
+                      fontSize: 18,
+                      fontWeight: FontWeight.w800,
+                      color: Colors.black,
+                      height: 1.0,
+                    ),
+                  ),
+                  Text(
+                    S.appTagline,
+                    style: const TextStyle(
+                      fontSize: 13,
+                      color: Colors.black45,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+          const Spacer(),
+          // ── Motto ─────────────────────────────────────────────────────
           Text(
             S.onboardingMottoTitle,
             style: const TextStyle(
-              fontSize: 36,
+              fontSize: 44,
               fontWeight: FontWeight.w800,
               fontStyle: FontStyle.italic,
               color: Colors.black,
-              height: 1.3,
+              height: 1.25,
               letterSpacing: -0.5,
             ),
           ),
-          const Spacer(flex: 4),
+          const Spacer(),
           _PrimaryButton(label: S.onboardingMottoBtn, onTap: onContinue),
           const SizedBox(height: 32),
         ],
