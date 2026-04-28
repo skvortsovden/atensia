@@ -62,7 +62,15 @@ class _StatsViewState extends State<StatsView> {
             else ...[
               TrendChartCard(entries: entries, totalDays: _days),
               const SizedBox(height: 16),
-              HabitStreakCard(entries: entries, totalDays: _days),
+              HabitStreakCard(
+                entries: entries,
+                totalDays: _days,
+                periodLabel: switch (_period) {
+                  _Period.week => S.statsPeriodWeek,
+                  _Period.month => S.statsPeriodMonth,
+                  _Period.year => S.statsPeriodYear,
+                },
+              ),
               const SizedBox(height: 16),
               _MoodCard(entries: entries, total: _days),
               const SizedBox(height: 16),

@@ -219,25 +219,42 @@ class _ToggleButton extends StatelessWidget {
 
 // ── Habit list ────────────────────────────────────────────────────────────────
 
-class _HabitList extends StatelessWidget {
+class _HabitList extends StatefulWidget {
   final DailyEntry entry;
   final DateTime date;
 
   const _HabitList({required this.entry, required this.date});
 
   @override
+  State<_HabitList> createState() => _HabitListState();
+}
+
+class _HabitListState extends State<_HabitList> {
+  String? _expandedHabit;
+
+  @override
   Widget build(BuildContext context) {
     final provider = context.read<AppProvider>();
 
     return Column(
-      children: entry.habits.entries.map((e) {
+      children: widget.entry.habits.entries.map((e) {
         final checked = e.value;
+        final desc = S.habitDescription(e.key);
+        final expanded = _expandedHabit == e.key && desc.isNotEmpty;
 
         return GestureDetector(
           onTap: () {
             HapticFeedback.mediumImpact();
-            provider.toggleHabit(date, e.key);
+            provider.toggleHabit(widget.date, e.key);
           },
+          onLongPress: desc.isEmpty
+              ? null
+              : () {
+                  HapticFeedback.selectionClick();
+                  setState(() {
+                    _expandedHabit = expanded ? null : e.key;
+                  });
+                },
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 140),
             margin: const EdgeInsets.only(bottom: 8),
@@ -247,32 +264,66 @@ class _HabitList extends StatelessWidget {
               border: Border.all(color: Colors.black, width: 2),
               borderRadius: BorderRadius.circular(8),
             ),
-            child: Row(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                AnimatedContainer(
-                  duration: const Duration(milliseconds: 140),
-                  width: 20,
-                  height: 20,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(4),
-                    color: checked ? Colors.white : Colors.transparent,
-                    border: Border.all(
-                      color: checked ? Colors.transparent : Colors.black,
-                      width: 2,
+                Row(
+                  children: [
+                    AnimatedContainer(
+                      duration: const Duration(milliseconds: 140),
+                      width: 20,
+                      height: 20,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(4),
+                        color: checked ? Colors.white : Colors.transparent,
+                        border: Border.all(
+                          color: checked ? Colors.transparent : Colors.black,
+                          width: 2,
+                        ),
+                      ),
+                      child: checked
+                          ? const Icon(Icons.check, size: 14, color: Colors.black)
+                          : null,
                     ),
-                  ),
-                  child: checked
-                      ? const Icon(Icons.check, size: 14, color: Colors.black)
-                      : null,
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        e.key,
+                        style: TextStyle(
+                          color: checked ? Colors.white : Colors.black,
+                          fontWeight: FontWeight.w600,
+                          fontSize: 16,
+                        ),
+                      ),
+                    ),
+                    if (desc.isNotEmpty)
+                      Icon(
+                        expanded
+                            ? Icons.keyboard_arrow_up
+                            : Icons.keyboard_arrow_down,
+                        size: 16,
+                        color: checked ? Colors.white54 : Colors.black38,
+                      ),
+                  ],
                 ),
-                const SizedBox(width: 12),
-                Text(
-                  e.key,
-                  style: TextStyle(
-                    color: checked ? Colors.white : Colors.black,
-                    fontWeight: FontWeight.w600,
-                    fontSize: 16,
-                  ),
+                AnimatedSize(
+                  duration: const Duration(milliseconds: 200),
+                  curve: Curves.easeInOut,
+                  child: expanded
+                      ? Padding(
+                          padding: const EdgeInsets.only(top: 8, left: 32),
+                          child: Text(
+                            desc,
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: checked
+                                  ? Colors.white70
+                                  : Colors.black54,
+                              fontWeight: FontWeight.w400,
+                            ),
+                          ),
+                        )
+                      : const SizedBox.shrink(),
                 ),
               ],
             ),

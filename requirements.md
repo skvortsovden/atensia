@@ -20,7 +20,7 @@ Health toggles: 'Відчуваю хворобу' (Sick), 'Відчуваю бі
 
 Navigation tabs: 'Сьогодні' (Today), 'Календар' (History), 'Налаштування' (Settings).
 
-Habits: 'Прогулянка' (Walking), 'Фізична активність' (Physical activity), 'Читання' (Reading).
+Habits: 'Прогулянка' (Walking), 'Фізичні вправи' (Physical activity), 'Читання' (Reading).
 
 Architecture:
 

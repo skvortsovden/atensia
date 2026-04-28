@@ -88,6 +88,9 @@ class S {
   static String get statsSickLabel => _s('stats_sick_label');
   static String get statsPainLabel => _s('stats_pain_label');
   static String get statsMaxStreak => _s('stats_max_streak');
+  static String get statsShareBtn => _s('stats_share_btn');
+  static String get statsStoryLeisureTitle => _s('stats_story_leisure_title');
+  static String get statsStoryPeriodPrefix => _s('stats_story_period_prefix');
   static String get statsNoData => _s('stats_no_data');
 
   // ── Shared labels ────────────────────────────────────────────────────────
@@ -105,4 +108,11 @@ class S {
       (_m['habits'] as YamlList? ?? YamlList())
           .map((e) => e as String)
           .toList();
+
+  /// Returns the description for [habit], or empty string if not defined.
+  static String habitDescription(String habit) {
+    final map = _m['habit_descriptions'];
+    if (map == null) return '';
+    return (map as Map)[habit] as String? ?? '';
+  }
 }
