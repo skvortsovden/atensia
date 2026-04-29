@@ -81,6 +81,22 @@
 
     .btn-disabled:hover { opacity: 0.35; }
 
+    .screenshots {
+      display: flex;
+      gap: 16px;
+      margin-top: 40px;
+      justify-content: center;
+      width: 100%;
+      max-width: 520px;
+    }
+
+    .screenshots img {
+      width: calc(33.333% - 11px);
+      border-radius: 16px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+      display: block;
+    }
+
     .btn svg {
       flex-shrink: 0;
     }
@@ -140,13 +156,19 @@
   <div class="description">
     <h2><em>Простий.<br>Уважний.<br>Приватний.</em></h2>
     <p>Атенція — це безкоштовний додаток для щоденних записів про твій настрій, самопочуття та дозвілля. Він допоможе тобі помічати зміни та краще розуміти себе. Усі дані зберігаються лише на твоєму пристрої. Додаток не вимагає реєстрації, не збирає жодних даних та не використовує інтернет.</p>
+    <p>Функціонал додатку включає:</p>
     <ul>
-      <li>Щоденні записи про самопочуття та дозвілля</li>
-      <li>Нагадування, щоб не забувати робити записи</li>
-      <li>Календар для оновлення записів за минувші дні</li>
-      <li>Звіт для розуміння змін за певний період</li>
-      <li>Всі дані зберігаються лише на твоєму пристрої</li>
+      <li><strong>Щоденні записи</strong> про самопочуття та дозвілля</li>
+      <li><strong>Календар</strong> для оновлення записів за минувші дні</li>
+      <li><strong>Звіт</strong> для розуміння змін за певний період</li>
+      <li><strong>Нагадування</strong>, щоб не забувати робити записи</li>
     </ul>
+  </div>
+
+  <div class="screenshots">
+    <img src="main-screen.png" alt="Головний екран" />
+    <img src="calendar-screen.png" alt="Календар" />
+    <img src="report-screen.png" alt="Звіт" />
   </div>
 
   <div class="buttons">
@@ -163,3 +185,5 @@
       Google Play — скоро
     </a>
   </div>
+
+  <footer>© 2026 Denys Skvortsov</footer>
