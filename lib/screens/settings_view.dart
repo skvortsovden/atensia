@@ -292,7 +292,7 @@ class _SettingsViewState extends State<SettingsView> {
                           ?.copyWith(fontWeight: FontWeight.w600),
                     ),
                     const Spacer(),
-                    const Icon(Icons.arrow_forward_ios, size: 14),
+                    const Icon(Icons.info_outline, size: 18),
                   ],
                 ),
               ),

@@ -14,7 +14,7 @@ import UIKit
     GeneratedPluginRegistrant.register(with: engineBridge.pluginRegistry)
     let channel = FlutterMethodChannel(
       name: "com.texapp.atensia/timezone",
-      binaryMessenger: engineBridge.pluginRegistry.registrar(forPlugin: "timezone").messenger()
+      binaryMessenger: engineBridge.pluginRegistry.registrar(forPlugin: "timezone")!.messenger()
     )
     channel.setMethodCallHandler { call, result in
       if call.method == "getLocalTimezone" {

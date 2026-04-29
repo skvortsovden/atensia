@@ -32,8 +32,8 @@ class AppProvider extends ChangeNotifier {
   int get currentStreak {
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
-    int streak = 0;
-    for (int i = 0; ; i++) {
+    int streak = 1; // today always counts, even without an entry yet
+    for (int i = 1; ; i++) {
       final day = today.subtract(Duration(days: i));
       final entry = _entries[dateKey(day)];
       if (entry == null) break;

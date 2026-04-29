@@ -19,7 +19,11 @@ class TodayView extends StatelessWidget {
         ? S.greetingNamed(provider.username)
         : S.greetingDefault;
     final streak = provider.currentStreak;
-    final displayN = streak >= 2 ? streak : provider.totalFilledDays.clamp(1, double.maxFinite).toInt();
+    final todayFilled = entry.mood.isNotEmpty ||
+        entry.isSick ||
+        entry.hasPain ||
+        entry.habits.values.any((v) => v);
+    final displayN = provider.totalFilledDays + (todayFilled ? 0 : 1);
 
     return SafeArea(
       child: SingleChildScrollView(
@@ -40,24 +44,33 @@ class TodayView extends StatelessWidget {
             ),
             if (displayN >= 1) ...[
               const SizedBox(height: 2),
-              Text.rich(
-                TextSpan(
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Colors.black54,
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Text.rich(
+                    TextSpan(
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: Colors.black54,
+                      ),
+                      children: [
+                        const TextSpan(text: 'Твій '),
+                        TextSpan(
+                          text: '$displayN-й день',
+                          style: const TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                        TextSpan(
+                          text: streak >= 2
+                              ? ' записів поспіль'
+                              : ' записів.',
+                        ),
+                      ],
+                    ),
                   ),
-                  children: [
-                    const TextSpan(text: 'Твій '),
-                    TextSpan(
-                      text: '$displayN-й день',
-                      style: const TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                    TextSpan(
-                      text: streak >= 2
-                          ? ' записів поспіль.'
-                          : ' записів.',
-                    ),
+                  if (streak >= 2) ...[
+                    const SizedBox(width: 3),
+                    const Icon(Icons.arrow_upward, size: 14, color: Colors.black54),
                   ],
-                ),
+                ],
               ),
               const SizedBox(height: 8),
             ],

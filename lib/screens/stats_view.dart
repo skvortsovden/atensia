@@ -60,7 +60,13 @@ class _StatsViewState extends State<StatsView> {
             if (entries.isEmpty)
               _EmptyCard()
             else ...[
+              _FillCard(entries: entries, period: _period, total: _days),
+              const SizedBox(height: 16),
               TrendChartCard(entries: entries, totalDays: _days),
+              const SizedBox(height: 16),
+              _MoodCard(entries: entries, total: _days),
+              const SizedBox(height: 16),
+              _HealthCard(entries: entries, total: _days),
               const SizedBox(height: 16),
               HabitStreakCard(
                 entries: entries,
@@ -71,12 +77,6 @@ class _StatsViewState extends State<StatsView> {
                   _Period.year => S.statsPeriodYear,
                 },
               ),
-              const SizedBox(height: 16),
-              _MoodCard(entries: entries, total: _days),
-              const SizedBox(height: 16),
-              _HealthCard(entries: entries, total: _days),
-              const SizedBox(height: 16),
-              _FillCard(entries: entries, period: _period, total: _days),
             ],
           ],
         ),

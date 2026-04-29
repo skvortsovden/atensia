@@ -16,16 +16,16 @@ import '../providers/app_provider.dart';
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 double _moodY(String mood) {
-  if (mood == S.moodExhausted) return -1;
+  if (mood == S.moodExhausted) return 0;
   if (mood == S.moodGood) return 1;
   if (mood == S.moodEnergetic) return 2;
-  return 0;
+  return 1;
 }
 
 double _healthY(DailyEntry e) {
-  if (e.isSick) return -3;
-  if (e.hasPain) return -2;
-  return 0;
+  if (e.isSick) return -2;
+  if (e.hasPain) return -1;
+  return 1;
 }
 
 Widget _cardShell({required String title, required Widget child}) {
@@ -58,8 +58,9 @@ Widget _cardShell({required String title, required Widget child}) {
 // ── Streak helpers ────────────────────────────────────────────────────────────
 
 int _calcCurrentStreak(List<String> dayKeys, Set<String> filledKeys) {
-  int streak = 0;
-  for (int i = dayKeys.length - 1; i >= 0; i--) {
+  if (dayKeys.isEmpty) return 0;
+  int streak = 1; // today (last key) always counts, even without an entry yet
+  for (int i = dayKeys.length - 2; i >= 0; i--) {
     if (filledKeys.contains(dayKeys[i])) {
       streak++;
     } else {
@@ -198,7 +199,7 @@ class TrendChartCard extends StatelessWidget {
             height: 160,
             child: LineChart(
               LineChartData(
-                minY: -3.5,
+                minY: -2.5,
                 maxY: 2.5,
                 minX: 0,
                 maxX: (xCount - 1).toDouble(),
@@ -207,7 +208,7 @@ class TrendChartCard extends StatelessWidget {
                   show: true,
                   drawVerticalLine: false,
                   horizontalInterval: 1,
-                  checkToShowHorizontalLine: (v) => v != 0,
+                  checkToShowHorizontalLine: (_) => true,
                   getDrawingHorizontalLine: (_) => const FlLine(
                     color: Colors.black12,
                     strokeWidth: 1,
@@ -227,10 +228,9 @@ class TrendChartCard extends StatelessWidget {
                       getTitlesWidget: (value, meta) {
                         final v = value.round();
                         final label = switch (v) {
-                          -3 => S.statsSickLabel,
-                          -2 => S.statsPainLabel,
-                          -1 => S.moodExhausted,
-                          0 => '',
+                          -2 => S.statsSickLabel,
+                          -1 => S.statsPainLabel,
+                          0 => S.moodExhausted,
                           1 => S.moodGood,
                           2 => S.moodEnergetic,
                           _ => '',
@@ -732,6 +732,15 @@ class _StoryPreviewSheetState extends State<_StoryPreviewSheet> {
               ),
             ),
             const SizedBox(height: 12),
+            const Text(
+              'згенерована картинка, якою можна поділитись в соц.мережах або надіслати друзям',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 13,
+                color: Colors.black54,
+              ),
+            ),
+            const SizedBox(height: 12),
             GestureDetector(
               onTap: _sharing ? null : _askFilterEmpty,
               child: Row(
@@ -741,22 +750,22 @@ class _StoryPreviewSheetState extends State<_StoryPreviewSheet> {
                     _excludedHabits.isEmpty
                         ? Icons.filter_list_outlined
                         : Icons.filter_list,
-                    size: 14,
+                    size: 16,
                     color: _excludedHabits.isEmpty
-                        ? Colors.black38
+                        ? Colors.black54
                         : Colors.black,
                   ),
                   const SizedBox(width: 6),
                   Text(
                     'Прибрати пусті дані?',
                     style: TextStyle(
-                      fontSize: 13,
+                      fontSize: 15,
                       color: _excludedHabits.isEmpty
-                          ? Colors.black38
+                          ? Colors.black54
                           : Colors.black,
                       fontWeight: _excludedHabits.isEmpty
-                          ? FontWeight.w400
-                          : FontWeight.w600,
+                          ? FontWeight.w500
+                          : FontWeight.w700,
                     ),
                   ),
                 ],
@@ -1057,15 +1066,19 @@ class _HabitStoryRow extends StatelessWidget {
                       color: Colors.black,
                     ),
                   ),
-                ] else if (maxStreak >= 2)
+                ] else if (maxStreak >= 2) ...[
+                  const Icon(Icons.arrow_upward,
+                      size: 9, color: Colors.black45),
+                  const SizedBox(width: 2),
                   Text(
-                    '${S.statsMaxStreak} $maxStreak ${S.statsDaysSuffix}',
+                    '$maxStreak ${S.statsDaysSuffix}',
                     style: const TextStyle(
                       fontFamily: 'FixelText',
                       fontSize: 9,
                       color: Colors.black45,
                     ),
                   ),
+                ],
               ],
             ),
           ),
