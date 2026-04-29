@@ -23,7 +23,7 @@
       width: 80px;
       height: 80px;
       border-radius: 20px;
-      margin-bottom: 24px;
+      margin-bottom: 16px;
     }
 
     h1 {
@@ -36,7 +36,7 @@
     .tagline {
       font-size: 16px;
       color: #555;
-      margin-bottom: 48px;
+      margin-bottom: 0;
     }
 
     .buttons {
@@ -45,6 +45,7 @@
       gap: 14px;
       width: 100%;
       max-width: 280px;
+      margin-top: 48px;
     }
 
     .btn {
@@ -73,6 +74,13 @@
       border: 2px solid #000;
     }
 
+    .btn-disabled {
+      opacity: 0.35;
+      cursor: default;
+    }
+
+    .btn-disabled:hover { opacity: 0.35; }
+
     .btn svg {
       flex-shrink: 0;
     }
@@ -84,7 +92,7 @@
     }
 
     .description {
-      margin-top: 48px;
+      margin-top: 24px;
       max-width: 480px;
       text-align: left;
     }
@@ -130,7 +138,7 @@
   <p class="tagline">це увага до себе</p>
 
   <div class="description">
-    <h2>Простий. Уважний. Приватний.</h2>
+    <h2><em>Простий.<br>Уважний.<br>Приватний.</em></h2>
     <p>Атенція — це безкоштовний додаток для щоденних записів про твій настрій, самопочуття та дозвілля. Він допоможе тобі помічати зміни та краще розуміти себе. Усі дані зберігаються лише на твоєму пристрої. Додаток не вимагає реєстрації, не збирає жодних даних та не використовує інтернет.</p>
     <ul>
       <li>Щоденні записи про самопочуття та дозвілля</li>
@@ -148,10 +156,10 @@
       </svg>
       App Store
     </a>
-    <a class="btn btn-android" href="https://play.google.com/store/apps/details?id=com.texapp.atensia" target="_blank" rel="noopener">
+    <a class="btn btn-android btn-disabled" href="#" onclick="return false;">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
         <path d="M3.18 23.76c.3.17.64.22.98.15l12.09-6.98-2.54-2.54zm15.8-10.24L16.65 12l2.33-1.52L21 8.71a1.23 1.23 0 0 0 0-2.14l-2.33-1.27zm-2.54-7.27L4.16.07a1.16 1.16 0 0 0-1.17.1l9.67 9.67zm-12.08.92v17.66l9.2-8.83z"/>
       </svg>
-      Google Play
+      Google Play — скоро
     </a>
   </div>
