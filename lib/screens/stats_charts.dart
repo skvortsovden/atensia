@@ -500,12 +500,12 @@ class _HabitStreakCardState extends State<HabitStreakCard> {
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             const Icon(Icons.arrow_upward,
-                                size: 12, color: Colors.black45),
+                                size: 12, color: Colors.black),
                             const SizedBox(width: 2),
                             Text(
                               '$maxStreak ${S.statsDaysSuffix}',
                               style: const TextStyle(
-                                  fontSize: 12, color: Colors.black45),
+                                  fontSize: 12, color: Colors.black),
                             ),
                           ],
                         ),
@@ -1068,14 +1068,14 @@ class _HabitStoryRow extends StatelessWidget {
                   ),
                 ] else if (maxStreak >= 2) ...[
                   const Icon(Icons.arrow_upward,
-                      size: 9, color: Colors.black45),
+                      size: 9, color: Colors.black),
                   const SizedBox(width: 2),
                   Text(
                     '$maxStreak ${S.statsDaysSuffix}',
                     style: const TextStyle(
                       fontFamily: 'FixelText',
                       fontSize: 9,
-                      color: Colors.black45,
+                      color: Colors.black,
                     ),
                   ),
                 ],
