@@ -720,6 +720,7 @@
 				SWIFT_OBJC_BRIDGING_HEADER = "Runner/Runner-Bridging-Header.h";
 				SWIFT_VERSION = 5.0;
 				VERSIONING_SYSTEM = "apple-generic";
+				"EXCLUDED_ARCHS[sdk=iphonesimulator*]" = "x86_64";
 			};
 			name = Release;
 		};
