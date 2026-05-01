@@ -42,16 +42,14 @@ post_install do |installer|
     target.build_configurations.each do |config|
       config.build_settings['CODE_SIGNING_ALLOWED'] = 'NO'
       config.build_settings['DEBUG_INFORMATION_FORMAT'] = 'dwarf-with-dsym'
-      # Exclude simulator architectures from Release/Profile builds so that
-      # x86_64 simulator slices are never included in App Store archives.
       if config.name == 'Release' || config.name == 'Profile'
         config.build_settings['EXCLUDED_ARCHS[sdk=iphonesimulator*]'] = 'x86_64 arm64'
       end
     end
   end
 
-  # Strip simulator (x86_64) slices from any embedded XCFramework / framework
-  # that CocoaPods copies into the archive. Required for App Store validation.
+  # Add a shell script phase to all aggregate targets to strip simulator slices
+  # from embedded frameworks before App Store submission.
   installer.aggregate_targets.each do |aggregate_target|
     aggregate_target.xcconfigs.each do |config_name, xcconfig|
       xcconfig_path = aggregate_target.xcconfig_path(config_name)
