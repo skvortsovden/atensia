@@ -53,6 +53,16 @@ settings_export_title: Експорт даних
 settings_export_message: "Приватність перш за все.\nВсі твої дані зберігаються лише на твоєму телефоні, за допомогою експорту ти можеш отримати доступ до цих даних та використати у власних цілях.\nДані буде збережено у форматі CSV."
 settings_export_save: Зберегти
 settings_export_cancel: Скасувати
+settings_clear_btn: Видалити дані
+settings_clear_title: Видалити всі дані?
+settings_clear_message: "Усі твої записи буде видалено безповоротно.\nБажаєш спочатку зберегти їх у файл?"
+settings_clear_export: Зберегти та видалити
+settings_clear_erase: Просто видалити
+settings_clear_cancel: Скасувати
+settings_clear_export_error: Не вдалось зберегти файл. Дані не було видалено.
+settings_clear_done_title: Дані видалено
+settings_clear_done_message: Усі твої записи було успішно видалено.
+settings_clear_done_btn: Зрозуміло
 settings_version: Версія 1.3.1
 settings_privacy: Усі дані зберігаються лише на цьому пристрої.
 

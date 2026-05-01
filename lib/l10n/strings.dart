@@ -71,6 +71,16 @@ class S {
   static String get settingsExportMessage => _s('settings_export_message');
   static String get settingsExportSave => _s('settings_export_save');
   static String get settingsExportCancel => _s('settings_export_cancel');
+  static String get settingsClearBtn => _s('settings_clear_btn');
+  static String get settingsClearTitle => _s('settings_clear_title');
+  static String get settingsClearMessage => _s('settings_clear_message');
+  static String get settingsClearExport => _s('settings_clear_export');
+  static String get settingsClearErase => _s('settings_clear_erase');
+  static String get settingsClearCancel => _s('settings_clear_cancel');
+  static String get settingsClearExportError => _s('settings_clear_export_error');
+  static String get settingsClearDoneTitle => _s('settings_clear_done_title');
+  static String get settingsClearDoneMessage => _s('settings_clear_done_message');
+  static String get settingsClearDoneBtn => _s('settings_clear_done_btn');
   static String get settingsVersion => _s('settings_version');
   static String get settingsPrivacy => _s('settings_privacy');
 

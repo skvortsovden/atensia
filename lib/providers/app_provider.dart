@@ -160,6 +160,12 @@ class AppProvider extends ChangeNotifier {
 
   void updateEntry(DailyEntry entry) => _saveEntry(entry);
 
+  Future<void> clearAllData() async {
+    _entries = {};
+    await _prefs.remove(_entriesKey);
+    notifyListeners();
+  }
+
   // ── Export ────────────────────────────────────────────────────────────────
 
   String buildCsv() {

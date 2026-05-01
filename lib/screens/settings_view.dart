@@ -31,6 +31,116 @@ class _SettingsViewState extends State<SettingsView> {
     super.dispose();
   }
 
+  Future<void> _showClearDataDialog(BuildContext context) async {
+    final result = await showDialog<String>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+        title: Text(
+          S.settingsClearTitle,
+          style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 18),
+        ),
+        content: Text(
+          S.settingsClearMessage,
+          style: const TextStyle(fontSize: 14, height: 1.6, color: Colors.black87),
+        ),
+        actions: [
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              ElevatedButton(
+                onPressed: () => Navigator.of(ctx).pop('export_erase'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.black,
+                  foregroundColor: Colors.white,
+                  elevation: 0,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+                child: Text(S.settingsClearExport),
+              ),
+              const SizedBox(height: 8),
+              ElevatedButton(
+                onPressed: () => Navigator.of(ctx).pop('erase'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.black,
+                  foregroundColor: Colors.white,
+                  elevation: 0,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+                child: Text(S.settingsClearErase),
+              ),
+              const SizedBox(height: 4),
+              TextButton(
+                onPressed: () => Navigator.of(ctx).pop(null),
+                child: Text(
+                  S.settingsClearCancel,
+                  style: const TextStyle(color: Colors.black54),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+
+    if (result == null) return;
+    if (!context.mounted) return;
+
+    if (result == 'export_erase') {
+      try {
+        await _saveCsv(context);
+      } catch (_) {
+        if (!context.mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(S.settingsClearExportError),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+        return; // abort — do not delete data
+      }
+      if (!context.mounted) return;
+    }
+
+    await context.read<AppProvider>().clearAllData();
+    if (!context.mounted) return;
+
+    await showDialog<void>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+        title: Text(
+          S.settingsClearDoneTitle,
+          style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 18),
+        ),
+        content: Text(
+          S.settingsClearDoneMessage,
+          style: const TextStyle(fontSize: 14, height: 1.6, color: Colors.black87),
+        ),
+        actions: [
+          ElevatedButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.black,
+              foregroundColor: Colors.white,
+              elevation: 0,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+            child: Text(S.settingsClearDoneBtn),
+          ),
+        ],
+      ),
+    );
+  }
+
   Future<void> _showExportDialog(BuildContext context) async {
     await showDialog<void>(
       context: context,
@@ -46,27 +156,33 @@ class _SettingsViewState extends State<SettingsView> {
           style: const TextStyle(fontSize: 14, height: 1.6, color: Colors.black87),
         ),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(),
-            child: Text(
-              S.settingsExportCancel,
-              style: const TextStyle(color: Colors.black54),
-            ),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              Navigator.of(ctx).pop();
-              await _saveCsv(context);
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.black,
-              foregroundColor: Colors.white,
-              elevation: 0,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              ElevatedButton(
+                onPressed: () async {
+                  Navigator.of(ctx).pop();
+                  await _saveCsv(context);
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.black,
+                  foregroundColor: Colors.white,
+                  elevation: 0,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+                child: Text(S.settingsExportSave),
               ),
-            ),
-            child: Text(S.settingsExportSave),
+              const SizedBox(height: 4),
+              TextButton(
+                onPressed: () => Navigator.of(ctx).pop(),
+                child: Text(
+                  S.settingsExportCancel,
+                  style: const TextStyle(color: Colors.black54),
+                ),
+              ),
+            ],
           ),
         ],
       ),
@@ -322,6 +438,34 @@ class _SettingsViewState extends State<SettingsView> {
                     ),
                     const Spacer(),
                     const Icon(Icons.download_outlined, size: 18),
+                  ],
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 8),
+
+            // ── Clear data ──────────────────────────────────────────────────
+            GestureDetector(
+              onTap: () => _showClearDataDialog(context),
+              child: Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                decoration: BoxDecoration(
+                  border: Border.all(color: Colors.black, width: 2),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  children: [
+                    Text(
+                      S.settingsClearBtn,
+                      style: Theme.of(context)
+                          .textTheme
+                          .bodyLarge
+                          ?.copyWith(fontWeight: FontWeight.w600),
+                    ),
+                    const Spacer(),
+                    const Icon(Icons.delete_outline, size: 18),
                   ],
                 ),
               ),
