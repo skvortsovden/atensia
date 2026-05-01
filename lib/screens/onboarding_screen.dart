@@ -61,7 +61,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               padding: const EdgeInsets.only(top: 24, bottom: 8),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
-                children: List.generate(3, (i) {
+                children: List.generate(4, (i) {
                   final active = i == _currentPage;
                   return AnimatedContainer(
                     duration: const Duration(milliseconds: 250),
@@ -87,7 +87,11 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     controller: _nameController,
                     onContinue: _nextPage,
                   ),
-                  _MottoPage(onContinue: _nextPage),
+                  _GreetingPage(
+                    nameController: _nameController,
+                    onContinue: _nextPage,
+                  ),
+                  _NotificationsPage(onContinue: _nextPage),
                   _GuidePage(onFinish: _finish),
                 ],
               ),
@@ -151,67 +155,48 @@ class _NamePage extends StatelessWidget {
   }
 }
 
-// ── Page 2: Motto ───────────────────────────────────────────────────────────
+// ── Page 2: Greeting ────────────────────────────────────────────────────────
 
-class _MottoPage extends StatelessWidget {
-  const _MottoPage({required this.onContinue});
+class _GreetingPage extends StatelessWidget {
+  const _GreetingPage({
+    required this.nameController,
+    required this.onContinue,
+  });
 
+  final TextEditingController nameController;
   final VoidCallback onContinue;
 
   @override
   Widget build(BuildContext context) {
+    final name = nameController.text.trim();
+    final title = name.isNotEmpty
+        ? S.onboardingGreetingTitle(name)
+        : S.onboardingGreetingTitleDefault;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 32),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const SizedBox(height: 20),
-          // ── Logo + tagline lockup ──────────────────────────────────────
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Image.asset('assets/atensia-logo.png', width: 48),
-              const SizedBox(width: 12),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    S.appTitle,
-                    style: const TextStyle(
-                      fontFamily: 'FixelDisplay',
-                      fontSize: 18,
-                      fontWeight: FontWeight.w800,
-                      color: Colors.black,
-                      height: 1.0,
-                    ),
-                  ),
-                  Text(
-                    S.appTagline,
-                    style: const TextStyle(
-                      fontSize: 13,
-                      color: Colors.black45,
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-          const Spacer(),
-          // ── Motto ─────────────────────────────────────────────────────
+          const Spacer(flex: 2),
           Text(
-            S.onboardingMottoTitle,
+            title,
             style: const TextStyle(
-              fontSize: 44,
+              fontSize: 36,
               fontWeight: FontWeight.w800,
-              fontStyle: FontStyle.italic,
-              color: Colors.black,
-              height: 1.25,
-              letterSpacing: -0.5,
+              height: 1.2,
             ),
           ),
-          const Spacer(),
-          _PrimaryButton(label: S.onboardingMottoBtn, onTap: onContinue),
+          const SizedBox(height: 24),
+          Text(
+            S.onboardingGreetingText,
+            style: const TextStyle(
+              fontSize: 18,
+              height: 1.5,
+              color: Colors.black87,
+            ),
+          ),
+          const Spacer(flex: 3),
+          _PrimaryButton(label: S.onboardingGreetingBtn, onTap: onContinue),
           const SizedBox(height: 32),
         ],
       ),
@@ -219,7 +204,127 @@ class _MottoPage extends StatelessWidget {
   }
 }
 
-// ── Page 3: Guide ───────────────────────────────────────────────────────────
+// ── Page 3: Notifications ───────────────────────────────────────────────────
+
+class _NotificationsPage extends StatelessWidget {
+  const _NotificationsPage({required this.onContinue});
+
+  final VoidCallback onContinue;
+
+  @override
+  Widget build(BuildContext context) {
+    return Consumer<AppProvider>(
+      builder: (context, provider, _) {
+        return Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 32),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Spacer(flex: 2),
+              Text(
+                S.onboardingNotificationsTitle,
+                style: const TextStyle(
+                  fontSize: 28,
+                  fontWeight: FontWeight.w700,
+                  height: 1.2,
+                ),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                S.onboardingNotificationsDesc,
+                style: const TextStyle(
+                  fontSize: 16,
+                  height: 1.5,
+                  color: Colors.black54,
+                ),
+              ),
+              const SizedBox(height: 32),
+              // Toggle row
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                decoration: BoxDecoration(
+                  border: Border.all(color: Colors.black, width: 2),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  children: [
+                    Text(
+                      S.settingsReminders,
+                      style: Theme.of(context)
+                          .textTheme
+                          .bodyLarge
+                          ?.copyWith(fontWeight: FontWeight.w600),
+                    ),
+                    const Spacer(),
+                    Switch(
+                      value: provider.remindersEnabled,
+                      onChanged: (v) => provider.setReminders(v),
+                      activeColor: Colors.black,
+                      activeTrackColor: Colors.black26,
+                      inactiveThumbColor: Colors.black38,
+                      inactiveTrackColor: Colors.black12,
+                    ),
+                  ],
+                ),
+              ),
+              if (provider.remindersEnabled) ...[
+                const SizedBox(height: 8),
+                GestureDetector(
+                  onTap: () async {
+                    final picked = await showTimePicker(
+                      context: context,
+                      initialTime: provider.reminderTime,
+                      builder: (context, child) => MediaQuery(
+                        data: MediaQuery.of(context)
+                            .copyWith(alwaysUse24HourFormat: true),
+                        child: child!,
+                      ),
+                    );
+                    if (picked != null) provider.setReminderTime(picked);
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 16, vertical: 14),
+                    decoration: BoxDecoration(
+                      border: Border.all(color: Colors.black, width: 2),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Row(
+                      children: [
+                        Text(
+                          S.settingsReminderTime,
+                          style: Theme.of(context).textTheme.bodyLarge,
+                        ),
+                        const Spacer(),
+                        Text(
+                          '${provider.reminderTime.hour.toString().padLeft(2, '0')}:${provider.reminderTime.minute.toString().padLeft(2, '0')}',
+                          style: Theme.of(context)
+                              .textTheme
+                              .bodyLarge
+                              ?.copyWith(fontWeight: FontWeight.w700),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+              const Spacer(flex: 3),
+              _PrimaryButton(
+                label: provider.remindersEnabled
+                    ? S.onboardingNotificationsDone
+                    : S.onboardingNotificationsSkip,
+                onTap: onContinue,
+              ),
+              const SizedBox(height: 32),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
+// ── Page 4: Guide ───────────────────────────────────────────────────────────
 
 class _GuidePage extends StatelessWidget {
   const _GuidePage({required this.onFinish});

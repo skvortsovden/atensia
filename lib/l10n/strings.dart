@@ -19,8 +19,20 @@ class S {
   static String get onboardingNameTitle => _s('onboarding_name_title');
   static String get onboardingNameHint => _s('onboarding_name_hint');
   static String get onboardingNameBtn => _s('onboarding_name_btn');
-  static String get onboardingMottoTitle => _s('onboarding_motto_title');
-  static String get onboardingMottoBtn => _s('onboarding_motto_btn');
+  static String onboardingGreetingTitle(String name) =>
+      _s('onboarding_greeting_title').replaceFirst('{name}', name);
+  static String get onboardingGreetingTitleDefault =>
+      _s('onboarding_greeting_title_default');
+  static String get onboardingGreetingText => _s('onboarding_greeting_text');
+  static String get onboardingGreetingBtn => _s('onboarding_greeting_btn');
+  static String get onboardingNotificationsTitle =>
+      _s('onboarding_notifications_title');
+  static String get onboardingNotificationsDesc =>
+      _s('onboarding_notifications_desc');
+  static String get onboardingNotificationsSkip =>
+      _s('onboarding_notifications_skip');
+  static String get onboardingNotificationsDone =>
+      _s('onboarding_notifications_done');
   static String get onboardingGuideTitle => _s('onboarding_guide_title');
   static String get onboardingGuideText => _s('onboarding_guide_text');
   static String get onboardingGuideBtn => _s('onboarding_guide_btn');

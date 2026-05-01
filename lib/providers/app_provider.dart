@@ -15,11 +15,20 @@ class AppProvider extends ChangeNotifier {
 
   late SharedPreferences _prefs;
 
-  static const _entriesKey = 'proso_entries';
-  static const _usernameKey = 'proso_username';
-  static const _remindersKey = 'proso_reminders';
-  static const _reminderTimeKey = 'proso_reminder_time';
-  static const _launchedKey = 'proso_launched';
+  static const _entriesKey = 'atensia_entries';
+  static const _usernameKey = 'atensia_username';
+  static const _remindersKey = 'atensia_reminders';
+  static const _reminderTimeKey = 'atensia_reminder_time';
+  static const _launchedKey = 'atensia_launched';
+
+  // Old keys from when the app was named Proso — used for one-time migration
+  static const _oldKeys = {
+    'proso_entries': 'atensia_entries',
+    'proso_username': 'atensia_username',
+    'proso_reminders': 'atensia_reminders',
+    'proso_reminder_time': 'atensia_reminder_time',
+    'proso_launched': 'atensia_launched',
+  };
 
   // ── Getters ──────────────────────────────────────────────────────────────
 
@@ -60,6 +69,15 @@ class AppProvider extends ChangeNotifier {
 
   Future<void> init() async {
     _prefs = await SharedPreferences.getInstance();
+    // One-time migration from proso_* keys to atensia_*
+    for (final e in _oldKeys.entries) {
+      if (_prefs.containsKey(e.key) && !_prefs.containsKey(e.value)) {
+        final v = _prefs.get(e.key);
+        if (v is String) await _prefs.setString(e.value, v);
+        if (v is bool) await _prefs.setBool(e.value, v);
+      }
+      await _prefs.remove(e.key);
+    }
     _username = _prefs.getString(_usernameKey) ?? '';
     _remindersEnabled = _prefs.getBool(_remindersKey) ?? false;
     final timeStr = _prefs.getString(_reminderTimeKey);
@@ -161,7 +179,11 @@ class AppProvider extends ChangeNotifier {
     _prefs.setBool(_launchedKey, true);
   }
 
-  void setReminders(bool enabled) {
+  Future<void> setReminders(bool enabled) async {
+    if (enabled) {
+      final granted = await NotificationService.instance.requestPermission();
+      if (!granted) return;
+    }
     _remindersEnabled = enabled;
     _prefs.setBool(_remindersKey, enabled);
     NotificationService.instance.schedule(_reminderTime, enabled: enabled);
