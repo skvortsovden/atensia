@@ -166,6 +166,82 @@ class AppProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  // ── Import ────────────────────────────────────────────────────────────────
+
+  /// Parses [csv] content and merges it into existing entries.
+  /// Returns null on success, or an error message string on failure.
+  String? importCsv(String csv) {
+    final lines = csv
+        .split('\n')
+        .map((l) => l.trimRight())
+        .where((l) => l.isNotEmpty)
+        .toList();
+
+    if (lines.isEmpty) return 'CSV is empty';
+
+    final header = _parseCsvRow(lines.first);
+    if (header.length < 4) return 'Invalid CSV header';
+    if (header[0] != 'date' || header[1] != 'mood' ||
+        header[2] != 'sick'  || header[3] != 'pain') {
+      return 'CSV must start with columns: date,mood,sick,pain';
+    }
+
+    final habitCols = header.sublist(4);
+    final imported = <String, DailyEntry>{};
+
+    for (int i = 1; i < lines.length; i++) {
+      final cells = _parseCsvRow(lines[i]);
+      if (cells.length != header.length) {
+        return 'Row ${i + 1} has ${cells.length} columns, expected ${header.length}';
+      }
+
+      final date = DateTime.tryParse(cells[0]);
+      if (date == null) return 'Row ${i + 1}: invalid date "${cells[0]}"';
+
+      final mood  = cells[1];
+      final isSick  = cells[2].toLowerCase() == 'true';
+      final hasPain = cells[3].toLowerCase() == 'true';
+
+      final habits = <String, bool>{};
+      for (int j = 0; j < habitCols.length; j++) {
+        habits[habitCols[j]] = cells[4 + j].toLowerCase() == 'true';
+      }
+
+      final key = dateKey(date);
+      imported[key] = DailyEntry(
+        date: DateTime(date.year, date.month, date.day),
+        mood: mood,
+        isSick: isSick,
+        hasPain: hasPain,
+        habits: habits,
+      );
+    }
+
+    _entries = {..._entries, ...imported};
+    _persistEntries();
+    notifyListeners();
+    return null;
+  }
+
+  /// Returns a template CSV with just the header row + 3 blank example rows.
+  String buildTemplateCsv() {
+    final habitNames = DailyEntry.defaultHabits;
+    final headerCells = [
+      'date', 'mood', 'sick', 'pain',
+      ...habitNames.map((h) => _csvCell(h)),
+    ];
+    final buf = StringBuffer();
+    buf.writeln(headerCells.join(','));
+    for (int i = 0; i < 3; i++) {
+      final emptyCells = [
+        '2026-01-0${i + 1}', '', 'false', 'false',
+        ...habitNames.map((_) => 'false'),
+      ];
+      buf.writeln(emptyCells.join(','));
+    }
+    return buf.toString();
+  }
+
   // ── Export ────────────────────────────────────────────────────────────────
 
   String buildCsv() {
@@ -205,6 +281,40 @@ class AppProvider extends ChangeNotifier {
       return '"${value.replaceAll('"', '""')}"';
     }
     return value;
+  }
+
+  /// Parses a single CSV row, handling quoted fields.
+  static List<String> _parseCsvRow(String line) {
+    final fields = <String>[];
+    final buf = StringBuffer();
+    bool inQuotes = false;
+
+    for (int i = 0; i < line.length; i++) {
+      final ch = line[i];
+      if (inQuotes) {
+        if (ch == '"') {
+          if (i + 1 < line.length && line[i + 1] == '"') {
+            buf.write('"');
+            i++;
+          } else {
+            inQuotes = false;
+          }
+        } else {
+          buf.write(ch);
+        }
+      } else {
+        if (ch == '"') {
+          inQuotes = true;
+        } else if (ch == ',') {
+          fields.add(buf.toString());
+          buf.clear();
+        } else {
+          buf.write(ch);
+        }
+      }
+    }
+    fields.add(buf.toString());
+    return fields;
   }
 
   // ── Persistence ───────────────────────────────────────────────────────────

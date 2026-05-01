@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
@@ -29,6 +30,186 @@ class _SettingsViewState extends State<SettingsView> {
   void dispose() {
     _nameController.dispose();
     super.dispose();
+  }
+
+  Future<void> _showImportDialog(BuildContext context) async {
+    final action = await showDialog<String>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+        title: Text(
+          S.settingsImportTitle,
+          style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 18),
+        ),
+        content: Text(
+          S.settingsImportMessage,
+          style: const TextStyle(fontSize: 14, height: 1.6, color: Colors.black87),
+        ),
+        actions: [
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              ElevatedButton(
+                onPressed: () => Navigator.of(ctx).pop('choose'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.black,
+                  foregroundColor: Colors.white,
+                  elevation: 0,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+                child: Text(S.settingsImportChoose),
+              ),
+              const SizedBox(height: 8),
+              ElevatedButton(
+                onPressed: () => Navigator.of(ctx).pop('template'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.black,
+                  foregroundColor: Colors.white,
+                  elevation: 0,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+                child: Text(S.settingsImportTemplate),
+              ),
+              const SizedBox(height: 4),
+              TextButton(
+                onPressed: () => Navigator.of(ctx).pop(null),
+                child: Text(
+                  S.settingsImportCancel,
+                  style: const TextStyle(color: Colors.black54),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+
+    if (action == null) return;
+    if (!context.mounted) return;
+
+    if (action == 'template') {
+      await _downloadTemplate(context);
+      return;
+    }
+
+    // Pick file
+    final result = await FilePicker.platform.pickFiles(
+      type: FileType.custom,
+      allowedExtensions: ['csv'],
+      withData: true,
+    );
+    if (result == null || result.files.isEmpty) return;
+    if (!context.mounted) return;
+
+    final bytes = result.files.first.bytes;
+    final path  = result.files.first.path;
+    final String csvContent;
+    if (bytes != null) {
+      csvContent = String.fromCharCodes(bytes);
+    } else if (path != null) {
+      csvContent = await File(path).readAsString();
+    } else {
+      return;
+    }
+    if (!context.mounted) return;
+
+    final error = context.read<AppProvider>().importCsv(csvContent);
+    if (!context.mounted) return;
+
+    if (error != null) {
+      await showDialog<void>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          backgroundColor: Colors.white,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+          title: Text(
+            S.settingsImportErrorTitle,
+            style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 18),
+          ),
+          content: Text(
+            error,
+            style: const TextStyle(fontSize: 14, height: 1.6, color: Colors.black87),
+          ),
+          actions: [
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                ElevatedButton(
+                  onPressed: () => Navigator.of(ctx).pop(),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.black,
+                    foregroundColor: Colors.white,
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                  child: Text(S.settingsImportErrorBtn),
+                ),
+              ],
+            ),
+          ],
+        ),
+      );
+      return;
+    }
+
+    await showDialog<void>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+        title: Text(
+          S.settingsImportDoneTitle,
+          style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 18),
+        ),
+        content: Text(
+          S.settingsImportDoneMessage,
+          style: const TextStyle(fontSize: 14, height: 1.6, color: Colors.black87),
+        ),
+        actions: [
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              ElevatedButton(
+                onPressed: () => Navigator.of(ctx).pop(),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.black,
+                  foregroundColor: Colors.white,
+                  elevation: 0,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+                child: Text(S.settingsImportDoneBtn),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _downloadTemplate(BuildContext context) async {
+    final csv = context.read<AppProvider>().buildTemplateCsv();
+    final dir = await getTemporaryDirectory();
+    final file = File('${dir.path}/atensia-import-template.csv');
+    await file.writeAsString(csv, flush: true);
+
+    final box = _exportKey.currentContext?.findRenderObject() as RenderBox?;
+    final origin = box != null
+        ? box.localToGlobal(Offset.zero) & box.size
+        : const Rect.fromLTWH(0, 0, 1, 1);
+
+    await Share.shareXFiles(
+      [XFile(file.path, mimeType: 'text/csv')],
+      sharePositionOrigin: origin,
+    );
   }
 
   Future<void> _showClearDataDialog(BuildContext context) async {
@@ -333,6 +514,91 @@ class _SettingsViewState extends State<SettingsView> {
 
             const SizedBox(height: 48),
 
+            // ── Export ───────────────────────────────────────────────────────
+            GestureDetector(
+              key: _exportKey,
+              onTap: () => _showExportDialog(context),
+              child: Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                decoration: BoxDecoration(
+                  border: Border.all(color: Colors.black, width: 2),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  children: [
+                    Text(
+                      S.settingsExportBtn,
+                      style: Theme.of(context)
+                          .textTheme
+                          .bodyLarge
+                          ?.copyWith(fontWeight: FontWeight.w600),
+                    ),
+                    const Spacer(),
+                    const Icon(Icons.download_outlined, size: 18),
+                  ],
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 8),
+
+            // ── Import ───────────────────────────────────────────────────────
+            GestureDetector(
+              onTap: () => _showImportDialog(context),
+              child: Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                decoration: BoxDecoration(
+                  border: Border.all(color: Colors.black, width: 2),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  children: [
+                    Text(
+                      S.settingsImportBtn,
+                      style: Theme.of(context)
+                          .textTheme
+                          .bodyLarge
+                          ?.copyWith(fontWeight: FontWeight.w600),
+                    ),
+                    const Spacer(),
+                    const Icon(Icons.upload_outlined, size: 18),
+                  ],
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 8),
+
+            // ── Clear data ──────────────────────────────────────────────────
+            GestureDetector(
+              onTap: () => _showClearDataDialog(context),
+              child: Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                decoration: BoxDecoration(
+                  border: Border.all(color: Colors.black, width: 2),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  children: [
+                    Text(
+                      S.settingsClearBtn,
+                      style: Theme.of(context)
+                          .textTheme
+                          .bodyLarge
+                          ?.copyWith(fontWeight: FontWeight.w600),
+                    ),
+                    const Spacer(),
+                    const Icon(Icons.delete_outline, size: 18),
+                  ],
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 32),
+
             // ── Guide ───────────────────────────────────────────────────────
             GestureDetector(
               onTap: () => showModalBottomSheet(
@@ -409,63 +675,6 @@ class _SettingsViewState extends State<SettingsView> {
                     ),
                     const Spacer(),
                     const Icon(Icons.info_outline, size: 18),
-                  ],
-                ),
-              ),
-            ),
-
-            const SizedBox(height: 8),
-
-            // ── Export ───────────────────────────────────────────────────────
-            GestureDetector(
-              key: _exportKey,
-              onTap: () => _showExportDialog(context),
-              child: Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                decoration: BoxDecoration(
-                  border: Border.all(color: Colors.black, width: 2),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Row(
-                  children: [
-                    Text(
-                      S.settingsExportBtn,
-                      style: Theme.of(context)
-                          .textTheme
-                          .bodyLarge
-                          ?.copyWith(fontWeight: FontWeight.w600),
-                    ),
-                    const Spacer(),
-                    const Icon(Icons.download_outlined, size: 18),
-                  ],
-                ),
-              ),
-            ),
-
-            const SizedBox(height: 8),
-
-            // ── Clear data ──────────────────────────────────────────────────
-            GestureDetector(
-              onTap: () => _showClearDataDialog(context),
-              child: Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                decoration: BoxDecoration(
-                  border: Border.all(color: Colors.black, width: 2),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Row(
-                  children: [
-                    Text(
-                      S.settingsClearBtn,
-                      style: Theme.of(context)
-                          .textTheme
-                          .bodyLarge
-                          ?.copyWith(fontWeight: FontWeight.w600),
-                    ),
-                    const Spacer(),
-                    const Icon(Icons.delete_outline, size: 18),
                   ],
                 ),
               ),

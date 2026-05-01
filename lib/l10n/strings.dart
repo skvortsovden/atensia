@@ -81,6 +81,17 @@ class S {
   static String get settingsClearDoneTitle => _s('settings_clear_done_title');
   static String get settingsClearDoneMessage => _s('settings_clear_done_message');
   static String get settingsClearDoneBtn => _s('settings_clear_done_btn');
+  static String get settingsImportBtn => _s('settings_import_btn');
+  static String get settingsImportTitle => _s('settings_import_title');
+  static String get settingsImportMessage => _s('settings_import_message');
+  static String get settingsImportTemplate => _s('settings_import_template');
+  static String get settingsImportChoose => _s('settings_import_choose');
+  static String get settingsImportCancel => _s('settings_import_cancel');
+  static String get settingsImportDoneTitle => _s('settings_import_done_title');
+  static String get settingsImportDoneMessage => _s('settings_import_done_message');
+  static String get settingsImportDoneBtn => _s('settings_import_done_btn');
+  static String get settingsImportErrorTitle => _s('settings_import_error_title');
+  static String get settingsImportErrorBtn => _s('settings_import_error_btn');
   static String get settingsVersion => _s('settings_version');
   static String get settingsPrivacy => _s('settings_privacy');
 

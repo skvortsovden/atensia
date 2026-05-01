@@ -17,7 +17,7 @@ class StatsView extends StatefulWidget {
 }
 
 class _StatsViewState extends State<StatsView> {
-  _Period _period = _Period.month;
+  _Period _period = _Period.week;
 
   int get _days => switch (_period) {
         _Period.week => 7,
