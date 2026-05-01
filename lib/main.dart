@@ -92,7 +92,7 @@ class AtensiaApp extends StatelessWidget {
           headlineLarge: TextStyle(
             fontFamily: 'FixelDisplay',
             fontWeight: FontWeight.w700,
-            fontSize: 30,
+            fontSize: 24,
             color: Colors.black,
             height: 1.2,
           ),

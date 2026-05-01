@@ -64,7 +64,7 @@ class _StatsViewState extends State<StatsView> {
               const SizedBox(height: 16),
               TrendChartCard(entries: entries, totalDays: _days),
               const SizedBox(height: 16),
-              _MoodCard(entries: entries, total: _days),
+              _CircumplexCard(entries: entries),
               const SizedBox(height: 16),
               _HealthCard(entries: entries, total: _days),
               const SizedBox(height: 16),
@@ -218,33 +218,45 @@ class _StatRow extends StatelessWidget {
   }
 }
 
-// ── Mood card ─────────────────────────────────────────────────────────────────
+// ── Circumplex quadrant distribution card ─────────────────────────────────────
 
-class _MoodCard extends StatelessWidget {
-  const _MoodCard({required this.entries, required this.total});
+class _CircumplexCard extends StatelessWidget {
+  const _CircumplexCard({required this.entries});
 
   final List<DailyEntry> entries;
-  final int total;
 
   @override
   Widget build(BuildContext context) {
-    final filled = entries.where((e) => e.mood.isNotEmpty).toList();
-    final counts = <String, int>{};
-    for (final e in filled) {
-      counts[e.mood] = (counts[e.mood] ?? 0) + 1;
+    final withState = entries.where((e) => e.hasState).toList();
+    final total = withState.length;
+
+    if (total == 0) {
+      return _Card(
+        title: S.statsSectionMood,
+        child: SizedBox(
+          height: 60,
+          child: Center(
+            child: Text(
+              S.circumplexNoData,
+              style: const TextStyle(color: Colors.black38, fontSize: 14),
+            ),
+          ),
+        ),
+      );
     }
-    final moods = S.moods;
+
+    final counts = <String, int>{};
+    for (final e in withState) {
+      final label = S.circumplexQuadrant(e.valence!, e.arousal!);
+      counts[label] = (counts[label] ?? 0) + 1;
+    }
+    final sorted = counts.entries.toList()
+      ..sort((a, b) => b.value.compareTo(a.value));
 
     return _Card(
       title: S.statsSectionMood,
       child: Column(
-        children: moods
-            .map((m) => _StatRow(
-                  label: m,
-                  count: counts[m] ?? 0,
-                  total: total,
-                ))
-            .toList(),
+        children: sorted.map((e) => _StatRow(label: e.key, count: e.value, total: total)).toList(),
       ),
     );
   }

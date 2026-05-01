@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 import '../l10n/strings.dart';
 import '../models/daily_entry.dart';
 import '../providers/app_provider.dart';
+import 'circumplex_buttons.dart';
 
 class TodayView extends StatelessWidget {
   const TodayView({super.key});
@@ -15,11 +16,8 @@ class TodayView extends StatelessWidget {
     final provider = context.watch<AppProvider>();
     final today = _today();
     final entry = provider.getOrCreateEntry(today);
-    final greeting = provider.username.isNotEmpty
-        ? S.greetingNamed(provider.username)
-        : S.greetingDefault;
     final streak = provider.currentStreak;
-    final todayFilled = entry.mood.isNotEmpty ||
+    final todayFilled = entry.hasState ||
         entry.isSick ||
         entry.hasPain ||
         entry.habits.values.any((v) => v);
@@ -31,57 +29,58 @@ class TodayView extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              greeting,
-              style: Theme.of(context).textTheme.headlineMedium,
-            ),
-            const SizedBox(height: 4),
-            Text(
-              '${S.todayDatePrefix} ${DateFormat('d MMMM', 'uk').format(today)}.',
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: Colors.black54,
-              ),
-            ),
-            if (displayN >= 1) ...[
-              const SizedBox(height: 2),
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Text.rich(
-                    TextSpan(
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: Colors.black54,
-                      ),
-                      children: [
-                        const TextSpan(text: 'Твій '),
-                        TextSpan(
-                          text: '$displayN-й день',
-                          style: const TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                        TextSpan(
-                          text: streak >= 2
-                              ? ' записів поспіль'
-                              : ' записів.',
-                        ),
-                      ],
-                    ),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Вітаю,',
+                  style: Theme.of(context).textTheme.headlineLarge,
+                ),
+                Text(
+                  provider.username.isNotEmpty ? provider.username : 'друже!',
+                  style: Theme.of(context).textTheme.headlineLarge,
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  '${S.todayDatePrefix} ${DateFormat('d MMMM', 'uk').format(today)}.',
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: Colors.black54,
                   ),
-                  if (streak >= 2) ...[
-                    const SizedBox(width: 3),
-                    const Icon(Icons.arrow_upward, size: 14, color: Colors.black54),
-                  ],
-                ],
-              ),
-              const SizedBox(height: 8),
-            ],
-            const SizedBox(height: 6),
-            Text(
-              S.todaySubtitle,
-              style: Theme.of(context).textTheme.headlineLarge,
+                ),
+                if (displayN >= 1)
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Text.rich(
+                        TextSpan(
+                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            color: Colors.black54,
+                          ),
+                          children: [
+                            TextSpan(
+                              text: '$displayN-й день',
+                              style: const TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                            TextSpan(
+                              text: streak >= 2 ? ' записів поспіль.' : ' записів.',
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+              ],
             ),
-
-            const SizedBox(height: 10),
-            _MoodSelector(entry: entry, date: today),
+            const SizedBox(height: 6),
+            CircumplexButtons(
+              title: S.todaySubtitle,
+              valence: entry.valence,
+              arousal: entry.arousal,
+              onValenceChanged: (v) => provider.setValence(today, v),
+              onArousalChanged: (a) => provider.setArousal(today, a),
+              onValenceCleared: () => provider.clearValence(today),
+              onArousalCleared: () => provider.clearArousal(today),
+            ),
 
             const SizedBox(height: 28),
             _SectionLabel(S.todaySectionHealth),
@@ -115,65 +114,6 @@ class _SectionLabel extends StatelessWidget {
     return Text(
       text,
       style: Theme.of(context).textTheme.headlineLarge,
-    );
-  }
-}
-
-// ── Mood selector ─────────────────────────────────────────────────────────────
-
-class _MoodSelector extends StatelessWidget {
-  final DailyEntry entry;
-  final DateTime date;
-
-  const _MoodSelector({required this.entry, required this.date});
-
-  static List<String> get _moods => S.moods;
-
-  @override
-  Widget build(BuildContext context) {
-    final provider = context.read<AppProvider>();
-
-    return GridView.builder(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 3,
-        childAspectRatio: 2.2,
-        crossAxisSpacing: 8,
-        mainAxisSpacing: 8,
-      ),
-      itemCount: _moods.length,
-      itemBuilder: (context, i) {
-        final mood = _moods[i];
-        final selected = entry.mood == mood;
-
-        return GestureDetector(
-          onTap: () {
-            HapticFeedback.mediumImpact();
-            provider.setMood(date, selected ? '' : mood);
-          },
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 140),
-            decoration: BoxDecoration(
-              color: selected ? Colors.black : Colors.white,
-              border: Border.all(color: Colors.black, width: 2),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            alignment: Alignment.center,
-            padding: const EdgeInsets.symmetric(horizontal: 8),
-            child: Text(
-              mood,
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                color: selected ? Colors.white : Colors.black,
-                fontWeight: FontWeight.w600,
-                fontSize: 13,
-                height: 1.3,
-              ),
-            ),
-          ),
-        );
-      },
     );
   }
 }

@@ -189,7 +189,7 @@ class _DayMarker extends StatelessWidget {
       );
     }
 
-    if (habitsCompleted > 0 || entry.mood.isNotEmpty) {
+    if (habitsCompleted > 0 || entry.hasState) {
       // Some activity: outline circle
       return Container(
         width: 6,
@@ -216,7 +216,7 @@ class _DayDetail extends StatelessWidget {
 
   bool _hasData(DailyEntry? entry) {
     if (entry == null) return false;
-    return entry.mood.isNotEmpty ||
+    return entry.hasState ||
         entry.isSick ||
         entry.hasPain ||
         entry.habits.values.any((v) => v);
@@ -328,7 +328,8 @@ class _DayDetail extends StatelessWidget {
         .toList();
 
     final rows = <_InfoRow>[
-      if (e.mood.isNotEmpty) _InfoRow(S.calendarRowFeel, e.mood),
+      if (e.hasState)
+        _InfoRow(S.calendarRowFeel, S.circumplexQuadrant(e.valence!, e.arousal!)),
       if (healthItems.isNotEmpty)
         _InfoRow(S.calendarRowHealth, healthItems.join(', ')),
       if (doneHabits.isNotEmpty)

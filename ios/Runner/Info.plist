@@ -79,5 +79,7 @@
 		</array>
 		<key>UIStatusBarHidden</key>
 		<false/>
+		<key>NSPhotoLibraryUsageDescription</key>
+		<string>Додаток не використовує бібліотеку фотографій. Цей рядок потрібен для роботи функції вибору файлів.</string>
 	</dict>
 </plist>

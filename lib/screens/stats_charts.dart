@@ -15,19 +15,6 @@ import '../providers/app_provider.dart';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-double _moodY(String mood) {
-  if (mood == S.moodExhausted) return 0;
-  if (mood == S.moodGood) return 1;
-  if (mood == S.moodEnergetic) return 2;
-  return 1;
-}
-
-double _healthY(DailyEntry e) {
-  if (e.isSick) return -2;
-  if (e.hasPain) return -1;
-  return 1;
-}
-
 Widget _cardShell({required String title, required Widget child}) {
   return Container(
     width: double.infinity,
@@ -102,7 +89,7 @@ class TrendChartCard extends StatelessWidget {
     final start = today.subtract(Duration(days: totalDays - 1));
     final aggregate = totalDays > 30;
 
-    final List<FlSpot> moodSpots;
+    final List<FlSpot> valenceSpots;
     final List<FlSpot> healthSpots;
     final int xCount;
     final String Function(double) xLabel;
@@ -111,20 +98,19 @@ class TrendChartCard extends StatelessWidget {
       final entryMap = {
         for (final e in entries) AppProvider.dateKey(e.date): e
       };
-      final moodList = <FlSpot>[];
+      final valenceList = <FlSpot>[];
       final healthList = <FlSpot>[];
 
       for (int i = 0; i < totalDays; i++) {
         final d = start.add(Duration(days: i));
         final e = entryMap[AppProvider.dateKey(d)];
-        if (e != null) {
-          if (e.mood.isNotEmpty) {
-            moodList.add(FlSpot(i.toDouble(), _moodY(e.mood)));
-          }
-          healthList.add(FlSpot(i.toDouble(), _healthY(e)));
+        if (e != null && e.valence != null) {
+          valenceList.add(FlSpot(i.toDouble(), e.valence!));
         }
+        final h = (e != null && (e.isSick || e.hasPain)) ? -1.0 : 0.0;
+        healthList.add(FlSpot(i.toDouble(), h));
       }
-      moodSpots = moodList;
+      valenceSpots = valenceList;
       healthSpots = healthList;
       xCount = totalDays;
 
@@ -146,49 +132,35 @@ class TrendChartCard extends StatelessWidget {
         weeks.putIfAbsent(wi, () => []).add(e);
       }
       final wCount = (totalDays / 7).ceil();
-      final moodList = <FlSpot>[];
+      final valenceList = <FlSpot>[];
       final healthList = <FlSpot>[];
 
       for (int wi = 0; wi < wCount; wi++) {
         final we = weeks[wi] ?? [];
-        final moodE = we.where((e) => e.mood.isNotEmpty).toList();
-        if (moodE.isNotEmpty) {
-          final avg =
-              moodE.map((e) => _moodY(e.mood)).reduce((a, b) => a + b) /
-                  moodE.length;
-          moodList.add(FlSpot(wi.toDouble(), avg));
-        }
         if (we.isNotEmpty) {
-          final minH = we.map(_healthY).reduce((a, b) => a < b ? a : b);
-          healthList.add(FlSpot(wi.toDouble(), minH));
+          final vEntries = we.where((e) => e.valence != null).toList();
+          if (vEntries.isNotEmpty) {
+            final avgV = vEntries.map((e) => e.valence!).reduce((a, b) => a + b) / vEntries.length;
+            valenceList.add(FlSpot(wi.toDouble(), avgV));
+          }
         }
+        final daysInWeek = (totalDays - wi * 7).clamp(0, 7);
+        final sickCount = we.where((e) => e.isSick || e.hasPain).length;
+        final healthVal = sickCount > 0 ? -(sickCount / daysInWeek) : 0.0;
+        healthList.add(FlSpot(wi.toDouble(), healthVal));
       }
-      moodSpots = moodList;
+      valenceSpots = valenceList;
       healthSpots = healthList;
       xCount = wCount;
 
       xLabel = (v) {
         final wi = v.round();
         final d = start.add(Duration(days: wi * 7));
-        // Show month name only at month boundary
         if (wi == 0) return DateFormat('MMM', 'uk').format(d);
         final prev = start.add(Duration(days: (wi - 1) * 7));
         if (d.month != prev.month) return DateFormat('MMM', 'uk').format(d);
         return '';
       };
-    }
-
-    if (moodSpots.isEmpty && healthSpots.isEmpty) {
-      return _cardShell(
-        title: S.statsSectionTrend,
-        child: const SizedBox(
-          height: 100,
-          child: Center(
-            child: Text('—',
-                style: TextStyle(fontSize: 24, color: Colors.black26)),
-          ),
-        ),
-      );
     }
 
     return _cardShell(
@@ -199,8 +171,8 @@ class TrendChartCard extends StatelessWidget {
             height: 160,
             child: LineChart(
               LineChartData(
-                minY: -2.5,
-                maxY: 2.5,
+                minY: -1.4,
+                maxY: 1.4,
                 minX: 0,
                 maxX: (xCount - 1).toDouble(),
                 clipData: const FlClipData.all(),
@@ -208,10 +180,10 @@ class TrendChartCard extends StatelessWidget {
                   show: true,
                   drawVerticalLine: false,
                   horizontalInterval: 1,
-                  checkToShowHorizontalLine: (_) => true,
-                  getDrawingHorizontalLine: (_) => const FlLine(
-                    color: Colors.black12,
-                    strokeWidth: 1,
+                  checkToShowHorizontalLine: (v) => v == -1 || v == 0 || v == 1,
+                  getDrawingHorizontalLine: (v) => FlLine(
+                    color: v == 0 ? Colors.black26 : Colors.black12,
+                    strokeWidth: v == 0 ? 1.5 : 1,
                   ),
                 ),
                 borderData: FlBorderData(show: false),
@@ -223,23 +195,24 @@ class TrendChartCard extends StatelessWidget {
                   leftTitles: AxisTitles(
                     sideTitles: SideTitles(
                       showTitles: true,
-                      reservedSize: 70,
+                      reservedSize: 56,
                       interval: 1,
                       getTitlesWidget: (value, meta) {
+                        if ((value - value.round()).abs() > 0.01) {
+                          return const SizedBox.shrink();
+                        }
                         final v = value.round();
                         final label = switch (v) {
-                          -2 => S.statsSickLabel,
-                          -1 => S.statsPainLabel,
-                          0 => S.moodExhausted,
-                          1 => S.moodGood,
-                          2 => S.moodEnergetic,
+                          -1 => S.todayValenceLow,
+                           0 => S.todayValenceMid,
+                           1 => S.todayValenceHigh,
                           _ => '',
                         };
                         if (label.isEmpty) return const SizedBox.shrink();
                         return Padding(
                           padding: const EdgeInsets.only(right: 4),
                           child: Text(
-                            label,
+                            label.toLowerCase(),
                             style: const TextStyle(
                                 fontSize: 9, color: Colors.black45),
                             textAlign: TextAlign.right,
@@ -269,25 +242,34 @@ class TrendChartCard extends StatelessWidget {
                 lineTouchData: LineTouchData(
                   touchTooltipData: LineTouchTooltipData(
                     getTooltipColor: (_) => Colors.black87,
-                    getTooltipItems: (spots) => spots.map((s) {
-                      final label = s.barIndex == 0
-                          ? S.statsSectionMood
-                          : S.statsSectionHealth;
-                      return LineTooltipItem(
-                        '$label: ${s.y.toStringAsFixed(1)}',
-                        const TextStyle(color: Colors.white, fontSize: 11),
-                      );
-                    }).toList(),
+                    getTooltipItems: (spots) {
+                      return spots.map((s) {
+                        if (s.barIndex == 1) {
+                          final label = s.y < -0.1 ? 'хвороба' : 'норма';
+                          return LineTooltipItem(label,
+                              const TextStyle(color: Colors.white70, fontSize: 11));
+                        }
+                        final y = s.y;
+                        final label = y >= 0.34
+                            ? S.todayValenceHigh
+                            : (y <= -0.34 ? S.todayValenceLow : S.todayValenceMid);
+                        return LineTooltipItem(
+                          label.toLowerCase(),
+                          const TextStyle(color: Colors.white, fontSize: 11),
+                        );
+                      }).toList();
+                    },
                   ),
                 ),
                 lineBarsData: [
-                  // Mood — solid black
+                  // Valence — dashed black (index 0)
                   LineChartBarData(
-                    spots: moodSpots,
+                    spots: valenceSpots,
                     color: Colors.black,
-                    barWidth: 2.5,
+                    barWidth: 2,
                     isCurved: true,
-                    curveSmoothness: 0.25,
+                    curveSmoothness: 0.3,
+                    dashArray: [6, 4],
                     dotData: FlDotData(
                       show: totalDays <= 30,
                       getDotPainter: (_, __, ___, ____) => FlDotCirclePainter(
@@ -299,22 +281,13 @@ class TrendChartCard extends StatelessWidget {
                     ),
                     belowBarData: BarAreaData(show: false),
                   ),
-                  // Health — dashed grey
+                  // Health — solid black (index 1)
                   LineChartBarData(
                     spots: healthSpots,
-                    color: Colors.black54,
+                    color: Colors.black,
                     barWidth: 1.5,
                     isCurved: false,
-                    dashArray: [5, 4],
-                    dotData: FlDotData(
-                      show: totalDays <= 30,
-                      getDotPainter: (_, __, ___, ____) => FlDotCirclePainter(
-                        radius: 2,
-                        color: Colors.black54,
-                        strokeWidth: 0,
-                        strokeColor: Colors.transparent,
-                      ),
-                    ),
+                    dotData: const FlDotData(show: false),
                     belowBarData: BarAreaData(show: false),
                   ),
                 ],
@@ -325,15 +298,9 @@ class TrendChartCard extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              _LegendItem(
-                  color: Colors.black,
-                  dashed: false,
-                  label: S.statsSectionMood),
-              const SizedBox(width: 24),
-              _LegendItem(
-                  color: Colors.black54,
-                  dashed: true,
-                  label: S.statsSectionHealth),
+              _LegendItem(color: Colors.black, dashed: true, label: S.statsSectionMood),
+              const SizedBox(width: 16),
+              _LegendItem(color: Colors.black, dashed: false, label: S.statsSectionHealth),
             ],
           ),
         ],

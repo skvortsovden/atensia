@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 import '../l10n/strings.dart';
 import '../models/daily_entry.dart';
 import '../providers/app_provider.dart';
+import 'circumplex_buttons.dart';
 
 class EditDayScreen extends StatefulWidget {
   final DateTime date;
@@ -17,7 +18,8 @@ class EditDayScreen extends StatefulWidget {
 }
 
 class _EditDayScreenState extends State<EditDayScreen> {
-  late String _mood;
+  late double? _valence;
+  late double? _arousal;
   late bool _isSick;
   late bool _hasPain;
   late Map<String, bool> _habits;
@@ -27,7 +29,8 @@ class _EditDayScreenState extends State<EditDayScreen> {
     super.initState();
     final entry =
         context.read<AppProvider>().getOrCreateEntry(widget.date);
-    _mood = entry.mood;
+    _valence = entry.valence;
+    _arousal = entry.arousal;
     _isSick = entry.isSick;
     _hasPain = entry.hasPain;
     _habits = Map<String, bool>.from(entry.habits);
@@ -37,7 +40,8 @@ class _EditDayScreenState extends State<EditDayScreen> {
     HapticFeedback.mediumImpact();
     final entry = DailyEntry(
       date: widget.date,
-      mood: _mood,
+      valence: _valence,
+      arousal: _arousal,
       isSick: _isSick,
       hasPain: _hasPain,
       habits: _habits,
@@ -60,7 +64,8 @@ class _EditDayScreenState extends State<EditDayScreen> {
 
     final localEntry = DailyEntry(
       date: widget.date,
-      mood: _mood,
+      valence: _valence,
+      arousal: _arousal,
       isSick: _isSick,
       hasPain: _hasPain,
       habits: _habits,
@@ -95,13 +100,7 @@ class _EditDayScreenState extends State<EditDayScreen> {
                       ),
                     ],
                   ),
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 2, 0, 0),
-                    child: Text(
-                      S.editSubtitle,
-                      style: Theme.of(context).textTheme.headlineLarge,
-                    ),
-                  ),
+
                 ],
               ),
             ),
@@ -113,9 +112,14 @@ class _EditDayScreenState extends State<EditDayScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _MoodSelector(
-                      entry: localEntry,
-                      onMoodChanged: (m) => setState(() => _mood = m),
+                    CircumplexButtons(
+                      title: S.editSubtitle,
+                      valence: _valence,
+                      arousal: _arousal,
+                      onValenceChanged: (v) => setState(() => _valence = v),
+                      onArousalChanged: (a) => setState(() => _arousal = a),
+                      onValenceCleared: () => setState(() => _valence = null),
+                      onArousalCleared: () => setState(() => _arousal = null),
                     ),
 
                     const SizedBox(height: 28),
@@ -184,64 +188,6 @@ class _SectionLabel extends StatelessWidget {
         text,
         style: Theme.of(context).textTheme.headlineLarge,
       );
-}
-
-// ── Mood selector ─────────────────────────────────────────────────────────────
-
-class _MoodSelector extends StatelessWidget {
-  final DailyEntry entry;
-  final ValueChanged<String> onMoodChanged;
-
-  const _MoodSelector(
-      {required this.entry, required this.onMoodChanged});
-
-  static List<String> get _moods => S.moods;
-
-  @override
-  Widget build(BuildContext context) {
-    return GridView.builder(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 3,
-        childAspectRatio: 2.2,
-        crossAxisSpacing: 8,
-        mainAxisSpacing: 8,
-      ),
-      itemCount: _moods.length,
-      itemBuilder: (context, i) {
-        final mood = _moods[i];
-        final selected = entry.mood == mood;
-
-        return GestureDetector(
-          onTap: () {
-            HapticFeedback.mediumImpact();
-            onMoodChanged(selected ? '' : mood);
-          },
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 140),
-            decoration: BoxDecoration(
-              color: selected ? Colors.black : Colors.white,
-              border: Border.all(color: Colors.black, width: 2),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            alignment: Alignment.center,
-            padding: const EdgeInsets.symmetric(horizontal: 8),
-            child: Text(
-              mood,
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                color: selected ? Colors.white : Colors.black,
-                fontWeight: FontWeight.w600,
-                fontSize: 13,
-                height: 1.3,
-              ),
-            ),
-          ),
-        );
-      },
-    );
-  }
 }
 
 // ── Health toggles ────────────────────────────────────────────────────────────

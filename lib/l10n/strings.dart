@@ -43,6 +43,18 @@ class S {
   static String get todaySubtitle => _s('today_subtitle');
   static String get todaySectionHealth => _s('today_section_health');
   static String get todaySectionLeisure => _s('today_section_leisure');
+  static String get todayValenceLabel => _s('today_valence_label');
+  static String get todayArousalLabel => _s('today_arousal_label');
+  static String get todayValenceMin => _s('today_valence_min');
+  static String get todayValenceMax => _s('today_valence_max');
+  static String get todayArousalMin => _s('today_arousal_min');
+  static String get todayArousalMax => _s('today_arousal_max');
+  static String get todayValenceLow  => _s('today_valence_low');
+  static String get todayValenceMid  => _s('today_valence_mid');
+  static String get todayValenceHigh => _s('today_valence_high');
+  static String get todayArousalLow  => _s('today_arousal_low');
+  static String get todayArousalMid  => _s('today_arousal_mid');
+  static String get todayArousalHigh => _s('today_arousal_high');
 
   // ── Edit day screen ──────────────────────────────────────────────────────
   static String get editSubtitle => _s('edit_subtitle');
@@ -118,11 +130,31 @@ class S {
   static String get labelSick => _s('label_sick');
   static String get labelPain => _s('label_pain');
 
-  // ── Moods ─────────────────────────────────────────────────────────────────
+  // ── Moods (kept for backward-compat migration) ────────────────────────────
   static String get moodExhausted => _s('mood_exhausted');
   static String get moodGood => _s('mood_good');
   static String get moodEnergetic => _s('mood_energetic');
   static List<String> get moods => [moodExhausted, moodGood, moodEnergetic];
+
+  // ── Circumplex combination labels (valence × arousal) ──────────────────────
+  static String get circumplexHH => _s('circumplex_hh');
+  static String get circumplexHM => _s('circumplex_hm');
+  static String get circumplexHL => _s('circumplex_hl');
+  static String get circumplexMH => _s('circumplex_mh');
+  static String get circumplexMM => _s('circumplex_mm');
+  static String get circumplexML => _s('circumplex_ml');
+  static String get circumplexLH => _s('circumplex_lh');
+  static String get circumplexLM => _s('circumplex_lm');
+  static String get circumplexLL => _s('circumplex_ll');
+  static String get circumplexNoData => _s('circumplex_no_data');
+
+  /// Returns the combination label for the given valence/arousal pair.
+  /// Uses same snap thresholds as CircumplexButtons: <= -0.34 = low, >= 0.34 = high.
+  static String circumplexQuadrant(double valence, double arousal) {
+    final v = valence >= 0.34 ? 'h' : (valence <= -0.34 ? 'l' : 'm');
+    final a = arousal >= 0.34 ? 'h' : (arousal <= -0.34 ? 'l' : 'm');
+    return _s('circumplex_${v}${a}');
+  }
 
   // ── Default habits ────────────────────────────────────────────────────────
   static List<String> get defaultHabits =>

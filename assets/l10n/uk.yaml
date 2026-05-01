@@ -22,13 +22,25 @@ tab_settings: Налаштування
 today_greeting_named: "Вітаю, {name}!"
 today_greeting_default: "Вітаю, друже!"
 today_date_prefix: Сьогодні
-today_subtitle: Як почуваєшься?
-today_section_health: Щось турбує?
+today_subtitle: Як почуваєшся?
+today_section_health: Що турбує?
 today_section_leisure: Дозвілля
+today_valence_label: "настрій"
+today_arousal_label: "енергія"
+today_valence_min: Неприємно
+today_valence_max: Приємно
+today_arousal_min: Спокійно
+today_arousal_max: Активно
+today_valence_low: Погано
+today_valence_mid: Нормально
+today_valence_high: Чудово
+today_arousal_low: Виснажено
+today_arousal_mid: Нормально
+today_arousal_high: Бадьоро
 
 # ── Edit day screen (past tense) ──────────────────────────────────────────────
-edit_subtitle: Як почуваєшься?
-edit_section_health: Щось турбує?
+edit_subtitle: Як почуваєшся?
+edit_section_health: Що турбує?
 edit_section_leisure: Дозвілля
 edit_btn_save: Зберегти
 
@@ -74,7 +86,7 @@ settings_import_done_message: Записи успішно додано.
 settings_import_done_btn: Зрозуміло
 settings_import_error_title: Помилка імпорту
 settings_import_error_btn: Зрозуміло
-settings_version: Версія 1.3.1
+settings_version: Версія 1.4.0
 settings_privacy: Усі дані зберігаються лише на цьому пристрої.
 
 # ── Stats view ────────────────────────────────────────────────────────────────
@@ -100,10 +112,22 @@ stats_no_data: Недостатньо даних за цей період
 label_sick: Хвороба
 label_pain: Біль
 
-# ── Moods ─────────────────────────────────────────────────────────────────────
+# ── Moods (kept for backward-compat migration of old saved data) ──────────────
 mood_exhausted: Виснажено
 mood_good: Добре
 mood_energetic: Бадьоро
+
+# ── Circumplex combination labels (valence × arousal) ───────────────────────
+circumplex_hh: На підйомі
+circumplex_hm: Спокійно
+circumplex_hl: Приємна втома
+circumplex_mh: В тонусі
+circumplex_mm: В рівновазі
+circumplex_ml: Мляво
+circumplex_lh: Стресово
+circumplex_lm: Пригнічено
+circumplex_ll: Виснажено
+circumplex_no_data: Стан не вказано
 
 # ── Default habits ────────────────────────────────────────────────────────────
 habits:

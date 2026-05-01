@@ -128,6 +128,7 @@ class _NamePage extends StatelessWidget {
             controller: controller,
             autofocus: true,
             textCapitalization: TextCapitalization.words,
+            maxLength: 30,
             style: const TextStyle(fontSize: 18),
             decoration: InputDecoration(
               hintText: S.onboardingNameHint,

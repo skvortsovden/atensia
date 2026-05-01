@@ -37,7 +37,7 @@ class AppProvider extends ChangeNotifier {
       final day = today.subtract(Duration(days: i));
       final entry = _entries[dateKey(day)];
       if (entry == null) break;
-      final filled = entry.mood.isNotEmpty ||
+      final filled = entry.hasState ||
           entry.isSick ||
           entry.hasPain ||
           entry.habits.values.any((v) => v);
@@ -51,7 +51,7 @@ class AppProvider extends ChangeNotifier {
   }
 
   int get totalFilledDays => _entries.values.where((e) =>
-      e.mood.isNotEmpty ||
+      e.hasState ||
       e.isSick ||
       e.hasPain ||
       e.habits.values.any((v) => v)).length;
@@ -116,9 +116,29 @@ class AppProvider extends ChangeNotifier {
     _saveEntry(entry.copyWith(habits: habits));
   }
 
-  void setMood(DateTime date, String mood) {
+  void setCircumplex(DateTime date, double? valence, double? arousal) {
     final entry = getOrCreateEntry(date);
-    _saveEntry(entry.copyWith(mood: mood));
+    _saveEntry(entry.copyWith(valence: valence, arousal: arousal));
+  }
+
+  void setValence(DateTime date, double valence) {
+    final entry = getOrCreateEntry(date);
+    _saveEntry(entry.copyWith(valence: valence));
+  }
+
+  void setArousal(DateTime date, double arousal) {
+    final entry = getOrCreateEntry(date);
+    _saveEntry(entry.copyWith(arousal: arousal));
+  }
+
+  void clearValence(DateTime date) {
+    final entry = getOrCreateEntry(date);
+    _saveEntry(entry.copyWith(valence: null));
+  }
+
+  void clearArousal(DateTime date) {
+    final entry = getOrCreateEntry(date);
+    _saveEntry(entry.copyWith(arousal: null));
   }
 
   void toggleSick(DateTime date) {
@@ -180,13 +200,19 @@ class AppProvider extends ChangeNotifier {
     if (lines.isEmpty) return 'CSV is empty';
 
     final header = _parseCsvRow(lines.first);
-    if (header.length < 4) return 'Invalid CSV header';
-    if (header[0] != 'date' || header[1] != 'mood' ||
-        header[2] != 'sick'  || header[3] != 'pain') {
-      return 'CSV must start with columns: date,mood,sick,pain';
+    // Accept both new format (date,valence,arousal,sick,pain) and old (date,mood,sick,pain)
+    final isLegacy = header.length >= 4 &&
+        header[0] == 'date' && header[1] == 'mood' &&
+        header[2] == 'sick' && header[3] == 'pain';
+    final isNew = header.length >= 5 &&
+        header[0] == 'date' && header[1] == 'valence' &&
+        header[2] == 'arousal' && header[3] == 'sick' && header[4] == 'pain';
+    if (!isLegacy && !isNew) {
+      return 'CSV must start with columns: date,valence,arousal,sick,pain';
     }
 
-    final habitCols = header.sublist(4);
+    final dataStart = isLegacy ? 4 : 5;
+    final habitCols = header.sublist(dataStart);
     final imported = <String, DailyEntry>{};
 
     for (int i = 1; i < lines.length; i++) {
@@ -198,19 +224,38 @@ class AppProvider extends ChangeNotifier {
       final date = DateTime.tryParse(cells[0]);
       if (date == null) return 'Row ${i + 1}: invalid date "${cells[0]}"';
 
-      final mood  = cells[1];
-      final isSick  = cells[2].toLowerCase() == 'true';
-      final hasPain = cells[3].toLowerCase() == 'true';
+      double? valence;
+      double? arousal;
+      bool isSick;
+      bool hasPain;
+
+      if (isLegacy) {
+        // Map old mood string to circumplex values via fromJson migration
+        final moodStr = cells[1];
+        if (moodStr.isNotEmpty) {
+          final tmp = DailyEntry.fromJson({'date': cells[0], 'habits': {}, 'mood': moodStr, 'isSick': false, 'hasPain': false});
+          valence = tmp.valence;
+          arousal = tmp.arousal;
+        }
+        isSick  = cells[2].toLowerCase() == 'true';
+        hasPain = cells[3].toLowerCase() == 'true';
+      } else {
+        valence = double.tryParse(cells[1]);
+        arousal = double.tryParse(cells[2]);
+        isSick  = cells[3].toLowerCase() == 'true';
+        hasPain = cells[4].toLowerCase() == 'true';
+      }
 
       final habits = <String, bool>{};
       for (int j = 0; j < habitCols.length; j++) {
-        habits[habitCols[j]] = cells[4 + j].toLowerCase() == 'true';
+        habits[habitCols[j]] = cells[dataStart + j].toLowerCase() == 'true';
       }
 
       final key = dateKey(date);
       imported[key] = DailyEntry(
         date: DateTime(date.year, date.month, date.day),
-        mood: mood,
+        valence: valence,
+        arousal: arousal,
         isSick: isSick,
         hasPain: hasPain,
         habits: habits,
@@ -227,14 +272,14 @@ class AppProvider extends ChangeNotifier {
   String buildTemplateCsv() {
     final habitNames = DailyEntry.defaultHabits;
     final headerCells = [
-      'date', 'mood', 'sick', 'pain',
+      'date', 'valence', 'arousal', 'sick', 'pain',
       ...habitNames.map((h) => _csvCell(h)),
     ];
     final buf = StringBuffer();
     buf.writeln(headerCells.join(','));
     for (int i = 0; i < 3; i++) {
       final emptyCells = [
-        '2026-01-0${i + 1}', '', 'false', 'false',
+        '2026-01-0${i + 1}', '', '', 'false', 'false',
         ...habitNames.map((_) => 'false'),
       ];
       buf.writeln(emptyCells.join(','));
@@ -250,7 +295,7 @@ class AppProvider extends ChangeNotifier {
 
     // Header
     final headerCells = [
-      'date', 'mood', 'sick', 'pain',
+      'date', 'valence', 'arousal', 'sick', 'pain',
       ...habitNames.map((h) => _csvCell(h)),
     ];
     buf.writeln(headerCells.join(','));
@@ -265,7 +310,8 @@ class AppProvider extends ChangeNotifier {
           '${entry.date.day.toString().padLeft(2, '0')}';
       final cells = [
         date,
-        _csvCell(entry.mood),
+        entry.valence != null ? entry.valence!.toStringAsFixed(3) : '',
+        entry.arousal != null ? entry.arousal!.toStringAsFixed(3) : '',
         entry.isSick ? 'true' : 'false',
         entry.hasPain ? 'true' : 'false',
         ...habitNames.map((h) => (entry.habits[h] ?? false) ? 'true' : 'false'),

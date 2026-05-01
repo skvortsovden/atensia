@@ -419,6 +419,7 @@ class _SettingsViewState extends State<SettingsView> {
               controller: _nameController,
               onChanged: (v) => provider.setUsername(v),
               textCapitalization: TextCapitalization.words,
+              maxLength: 30,
               style: Theme.of(context).textTheme.bodyLarge,
               decoration: InputDecoration(
                 hintText: S.settingsNameHint,
