@@ -48,6 +48,8 @@ today_arousal_high: Бадьоро
 edit_subtitle: Як почуваєшся?
 edit_section_health: Що турбує?
 edit_section_leisure: Дозвілля
+edit_section_note: Нотатка
+edit_note_hint: Що сталося важливого сьогодні?
 edit_btn_save: Зберегти
 
 # ── Calendar / History view ───────────────────────────────────────────────────

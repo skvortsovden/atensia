@@ -87,7 +87,7 @@ class _CircumplexButtonsState extends State<CircumplexButtons> {
             }
           },
         ),
-        const SizedBox(height: 14),
+        const SizedBox(height: 28),
         _TripleSelector(
           label: S.todayArousalLabel,
           options: [S.todayArousalLow, S.todayArousalMid, S.todayArousalHigh],

@@ -513,12 +513,12 @@ class _HabitStreakCardState extends State<HabitStreakCard> {
                         Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            const Icon(Icons.arrow_upward, size: 12),
+                            const Icon(Icons.arrow_upward, size: 12, color: Colors.black),
                             const SizedBox(width: 2),
                             Text(
-                              '$currentStreak ${S.statsDaysSuffix}',
+                              '$currentStreak ${S.statsDaysSuffix} поспіль',
                               style: const TextStyle(
-                                  fontSize: 12, fontWeight: FontWeight.w700),
+                                  fontSize: 12, fontWeight: FontWeight.w700, color: Colors.black),
                             ),
                           ],
                         )
@@ -530,9 +530,9 @@ class _HabitStreakCardState extends State<HabitStreakCard> {
                                 size: 12, color: Colors.black),
                             const SizedBox(width: 2),
                             Text(
-                              '$maxStreak ${S.statsDaysSuffix}',
+                              '$maxStreak ${S.statsDaysSuffix} поспіль',
                               style: const TextStyle(
-                                  fontSize: 12, color: Colors.black),
+                                  fontSize: 12, fontWeight: FontWeight.w700, color: Colors.black),
                             ),
                           ],
                         ),
@@ -1085,7 +1085,7 @@ class _HabitStoryRow extends StatelessWidget {
                   const Icon(Icons.arrow_upward, size: 9, color: Colors.black),
                   const SizedBox(width: 2),
                   Text(
-                    '$currentStreak ${S.statsDaysSuffix}',
+                    '$currentStreak ${S.statsDaysSuffix} поспіль',
                     style: const TextStyle(
                       fontFamily: 'FixelText',
                       fontSize: 9,
@@ -1098,10 +1098,11 @@ class _HabitStoryRow extends StatelessWidget {
                       size: 9, color: Colors.black),
                   const SizedBox(width: 2),
                   Text(
-                    '$maxStreak ${S.statsDaysSuffix}',
+                    '$maxStreak ${S.statsDaysSuffix} поспіль',
                     style: const TextStyle(
                       fontFamily: 'FixelText',
                       fontSize: 9,
+                      fontWeight: FontWeight.w700,
                       color: Colors.black,
                     ),
                   ),

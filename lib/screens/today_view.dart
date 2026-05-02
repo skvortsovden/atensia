@@ -8,14 +8,51 @@ import '../models/daily_entry.dart';
 import '../providers/app_provider.dart';
 import 'circumplex_buttons.dart';
 
-class TodayView extends StatelessWidget {
+class TodayView extends StatefulWidget {
   const TodayView({super.key});
+
+  @override
+  State<TodayView> createState() => _TodayViewState();
+}
+
+class _TodayViewState extends State<TodayView> {
+  late final TextEditingController _commentCtrl;
+  String? _lastLoadedComment;
+
+  static DateTime _today() {
+    final now = DateTime.now();
+    return DateTime(now.year, now.month, now.day);
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    final today = _today();
+    final entry = context.read<AppProvider>().getOrCreateEntry(today);
+    _lastLoadedComment = entry.comment;
+    _commentCtrl = TextEditingController(text: entry.comment ?? '');
+  }
+
+  @override
+  void dispose() {
+    _commentCtrl.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<AppProvider>();
     final today = _today();
     final entry = provider.getOrCreateEntry(today);
+
+    // Sync controller if comment was changed externally (e.g. from calendar edit)
+    if (entry.comment != _lastLoadedComment) {
+      _lastLoadedComment = entry.comment;
+      final newText = entry.comment ?? '';
+      if (_commentCtrl.text != newText) {
+        _commentCtrl.text = newText;
+      }
+    }
     final streak = provider.currentStreak;
     final todayFilled = entry.hasState ||
         entry.isSick ||
@@ -33,11 +70,7 @@ class TodayView extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Вітаю,',
-                  style: Theme.of(context).textTheme.headlineLarge,
-                ),
-                Text(
-                  provider.username.isNotEmpty ? provider.username : 'друже!',
+                  'Вітаю, ${provider.username.isNotEmpty ? provider.username : 'друже'}!',
                   style: Theme.of(context).textTheme.headlineLarge,
                 ),
                 const SizedBox(height: 4),
@@ -83,23 +116,43 @@ class TodayView extends StatelessWidget {
             ),
 
             const SizedBox(height: 28),
-            _SectionLabel(S.todaySectionHealth),
-            const SizedBox(height: 10),
-            _HealthToggles(entry: entry, date: today),
+            _HealthRow(entry: entry, date: today),
 
             const SizedBox(height: 28),
             _SectionLabel(S.todaySectionLeisure),
             const SizedBox(height: 10),
             _HabitList(entry: entry, date: today),
+
+            const SizedBox(height: 28),
+            _SectionLabel(S.editSectionNote),
+            const SizedBox(height: 10),
+            TextField(
+              controller: _commentCtrl,
+              maxLines: null,
+              maxLength: 140,
+              textCapitalization: TextCapitalization.sentences,
+              onChanged: (val) => provider.setComment(today, val),
+              decoration: InputDecoration(
+                hintText: S.editNoteHint,
+                hintStyle:
+                    const TextStyle(color: Colors.black38, fontSize: 14),
+                filled: true,
+                fillColor: Colors.black.withValues(alpha: 0.04),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  borderSide: BorderSide.none,
+                ),
+                contentPadding:
+                    const EdgeInsets.fromLTRB(14, 12, 14, 12),
+                counterStyle:
+                    const TextStyle(color: Colors.black38, fontSize: 11),
+              ),
+              style: const TextStyle(fontSize: 14),
+            ),
           ],
         ),
       ),
     );
-  }
-
-  static DateTime _today() {
-    final now = DateTime.now();
-    return DateTime(now.year, now.month, now.day);
   }
 }
 
@@ -118,39 +171,90 @@ class _SectionLabel extends StatelessWidget {
   }
 }
 
-// ── Health toggles ────────────────────────────────────────────────────────────
+// ── Health row ────────────────────────────────────────────────────────────────
 
-class _HealthToggles extends StatelessWidget {
+class _HealthRow extends StatelessWidget {
   final DailyEntry entry;
   final DateTime date;
 
-  const _HealthToggles({required this.entry, required this.date});
+  const _HealthRow({required this.entry, required this.date});
 
   @override
   Widget build(BuildContext context) {
     final provider = context.read<AppProvider>();
 
-    return Row(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Expanded(
-          child: _ToggleButton(
-            label: S.labelSick,
-            isActive: entry.isSick,
-            onTap: () {
-              HapticFeedback.mediumImpact();
-              provider.toggleSick(date);
-            },
+        Text(
+          S.todaySectionHealth.toUpperCase(),
+          style: const TextStyle(
+            fontSize: 10,
+            fontWeight: FontWeight.w700,
+            letterSpacing: 1.2,
+            color: Colors.black54,
           ),
         ),
-        const SizedBox(width: 8),
-        Expanded(
-          child: _ToggleButton(
-            label: S.labelPain,
-            isActive: entry.hasPain,
-            onTap: () {
-              HapticFeedback.mediumImpact();
-              provider.togglePain(date);
-            },
+        const SizedBox(height: 8),
+        Container(
+          decoration: BoxDecoration(
+            border: Border.all(color: Colors.black, width: 2),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(6),
+            child: IntrinsicHeight(
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: () {
+                        HapticFeedback.mediumImpact();
+                        provider.toggleSick(date);
+                      },
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 140),
+                        color: entry.isSick ? Colors.black : Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 13),
+                        alignment: Alignment.center,
+                        child: Text(
+                          S.labelSick,
+                          style: TextStyle(
+                            color: entry.isSick ? Colors.white : Colors.black,
+                            fontWeight: FontWeight.w600,
+                            fontSize: 14,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  Container(width: 2, color: Colors.black),
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: () {
+                        HapticFeedback.mediumImpact();
+                        provider.togglePain(date);
+                      },
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 140),
+                        color: entry.hasPain ? Colors.black : Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 13),
+                        alignment: Alignment.center,
+                        child: Text(
+                          S.labelPain,
+                          style: TextStyle(
+                            color: entry.hasPain ? Colors.white : Colors.black,
+                            fontWeight: FontWeight.w600,
+                            fontSize: 14,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ),
         ),
       ],
@@ -158,81 +262,27 @@ class _HealthToggles extends StatelessWidget {
   }
 }
 
-class _ToggleButton extends StatelessWidget {
-  final String label;
-  final bool isActive;
-  final VoidCallback onTap;
-
-  const _ToggleButton({
-    required this.label,
-    required this.isActive,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 140),
-        padding: const EdgeInsets.symmetric(vertical: 15),
-        alignment: Alignment.center,
-        decoration: BoxDecoration(
-          color: isActive ? Colors.black : Colors.white,
-          border: Border.all(color: Colors.black, width: 2),
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: Text(
-          label,
-          style: TextStyle(
-            color: isActive ? Colors.white : Colors.black,
-            fontWeight: FontWeight.w600,
-            fontSize: 15,
-          ),
-        ),
-      ),
-    );
-  }
-}
-
 // ── Habit list ────────────────────────────────────────────────────────────────
 
-class _HabitList extends StatefulWidget {
+class _HabitList extends StatelessWidget {
   final DailyEntry entry;
   final DateTime date;
 
   const _HabitList({required this.entry, required this.date});
 
   @override
-  State<_HabitList> createState() => _HabitListState();
-}
-
-class _HabitListState extends State<_HabitList> {
-  String? _expandedHabit;
-
-  @override
   Widget build(BuildContext context) {
     final provider = context.read<AppProvider>();
 
     return Column(
-      children: widget.entry.habits.entries.map((e) {
+      children: entry.habits.entries.map((e) {
         final checked = e.value;
-        final desc = S.habitDescription(e.key);
-        final expanded = _expandedHabit == e.key && desc.isNotEmpty;
 
         return GestureDetector(
           onTap: () {
             HapticFeedback.mediumImpact();
-            provider.toggleHabit(widget.date, e.key);
+            provider.toggleHabit(date, e.key);
           },
-          onLongPress: desc.isEmpty
-              ? null
-              : () {
-                  HapticFeedback.selectionClick();
-                  setState(() {
-                    _expandedHabit = expanded ? null : e.key;
-                  });
-                },
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 140),
             margin: const EdgeInsets.only(bottom: 8),
@@ -242,66 +292,34 @@ class _HabitListState extends State<_HabitList> {
               border: Border.all(color: Colors.black, width: 2),
               borderRadius: BorderRadius.circular(8),
             ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            child: Row(
               children: [
-                Row(
-                  children: [
-                    AnimatedContainer(
-                      duration: const Duration(milliseconds: 140),
-                      width: 20,
-                      height: 20,
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(4),
-                        color: checked ? Colors.white : Colors.transparent,
-                        border: Border.all(
-                          color: checked ? Colors.transparent : Colors.black,
-                          width: 2,
-                        ),
-                      ),
-                      child: checked
-                          ? const Icon(Icons.check, size: 14, color: Colors.black)
-                          : null,
+                AnimatedContainer(
+                  duration: const Duration(milliseconds: 140),
+                  width: 20,
+                  height: 20,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(4),
+                    color: checked ? Colors.white : Colors.transparent,
+                    border: Border.all(
+                      color: checked ? Colors.transparent : Colors.black,
+                      width: 2,
                     ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Text(
-                        e.key,
-                        style: TextStyle(
-                          color: checked ? Colors.white : Colors.black,
-                          fontWeight: FontWeight.w600,
-                          fontSize: 16,
-                        ),
-                      ),
-                    ),
-                    if (desc.isNotEmpty)
-                      Icon(
-                        expanded
-                            ? Icons.keyboard_arrow_up
-                            : Icons.keyboard_arrow_down,
-                        size: 16,
-                        color: checked ? Colors.white54 : Colors.black38,
-                      ),
-                  ],
+                  ),
+                  child: checked
+                      ? const Icon(Icons.check, size: 14, color: Colors.black)
+                      : null,
                 ),
-                AnimatedSize(
-                  duration: const Duration(milliseconds: 200),
-                  curve: Curves.easeInOut,
-                  child: expanded
-                      ? Padding(
-                          padding: const EdgeInsets.only(top: 8, left: 32),
-                          child: Text(
-                            desc,
-                            style: TextStyle(
-                              fontSize: 13,
-                              color: checked
-                                  ? Colors.white70
-                                  : Colors.black54,
-                              fontWeight: FontWeight.w400,
-                            ),
-                          ),
-                        )
-                      : const SizedBox.shrink(),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    e.key,
+                    style: TextStyle(
+                      color: checked ? Colors.white : Colors.black,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 16,
+                    ),
+                  ),
                 ),
               ],
             ),

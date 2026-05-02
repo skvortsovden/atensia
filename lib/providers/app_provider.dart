@@ -169,6 +169,11 @@ class AppProvider extends ChangeNotifier {
     _saveEntry(entry.copyWith(hasPain: !entry.hasPain));
   }
 
+  void setComment(DateTime date, String? comment) {
+    final entry = getOrCreateEntry(date);
+    _saveEntry(entry.copyWith(comment: comment?.trim().isEmpty == true ? null : comment?.trim()));
+  }
+
   void setUsername(String name) {
     _username = name;
     _prefs.setString(_usernameKey, name);
