@@ -23,6 +23,7 @@ class _EditDayScreenState extends State<EditDayScreen> {
   late bool _isSick;
   late bool _hasPain;
   late Map<String, bool> _habits;
+  late final TextEditingController _commentCtrl;
 
   @override
   void initState() {
@@ -34,6 +35,13 @@ class _EditDayScreenState extends State<EditDayScreen> {
     _isSick = entry.isSick;
     _hasPain = entry.hasPain;
     _habits = Map<String, bool>.from(entry.habits);
+    _commentCtrl = TextEditingController(text: entry.comment ?? '');
+  }
+
+  @override
+  void dispose() {
+    _commentCtrl.dispose();
+    super.dispose();
   }
 
   void _save() {
@@ -45,6 +53,7 @@ class _EditDayScreenState extends State<EditDayScreen> {
       isSick: _isSick,
       hasPain: _hasPain,
       habits: _habits,
+      comment: _commentCtrl.text.trim().isEmpty ? null : _commentCtrl.text.trim(),
     );
     context.read<AppProvider>().updateEntry(entry);
     Navigator.of(context).pop();
@@ -138,6 +147,31 @@ class _EditDayScreenState extends State<EditDayScreen> {
                       entry: localEntry,
                       onHabitChanged: (key, val) =>
                           setState(() => _habits[key] = val),
+                    ),
+
+                    const SizedBox(height: 28),
+                    _SectionLabel(S.editSectionNote),
+                    const SizedBox(height: 10),
+                    TextField(
+                      controller: _commentCtrl,
+                      maxLines: 3,
+                      maxLength: 300,
+                      textCapitalization: TextCapitalization.sentences,
+                      decoration: InputDecoration(
+                        hintText: S.editNoteHint,
+                        hintStyle: const TextStyle(
+                            color: Colors.black38, fontSize: 14),
+                        filled: true,
+                        fillColor: Colors.black.withOpacity(0.04),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10),
+                          borderSide: BorderSide.none,
+                        ),
+                        contentPadding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
+                        counterStyle: const TextStyle(
+                            color: Colors.black38, fontSize: 11),
+                      ),
+                      style: const TextStyle(fontSize: 14),
                     ),
                   ],
                 ),

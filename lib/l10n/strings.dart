@@ -72,6 +72,8 @@ class S {
   static String get editSubtitle => _s('edit_subtitle');
   static String get editSectionHealth => _s('edit_section_health');
   static String get editSectionLeisure => _s('edit_section_leisure');
+  static String get editSectionNote => _s('edit_section_note');
+  static String get editNoteHint => _s('edit_note_hint');
   static String get editBtnSave => _s('edit_btn_save');
 
   // ── Calendar / History ───────────────────────────────────────────────────
@@ -83,6 +85,7 @@ class S {
   static String get calendarRowFeel => _s('calendar_row_feel');
   static String get calendarRowHealth => _s('calendar_row_health');
   static String get calendarRowLeisure => _s('calendar_row_leisure');
+  static String get calendarRowNote => _s('calendar_row_note');
 
   // ── Settings ─────────────────────────────────────────────────────────────
   static String get settingsTitle => _s('settings_title');

@@ -11,6 +11,7 @@ class DailyEntry {
   final double? arousal;
   final bool isSick;
   final bool hasPain;
+  final String? comment;
 
   static List<String> get defaultHabits => S.defaultHabits;
 
@@ -21,6 +22,7 @@ class DailyEntry {
     this.arousal,
     required this.isSick,
     required this.hasPain,
+    this.comment,
   });
 
   /// True when the user has set their circumplex state for this day.
@@ -41,6 +43,7 @@ class DailyEntry {
     Object? arousal = _keep,
     bool? isSick,
     bool? hasPain,
+    Object? comment = _keep,
   }) =>
       DailyEntry(
         date: date ?? this.date,
@@ -49,6 +52,7 @@ class DailyEntry {
         arousal: arousal is _Sentinel ? this.arousal : arousal as double?,
         isSick: isSick ?? this.isSick,
         hasPain: hasPain ?? this.hasPain,
+        comment: comment is _Sentinel ? this.comment : comment as String?,
       );
 
   Map<String, dynamic> toJson() => {
@@ -58,6 +62,7 @@ class DailyEntry {
         if (arousal != null) 'arousal': arousal,
         'isSick': isSick,
         'hasPain': hasPain,
+        if (comment != null && comment!.isNotEmpty) 'comment': comment,
       };
 
   factory DailyEntry.fromJson(Map<String, dynamic> json) {
@@ -79,6 +84,7 @@ class DailyEntry {
       arousal: a,
       isSick: json['isSick'] as bool? ?? false,
       hasPain: json['hasPain'] as bool? ?? false,
+      comment: json['comment'] as String?,
     );
   }
 

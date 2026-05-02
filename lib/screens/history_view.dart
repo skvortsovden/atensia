@@ -335,6 +335,7 @@ class _DayDetail extends StatelessWidget {
       if (doneHabits.isNotEmpty)
         _InfoRow(S.calendarRowLeisure, doneHabits.join(', ')),
     ];
+    final comment = e.comment;
 
     final dateLabel = DateFormat('d MMMM yyyy', 'uk_UA').format(date);
 
@@ -386,6 +387,39 @@ class _DayDetail extends StatelessWidget {
               ),
             ),
           ),
+
+          if (comment != null && comment.isNotEmpty) ...
+            [
+              const SizedBox(height: 4),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  SizedBox(
+                    width: 110,
+                    child: Text(
+                      '${S.calendarRowNote}:',
+                      style: const TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.black54,
+                        letterSpacing: 0.2,
+                      ),
+                    ),
+                  ),
+                  Expanded(
+                    child: Text(
+                      comment,
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w400,
+                        color: Colors.black87,
+                        fontStyle: FontStyle.italic,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
 
           const SizedBox(height: 16),
 

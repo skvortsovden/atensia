@@ -72,7 +72,7 @@ int _calcMaxStreak(List<String> dayKeys, Set<String> filledKeys) {
 
 // ── Trend chart (mood + health lines) ────────────────────────────────────────
 
-class TrendChartCard extends StatelessWidget {
+class TrendChartCard extends StatefulWidget {
   const TrendChartCard({
     super.key,
     required this.entries,
@@ -83,11 +83,20 @@ class TrendChartCard extends StatelessWidget {
   final int totalDays;
 
   @override
+  State<TrendChartCard> createState() => _TrendChartCardState();
+}
+
+class _TrendChartCardState extends State<TrendChartCard> {
+
+  @override
   Widget build(BuildContext context) {
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
-    final start = today.subtract(Duration(days: totalDays - 1));
-    final aggregate = totalDays > 30;
+    final start = today.subtract(Duration(days: widget.totalDays - 1));
+    final aggregate = widget.totalDays > 30;
+    final entryMap = {
+      for (final e in widget.entries) AppProvider.dateKey(e.date): e
+    };
 
     final List<FlSpot> valenceSpots;
     final List<FlSpot> healthSpots;
@@ -95,13 +104,10 @@ class TrendChartCard extends StatelessWidget {
     final String Function(double) xLabel;
 
     if (!aggregate) {
-      final entryMap = {
-        for (final e in entries) AppProvider.dateKey(e.date): e
-      };
       final valenceList = <FlSpot>[];
       final healthList = <FlSpot>[];
 
-      for (int i = 0; i < totalDays; i++) {
+      for (int i = 0; i < widget.totalDays; i++) {
         final d = start.add(Duration(days: i));
         final e = entryMap[AppProvider.dateKey(d)];
         if (e != null && e.valence != null) {
@@ -112,9 +118,9 @@ class TrendChartCard extends StatelessWidget {
       }
       valenceSpots = valenceList;
       healthSpots = healthList;
-      xCount = totalDays;
+      xCount = widget.totalDays;
 
-      if (totalDays <= 7) {
+      if (widget.totalDays <= 7) {
         xLabel = (v) =>
             DateFormat('E', 'uk').format(start.add(Duration(days: v.round())));
       } else {
@@ -127,11 +133,11 @@ class TrendChartCard extends StatelessWidget {
     } else {
       // Weekly aggregation for year
       final weeks = <int, List<DailyEntry>>{};
-      for (final e in entries) {
+      for (final e in widget.entries) {
         final wi = e.date.difference(start).inDays ~/ 7;
         weeks.putIfAbsent(wi, () => []).add(e);
       }
-      final wCount = (totalDays / 7).ceil();
+      final wCount = (widget.totalDays / 7).ceil();
       final valenceList = <FlSpot>[];
       final healthList = <FlSpot>[];
 
@@ -144,10 +150,8 @@ class TrendChartCard extends StatelessWidget {
             valenceList.add(FlSpot(wi.toDouble(), avgV));
           }
         }
-        final daysInWeek = (totalDays - wi * 7).clamp(0, 7);
-        final sickCount = we.where((e) => e.isSick || e.hasPain).length;
-        final healthVal = sickCount > 0 ? -(sickCount / daysInWeek) : 0.0;
-        healthList.add(FlSpot(wi.toDouble(), healthVal));
+        final sickCount = (weeks[wi] ?? []).where((e) => e.isSick || e.hasPain).length;
+        healthList.add(FlSpot(wi.toDouble(), sickCount > 0 ? -1.0 : 0.0));
       }
       valenceSpots = valenceList;
       healthSpots = healthList;
@@ -241,21 +245,77 @@ class TrendChartCard extends StatelessWidget {
                 ),
                 lineTouchData: LineTouchData(
                   touchTooltipData: LineTouchTooltipData(
+                    maxContentWidth: 220,
+                    fitInsideHorizontally: true,
+                    fitInsideVertically: true,
                     getTooltipColor: (_) => Colors.black87,
                     getTooltipItems: (spots) {
                       return spots.map((s) {
-                        if (s.barIndex == 1) {
-                          final label = s.y < -0.1 ? 'хвороба' : 'норма';
-                          return LineTooltipItem(label,
-                              const TextStyle(color: Colors.white70, fontSize: 11));
+                        if (s.barIndex != 0) return null;
+                        final int dayIndex = s.x.round();
+                        final DateTime tappedDate = aggregate
+                            ? start.add(Duration(days: dayIndex * 7))
+                            : start.add(Duration(days: dayIndex));
+                        final e = entryMap[AppProvider.dateKey(tappedDate)];
+                        final dateLabel =
+                            DateFormat('d MMM', 'uk').format(tappedDate);
+
+                        final children = <TextSpan>[];
+                        if (e == null) {
+                          children.add(TextSpan(
+                            text: '\n${S.calendarNoData}',
+                            style: const TextStyle(
+                                color: Colors.white60, fontSize: 11),
+                          ));
+                        } else {
+                          if (e.hasState) {
+                            children.add(TextSpan(
+                              text:
+                                  '\n${S.circumplexQuadrant(e.valence!, e.arousal!)}',
+                              style: const TextStyle(
+                                  color: Colors.white, fontSize: 11),
+                            ));
+                          }
+                          final healthItems = [
+                            if (e.isSick) S.labelSick,
+                            if (e.hasPain) S.labelPain,
+                          ];
+                          if (healthItems.isNotEmpty) {
+                            children.add(TextSpan(
+                              text: '\n${healthItems.join(', ')}',
+                              style: const TextStyle(
+                                  color: Colors.white70, fontSize: 11),
+                            ));
+                          }
+                          final doneHabits = e.habits.entries
+                              .where((h) => h.value)
+                              .map((h) => h.key)
+                              .toList();
+                          if (doneHabits.isNotEmpty) {
+                            children.add(TextSpan(
+                              text: '\n${doneHabits.join(', ')}',
+                              style: const TextStyle(
+                                  color: Colors.white70, fontSize: 11),
+                            ));
+                          }
+                          if (e.comment != null && e.comment!.isNotEmpty) {
+                            children.add(TextSpan(
+                              text: '\n${e.comment}',
+                              style: const TextStyle(
+                                  color: Colors.white60,
+                                  fontSize: 11,
+                                  fontStyle: FontStyle.italic),
+                            ));
+                          }
                         }
-                        final y = s.y;
-                        final label = y >= 0.34
-                            ? S.todayValenceHigh
-                            : (y <= -0.34 ? S.todayValenceLow : S.todayValenceMid);
+
                         return LineTooltipItem(
-                          label.toLowerCase(),
-                          const TextStyle(color: Colors.white, fontSize: 11),
+                          dateLabel,
+                          const TextStyle(
+                              color: Colors.white,
+                              fontSize: 11,
+                              fontWeight: FontWeight.w700),
+                          children: children,
                         );
                       }).toList();
                     },
@@ -271,7 +331,7 @@ class TrendChartCard extends StatelessWidget {
                     curveSmoothness: 0.3,
                     dashArray: [6, 4],
                     dotData: FlDotData(
-                      show: totalDays <= 30,
+                      show: widget.totalDays <= 30,
                       getDotPainter: (_, __, ___, ____) => FlDotCirclePainter(
                         radius: 3,
                         color: Colors.black,
