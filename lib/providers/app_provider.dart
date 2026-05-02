@@ -239,7 +239,9 @@ class AppProvider extends ChangeNotifier {
     }
 
     final dataStart = isLegacy ? 4 : 5;
-    final habitCols = header.sublist(dataStart);
+    // Comment column is optional (last column named 'comment')
+    final hasCommentCol = header.last == 'comment';
+    final habitCols = header.sublist(dataStart, hasCommentCol ? header.length - 1 : null);
     final imported = <String, DailyEntry>{};
 
     for (int i = 1; i < lines.length; i++) {
@@ -278,6 +280,9 @@ class AppProvider extends ChangeNotifier {
         habits[habitCols[j]] = cells[dataStart + j].toLowerCase() == 'true';
       }
 
+      final commentRaw = hasCommentCol ? cells.last.trim() : null;
+      final comment = (commentRaw?.isEmpty ?? true) ? null : commentRaw;
+
       final key = dateKey(date);
       imported[key] = DailyEntry(
         date: DateTime(date.year, date.month, date.day),
@@ -286,6 +291,7 @@ class AppProvider extends ChangeNotifier {
         isSick: isSick,
         hasPain: hasPain,
         habits: habits,
+        comment: comment,
       );
     }
 
@@ -301,6 +307,7 @@ class AppProvider extends ChangeNotifier {
     final headerCells = [
       'date', 'valence', 'arousal', 'sick', 'pain',
       ...habitNames.map((h) => _csvCell(h)),
+      'comment',
     ];
     final buf = StringBuffer();
     buf.writeln(headerCells.join(','));
@@ -308,6 +315,7 @@ class AppProvider extends ChangeNotifier {
       final emptyCells = [
         '2026-01-0${i + 1}', '', '', 'false', 'false',
         ...habitNames.map((_) => 'false'),
+        '',
       ];
       buf.writeln(emptyCells.join(','));
     }
@@ -324,6 +332,7 @@ class AppProvider extends ChangeNotifier {
     final headerCells = [
       'date', 'valence', 'arousal', 'sick', 'pain',
       ...habitNames.map((h) => _csvCell(h)),
+      'comment',
     ];
     buf.writeln(headerCells.join(','));
 
@@ -342,6 +351,7 @@ class AppProvider extends ChangeNotifier {
         entry.isSick ? 'true' : 'false',
         entry.hasPain ? 'true' : 'false',
         ...habitNames.map((h) => (entry.habits[h] ?? false) ? 'true' : 'false'),
+        _csvCell(entry.comment ?? ''),
       ];
       buf.writeln(cells.join(','));
     }
