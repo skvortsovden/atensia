@@ -77,10 +77,12 @@ class TrendChartCard extends StatefulWidget {
     super.key,
     required this.entries,
     required this.totalDays,
+    required this.periodEnd,
   });
 
   final List<DailyEntry> entries;
   final int totalDays;
+  final DateTime periodEnd;
 
   @override
   State<TrendChartCard> createState() => _TrendChartCardState();
@@ -90,9 +92,7 @@ class _TrendChartCardState extends State<TrendChartCard> {
 
   @override
   Widget build(BuildContext context) {
-    final now = DateTime.now();
-    final today = DateTime(now.year, now.month, now.day);
-    final start = today.subtract(Duration(days: widget.totalDays - 1));
+    final start = widget.periodEnd.subtract(Duration(days: widget.totalDays - 1));
     final aggregate = widget.totalDays > 30;
     final entryMap = {
       for (final e in widget.entries) AppProvider.dateKey(e.date): e
@@ -454,11 +454,13 @@ class HabitStreakCard extends StatefulWidget {
     required this.entries,
     required this.totalDays,
     required this.periodLabel,
+    required this.periodEnd,
   });
 
   final List<DailyEntry> entries;
   final int totalDays;
   final String periodLabel;
+  final DateTime periodEnd;
 
   @override
   State<HabitStreakCard> createState() => _HabitStreakCardState();
@@ -472,7 +474,7 @@ class _HabitStreakCardState extends State<HabitStreakCard> {
     final habits = DailyEntry.defaultHabits;
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
-    final start = today.subtract(Duration(days: widget.totalDays - 1));
+    final start = widget.periodEnd.subtract(Duration(days: widget.totalDays - 1));
 
     final allDays = List.generate(
         widget.totalDays, (i) => start.add(Duration(days: i)));
@@ -544,11 +546,20 @@ class _HabitStreakCardState extends State<HabitStreakCard> {
                     runSpacing: dotGap,
                     children: List.generate(dayKeys.length, (i) {
                       final filled = filledKeys.contains(dayKeys[i]);
+                      final isFuture = allDays[i].isAfter(today);
+                      final Color color;
+                      if (isFuture) {
+                        color = Colors.black.withValues(alpha: 0.06);
+                      } else if (filled) {
+                        color = Colors.black;
+                      } else {
+                        color = Colors.black12;
+                      }
                       return Container(
                         width: dotSize,
                         height: dotSize,
                         decoration: BoxDecoration(
-                          color: filled ? Colors.black : Colors.black12,
+                          color: color,
                           borderRadius: BorderRadius.circular(dotSize / 2),
                         ),
                       );
@@ -608,6 +619,7 @@ class _HabitStreakCardState extends State<HabitStreakCard> {
         entries: widget.entries,
         totalDays: widget.totalDays,
         periodLabel: widget.periodLabel,
+        periodEnd: widget.periodEnd,
         shareOrigin: origin,
       ),
     );
@@ -621,12 +633,14 @@ class _StoryPreviewSheet extends StatefulWidget {
     required this.entries,
     required this.totalDays,
     required this.periodLabel,
+    required this.periodEnd,
     required this.shareOrigin,
   });
 
   final List<DailyEntry> entries;
   final int totalDays;
   final String periodLabel;
+  final DateTime periodEnd;
   final Rect shareOrigin;
 
   @override
@@ -640,9 +654,7 @@ class _StoryPreviewSheetState extends State<_StoryPreviewSheet> {
 
   /// Returns habits that have zero fills in the current period.
   Set<String> _computeEmptyHabits() {
-    final now = DateTime.now();
-    final today = DateTime(now.year, now.month, now.day);
-    final start = today.subtract(Duration(days: widget.totalDays - 1));
+    final start = widget.periodEnd.subtract(Duration(days: widget.totalDays - 1));
     final dayKeys = List.generate(
         widget.totalDays,
         (i) => AppProvider.dateKey(start.add(Duration(days: i))));
@@ -750,6 +762,7 @@ class _StoryPreviewSheetState extends State<_StoryPreviewSheet> {
                           entries: widget.entries,
                           totalDays: widget.totalDays,
                           periodLabel: widget.periodLabel,
+                          periodEnd: widget.periodEnd,
                           excludedHabits: _excludedHabits,
                         ),
                       ),
@@ -840,12 +853,14 @@ class _HabitStoryWidget extends StatelessWidget {
     required this.entries,
     required this.totalDays,
     required this.periodLabel,
+    required this.periodEnd,
     this.excludedHabits = const {},
   });
 
   final List<DailyEntry> entries;
   final int totalDays;
   final String periodLabel;
+  final DateTime periodEnd;
   final Set<String> excludedHabits;
 
   // Capture at pixelRatio 3.0 → 1080 × 1920 px output
@@ -859,7 +874,7 @@ class _HabitStoryWidget extends StatelessWidget {
         .toList();
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
-    final start = today.subtract(Duration(days: totalDays - 1));
+    final start = periodEnd.subtract(Duration(days: totalDays - 1));
     final dayKeys = List.generate(
         totalDays, (i) => AppProvider.dateKey(start.add(Duration(days: i))));
     final entryMap = {
@@ -932,6 +947,7 @@ class _HabitStoryWidget extends StatelessWidget {
                         filledKeys: filledKeys,
                         currentStreak: _calcCurrentStreak(dayKeys, filledKeys),
                         maxStreak: _calcMaxStreak(dayKeys, filledKeys),
+                        today: today,
                       ),
                     );
                   }).toList(),
@@ -981,7 +997,7 @@ class _HabitStoryWidget extends StatelessWidget {
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Text(
-                            DateFormat('d MMMM', 'uk').format(now),
+                            DateFormat('d MMMM', 'uk').format(DateTime.now()),
                             style: const TextStyle(
                               fontFamily: 'FixelText',
                               fontSize: 9,
@@ -989,7 +1005,7 @@ class _HabitStoryWidget extends StatelessWidget {
                             ),
                           ),
                           Text(
-                            DateFormat('yyyy', 'uk').format(now),
+                            DateFormat('yyyy', 'uk').format(DateTime.now()),
                             style: const TextStyle(
                               fontFamily: 'FixelText',
                               fontSize: 9,
@@ -1019,6 +1035,7 @@ class _HabitStoryRow extends StatelessWidget {
     required this.filledKeys,
     required this.currentStreak,
     required this.maxStreak,
+    required this.today,
   });
 
   final String habit;
@@ -1026,6 +1043,7 @@ class _HabitStoryRow extends StatelessWidget {
   final Set<String> filledKeys;
   final int currentStreak;
   final int maxStreak;
+  final DateTime today;
 
   static const double _nameH = 16.0;
   static const double _nameGap = 5.0;
@@ -1115,13 +1133,17 @@ class _HabitStoryRow extends StatelessWidget {
             Row(
               children: dayKeys.map((k) {
                 final filled = filledKeys.contains(k);
+                final isFuture = DateTime.parse(k).isAfter(today);
+                final color = isFuture
+                    ? Colors.black.withValues(alpha: 0.06)
+                    : filled ? Colors.black : Colors.black12;
                 return Padding(
                   padding: EdgeInsets.only(right: k != dayKeys.last ? gap : 0),
                   child: Container(
                     width: dotSize,
                     height: dotSize,
                     decoration: BoxDecoration(
-                      color: filled ? Colors.black : Colors.black12,
+                      color: color,
                       borderRadius: BorderRadius.circular(dotSize / 2),
                     ),
                   ),
@@ -1134,11 +1156,15 @@ class _HabitStoryRow extends StatelessWidget {
               runSpacing: gap,
               children: dayKeys.map((k) {
                 final filled = filledKeys.contains(k);
+                final isFuture = DateTime.parse(k).isAfter(today);
+                final color = isFuture
+                    ? Colors.black.withValues(alpha: 0.06)
+                    : filled ? Colors.black : Colors.black12;
                 return Container(
                   width: dotSize,
                   height: dotSize,
                   decoration: BoxDecoration(
-                    color: filled ? Colors.black : Colors.black12,
+                    color: color,
                     borderRadius: BorderRadius.circular(dotSize / 2),
                   ),
                 );

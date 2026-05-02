@@ -122,7 +122,17 @@ class AppProvider extends ChangeNotifier {
 
   void _saveEntry(DailyEntry entry) {
     final key = dateKey(entry.date);
-    _entries[key] = entry;
+    final isEmpty = entry.valence == null &&
+        entry.arousal == null &&
+        !entry.isSick &&
+        !entry.hasPain &&
+        entry.habits.values.every((v) => !v) &&
+        (entry.comment == null || entry.comment!.isEmpty);
+    if (isEmpty) {
+      _entries.remove(key);
+    } else {
+      _entries[key] = entry;
+    }
     _persistEntries();
     notifyListeners();
   }

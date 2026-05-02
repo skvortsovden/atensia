@@ -51,26 +51,19 @@ class _CircumplexButtonsState extends State<CircumplexButtons> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         if (widget.title != null) ...[
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            crossAxisAlignment: CrossAxisAlignment.baseline,
-            textBaseline: TextBaseline.alphabetic,
-            children: [
-              Text(widget.title!, style: Theme.of(context).textTheme.headlineLarge),
-              AnimatedOpacity(
-                duration: const Duration(milliseconds: 200),
-                opacity: label != null ? 1.0 : 0.0,
-                child: Text(
-                  (_lastLabel ?? '').toLowerCase(),
-                  style: const TextStyle(
-                    fontSize: 22,
-                    fontFamily: 'FixelDisplay',
-                    fontWeight: FontWeight.w400,
-                    color: Colors.black45,
-                  ),
-                ),
+          Text(widget.title!, style: Theme.of(context).textTheme.headlineLarge),
+          AnimatedOpacity(
+            duration: const Duration(milliseconds: 200),
+            opacity: label != null ? 1.0 : 0.0,
+            child: Text(
+              (_lastLabel ?? '').toLowerCase(),
+              style: const TextStyle(
+                fontSize: 18,
+                fontFamily: 'FixelDisplay',
+                fontWeight: FontWeight.w400,
+                color: Colors.black45,
               ),
-            ],
+            ),
           ),
           const SizedBox(height: 12),
         ],

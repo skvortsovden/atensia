@@ -18,19 +18,80 @@ class StatsView extends StatefulWidget {
 
 class _StatsViewState extends State<StatsView> {
   _Period _period = _Period.week;
+  int _offset = 0; // 0 = current, 1 = one period back, etc.
 
-  int get _days => switch (_period) {
-        _Period.week => 7,
-        _Period.month => 30,
-        _Period.year => 365,
-      };
+  DateTime get _today {
+    final now = DateTime.now();
+    return DateTime(now.year, now.month, now.day);
+  }
+
+  // First day of the target calendar month (offset months back).
+  DateTime _targetMonthStart(int offset) {
+    final now = DateTime.now();
+    int month = now.month - offset;
+    int year = now.year;
+    while (month <= 0) {
+      month += 12;
+      year--;
+    }
+    return DateTime(year, month, 1);
+  }
+
+  // Full period bounds (including future days for month).
+  DateTime get _periodStart {
+    switch (_period) {
+      case _Period.week:
+        return _today.subtract(Duration(days: 6 + 7 * _offset));
+      case _Period.month:
+        return _targetMonthStart(_offset);
+      case _Period.year:
+        return DateTime(_today.year - _offset, 1, 1);
+    }
+  }
+
+  DateTime get _periodEnd {
+    switch (_period) {
+      case _Period.week:
+        return _today.subtract(Duration(days: 7 * _offset));
+      case _Period.month:
+        final start = _targetMonthStart(_offset);
+        return DateTime(start.year, start.month + 1, 0); // last day of month
+      case _Period.year:
+        return DateTime(_today.year - _offset, 12, 31);
+    }
+  }
+
+  // Total grid days (includes future for month).
+  int get _days => _periodEnd.difference(_periodStart).inDays + 1;
+
+  // Data cutoff: never beyond today.
+  DateTime get _dataEnd => _periodEnd.isAfter(_today) ? _today : _periodEnd;
+
+  String get _periodLabel {
+    final start = _periodStart;
+    final end = _periodEnd;
+    switch (_period) {
+      case _Period.week:
+        return 'тиждень ${DateFormat('d MMM', 'uk').format(start)} – ${DateFormat('d MMM', 'uk').format(end)}';
+      case _Period.month:
+        return DateFormat('LLLL yyyy', 'uk').format(start);
+      case _Period.year:
+        return DateFormat('yyyy', 'uk').format(end);
+    }
+  }
+
+  static bool _hasData(DailyEntry e) =>
+      e.hasState ||
+      e.isSick ||
+      e.hasPain ||
+      e.habits.values.any((v) => v) ||
+      (e.comment?.isNotEmpty ?? false);
 
   List<DailyEntry> _entriesForPeriod(Map<String, DailyEntry> all) {
-    final now = DateTime.now();
-    final cutoff = DateTime(now.year, now.month, now.day)
-        .subtract(Duration(days: _days - 1));
+    final start = _periodStart;
+    final end = _dataEnd;
     return all.values
-        .where((e) => !e.date.isBefore(cutoff))
+        .where((e) => !e.date.isBefore(start) && !e.date.isAfter(end) && _hasData(e))
         .toList()
       ..sort((a, b) => a.date.compareTo(b.date));
   }
@@ -52,17 +113,30 @@ class _StatsViewState extends State<StatsView> {
             // ── Period selector ───────────────────────────────────────────
             _PeriodSelector(
               current: _period,
-              onChanged: (p) => setState(() => _period = p),
+              onChanged: (p) => setState(() {
+                _period = p;
+                _offset = 0;
+              }),
             ),
 
-            const SizedBox(height: 28),
+            const SizedBox(height: 12),
+
+            // ── Period navigator ──────────────────────────────────────────
+            _PeriodNavigator(
+              label: _periodLabel,
+              canGoForward: _offset > 0,
+              onBack: () => setState(() => _offset++),
+              onForward: () => setState(() => _offset--),
+            ),
+
+            const SizedBox(height: 20),
 
             if (entries.isEmpty)
               _EmptyCard()
             else ...[
-              _FillCard(entries: entries, period: _period, total: _days),
+              _FillCard(entries: entries, period: _period, total: _days, periodStart: _periodStart, periodEnd: _periodEnd),
               const SizedBox(height: 16),
-              TrendChartCard(entries: entries, totalDays: _days),
+              TrendChartCard(entries: entries, totalDays: _days, periodEnd: _periodEnd),
               const SizedBox(height: 16),
               _CircumplexCard(entries: entries),
               const SizedBox(height: 16),
@@ -71,11 +145,8 @@ class _StatsViewState extends State<StatsView> {
               HabitStreakCard(
                 entries: entries,
                 totalDays: _days,
-                periodLabel: switch (_period) {
-                  _Period.week => S.statsPeriodWeek,
-                  _Period.month => S.statsPeriodMonth,
-                  _Period.year => S.statsPeriodYear,
-                },
+                periodLabel: _periodLabel,
+                periodEnd: _periodEnd,
               ),
             ],
           ],
@@ -130,6 +201,57 @@ class _PeriodSelector extends StatelessWidget {
           ),
         );
       }).toList(),
+    );
+  }
+}
+
+// ── Period navigator ──────────────────────────────────────────────────────────
+
+class _PeriodNavigator extends StatelessWidget {
+  const _PeriodNavigator({
+    required this.label,
+    required this.canGoForward,
+    required this.onBack,
+    required this.onForward,
+  });
+
+  final String label;
+  final bool canGoForward;
+  final VoidCallback onBack;
+  final VoidCallback onForward;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        GestureDetector(
+          onTap: onBack,
+          child: const Padding(
+            padding: EdgeInsets.all(4),
+            child: Icon(Icons.chevron_left, size: 22, color: Colors.black),
+          ),
+        ),
+        Text(
+          label,
+          style: const TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+            color: Colors.black,
+          ),
+        ),
+        GestureDetector(
+          onTap: canGoForward ? onForward : null,
+          child: Padding(
+            padding: const EdgeInsets.all(4),
+            child: Icon(
+              Icons.chevron_right,
+              size: 22,
+              color: canGoForward ? Colors.black : Colors.black26,
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
@@ -314,12 +436,19 @@ class _HabitsCard extends StatelessWidget {
 // ── Fill card (dot grid) ──────────────────────────────────────────────────────
 
 class _FillCard extends StatelessWidget {
-  const _FillCard(
-      {required this.entries, required this.period, required this.total});
+  const _FillCard({
+    required this.entries,
+    required this.period,
+    required this.total,
+    required this.periodStart,
+    required this.periodEnd,
+  });
 
   final List<DailyEntry> entries;
   final _Period period;
   final int total;
+  final DateTime periodStart;
+  final DateTime periodEnd;
 
   @override
   Widget build(BuildContext context) {
@@ -328,13 +457,14 @@ class _FillCard extends StatelessWidget {
     final filledKeys = entries.map((e) => AppProvider.dateKey(e.date)).toSet();
     final count = filledKeys.length;
 
-    // Build list of days oldest → newest
-    final days = List.generate(
-      total,
-      (i) => today.subtract(Duration(days: total - 1 - i)),
-    );
+    // Days elapsed in period up to today (for the summary denominator).
+    final dataEnd = periodEnd.isAfter(today) ? today : periodEnd;
+    final elapsed = dataEnd.difference(periodStart).inDays + 1;
 
-    // For year: show by week rows; otherwise by day blocks
+    // Build list of days oldest → newest (full period including future).
+    final days = List.generate(total, (i) => periodStart.add(Duration(days: i)));
+
+    // For year: show smaller dots; otherwise standard size.
     final dotSize = period == _Period.year ? 8.0 : 14.0;
     final dotGap = period == _Period.year ? 3.0 : 5.0;
 
@@ -343,31 +473,39 @@ class _FillCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Summary line
           Text(
-            '$count / $total ${S.statsDaysSuffix}',
-            style: const TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w700,
-            ),
+            '$count / $elapsed ${S.statsDaysSuffix}',
+            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
           ),
           const SizedBox(height: 14),
-          // Dot grid
           Wrap(
             spacing: dotGap,
             runSpacing: dotGap,
             children: days.map((d) {
+              final isFuture = d.isAfter(today);
               final filled = filledKeys.contains(AppProvider.dateKey(d));
+
+              final Color dotColor;
+              if (isFuture) {
+                dotColor = Colors.black.withValues(alpha: 0.06);
+              } else if (filled) {
+                dotColor = Colors.black;
+              } else {
+                dotColor = Colors.black12;
+              }
+
+              Widget dot = Container(
+                width: dotSize,
+                height: dotSize,
+                decoration: BoxDecoration(
+                  color: dotColor,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              );
+
               return Tooltip(
                 message: DateFormat('d MMM', 'uk').format(d),
-                child: Container(
-                  width: dotSize,
-                  height: dotSize,
-                  decoration: BoxDecoration(
-                    color: filled ? Colors.black : Colors.black12,
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
+                child: dot,
               );
             }).toList(),
           ),
