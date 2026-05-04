@@ -1050,11 +1050,11 @@ class _HabitStoryRow extends StatelessWidget {
 
   /// Largest dot size where all [count] dots fit within [availW] × [availH].
   double _bestDotSize(double availW, double availH, int count) {
-    // For small counts force a single row sized to fill the width
+    // For small counts force a single row sized to fill the width, but cap at height
     if (count <= 7) {
       const maxGap = 6.0;
       final s = (availW - (count - 1) * maxGap) / count;
-      return s.clamp(4.0, 60.0);
+      return s.clamp(4.0, availH.clamp(4.0, 60.0));
     }
     double best = 4.0;
     for (double s = 4.0; s <= 60.0; s += 0.5) {
