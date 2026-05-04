@@ -85,8 +85,8 @@ settings_clear_done_title: Дані видалено
 settings_clear_done_message: Усі твої записи було успішно видалено.
 settings_clear_done_btn: Зрозуміло
 settings_import_btn: Імпортувати дані
-settings_import_title: Імпорт дані
-settings_import_message: "Обережіть CSV-файл у форматі експорту.\nІснуючі записи зберегаються, нові додаються або оновлюють існуючі."
+settings_import_title: Імпорт даних
+settings_import_message: "Оберіть файл на телефоні у форматі CSV.\nІснуючі записи зберігаються, нові додаються або оновлюють існуючі. Для прикладу файлу можна завантажити шаблон або експортувати свої дані та використати їх як зразок."
 settings_import_template: Завантажити шаблон
 settings_import_choose: Обрати файл
 settings_import_cancel: Скасувати
