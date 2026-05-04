@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
@@ -18,12 +19,16 @@ class SettingsView extends StatefulWidget {
 class _SettingsViewState extends State<SettingsView> {
   late TextEditingController _nameController;
   final _exportKey = GlobalKey();
+  String _appVersion = '';
 
   @override
   void initState() {
     super.initState();
     _nameController =
         TextEditingController(text: context.read<AppProvider>().username);
+    PackageInfo.fromPlatform().then((info) {
+      if (mounted) setState(() => _appVersion = info.version);
+    });
   }
 
   @override
@@ -701,7 +706,7 @@ class _SettingsViewState extends State<SettingsView> {
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    S.settingsVersion,
+                    'Версія $_appVersion',
                     style: const TextStyle(color: Colors.black38, fontSize: 13),
                   ),
                   const SizedBox(height: 4),

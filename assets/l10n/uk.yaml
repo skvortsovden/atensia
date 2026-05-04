@@ -95,7 +95,6 @@ settings_import_done_message: Записи успішно додано.
 settings_import_done_btn: Зрозуміло
 settings_import_error_title: Помилка імпорту
 settings_import_error_btn: Зрозуміло
-settings_version: Версія 1.7.0
 settings_privacy: Усі дані зберігаються лише на цьому пристрої.
 
 # ── Stats view ────────────────────────────────────────────────────────────────
@@ -116,6 +115,8 @@ stats_share_btn: Поділитись
 stats_story_leisure_title: Моє дозвілля
 stats_story_period_prefix: за
 stats_no_data: Недостатньо даних за цей період
+stats_custom_range: Свій діапазон
+stats_pick_dates: Обрати дати
 
 # ── Shared labels ─────────────────────────────────────────────────────────────
 label_sick: Хвороба

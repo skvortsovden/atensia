@@ -119,7 +119,6 @@ class S {
   static String get settingsImportDoneBtn => _s('settings_import_done_btn');
   static String get settingsImportErrorTitle => _s('settings_import_error_title');
   static String get settingsImportErrorBtn => _s('settings_import_error_btn');
-  static String get settingsVersion => _s('settings_version');
   static String get settingsPrivacy => _s('settings_privacy');
 
   // ── Stats ────────────────────────────────────────────────────────────────
@@ -140,6 +139,8 @@ class S {
   static String get statsStoryLeisureTitle => _s('stats_story_leisure_title');
   static String get statsStoryPeriodPrefix => _s('stats_story_period_prefix');
   static String get statsNoData => _s('stats_no_data');
+  static String get statsCustomRange => _s('stats_custom_range');
+  static String get statsPickDates => _s('stats_pick_dates');
 
   // ── Shared labels ────────────────────────────────────────────────────────
   static String get labelSick => _s('label_sick');

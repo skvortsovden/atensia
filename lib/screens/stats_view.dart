@@ -7,7 +7,7 @@ import '../models/daily_entry.dart';
 import '../providers/app_provider.dart';
 import 'stats_charts.dart';
 
-enum _Period { week, month, year }
+enum _Period { week, month, year, custom }
 
 class StatsView extends StatefulWidget {
   const StatsView({super.key});
@@ -19,6 +19,7 @@ class StatsView extends StatefulWidget {
 class _StatsViewState extends State<StatsView> {
   _Period _period = _Period.week;
   int _offset = 0; // 0 = current, 1 = one period back, etc.
+  DateTimeRange? _customRange;
 
   DateTime get _today {
     final now = DateTime.now();
@@ -46,6 +47,8 @@ class _StatsViewState extends State<StatsView> {
         return _targetMonthStart(_offset);
       case _Period.year:
         return DateTime(_today.year - _offset, 1, 1);
+      case _Period.custom:
+        return _customRange?.start ?? _today;
     }
   }
 
@@ -58,6 +61,8 @@ class _StatsViewState extends State<StatsView> {
         return DateTime(start.year, start.month + 1, 0); // last day of month
       case _Period.year:
         return DateTime(_today.year - _offset, 12, 31);
+      case _Period.custom:
+        return _customRange?.end ?? _today;
     }
   }
 
@@ -77,6 +82,35 @@ class _StatsViewState extends State<StatsView> {
         return DateFormat('LLLL yyyy', 'uk').format(start);
       case _Period.year:
         return DateFormat('yyyy', 'uk').format(end);
+      case _Period.custom:
+        if (_customRange == null) return S.statsPickDates;
+        if (start == end) return DateFormat('d MMM yyyy', 'uk').format(start);
+        return '${DateFormat('d MMM', 'uk').format(start)} – ${DateFormat('d MMM', 'uk').format(end)}';
+    }
+  }
+
+  Future<void> _openDateRangePicker() async {
+    final range = await showDateRangePicker(
+      context: context,
+      firstDate: DateTime(2020),
+      lastDate: _today,
+      initialDateRange: _customRange,
+      builder: (context, child) => Theme(
+        data: Theme.of(context).copyWith(
+          colorScheme: const ColorScheme.light(
+            primary: Colors.black,
+            onPrimary: Colors.white,
+            onSurface: Colors.black,
+            surface: Colors.white,
+          ),
+        ),
+        child: child!,
+      ),
+    );
+    if (range != null) {
+      setState(() => _customRange = range);
+    } else if (_customRange == null) {
+      setState(() => _period = _Period.week);
     }
   }
 
@@ -113,21 +147,30 @@ class _StatsViewState extends State<StatsView> {
             // ── Period selector ───────────────────────────────────────────
             _PeriodSelector(
               current: _period,
-              onChanged: (p) => setState(() {
-                _period = p;
-                _offset = 0;
-              }),
+              onChanged: (p) {
+                setState(() {
+                  _period = p;
+                  _offset = 0;
+                });
+                if (p == _Period.custom) _openDateRangePicker();
+              },
             ),
 
             const SizedBox(height: 12),
 
-            // ── Period navigator ──────────────────────────────────────────
-            _PeriodNavigator(
-              label: _periodLabel,
-              canGoForward: _offset > 0,
-              onBack: () => setState(() => _offset++),
-              onForward: () => setState(() => _offset--),
-            ),
+            // ── Period navigator / custom range row ───────────────────────
+            if (_period == _Period.custom)
+              _CustomRangeRow(
+                label: _periodLabel,
+                onTap: _openDateRangePicker,
+              )
+            else
+              _PeriodNavigator(
+                label: _periodLabel,
+                canGoForward: _offset > 0,
+                onBack: () => setState(() => _offset++),
+                onForward: () => setState(() => _offset--),
+              ),
 
             const SizedBox(height: 20),
 
@@ -171,36 +214,72 @@ class _PeriodSelector extends StatelessWidget {
       (_Period.month, S.statsPeriodMonth),
       (_Period.year, S.statsPeriodYear),
     ];
-    return Row(
-      children: options.map((opt) {
-        final active = current == opt.$1;
-        return Expanded(
-          child: GestureDetector(
-            onTap: () => onChanged(opt.$1),
-            child: Container(
-              margin: EdgeInsets.only(
-                right: opt.$1 != _Period.year ? 8 : 0,
-              ),
-              padding: const EdgeInsets.symmetric(vertical: 10),
-              decoration: BoxDecoration(
-                color: active ? Colors.black : Colors.transparent,
-                border: Border.all(color: Colors.black, width: 2),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              alignment: Alignment.center,
-              child: Text(
-                opt.$2,
-                style: TextStyle(
-                  fontFamily: 'FixelText',
-                  fontWeight: FontWeight.w600,
-                  fontSize: 14,
-                  color: active ? Colors.white : Colors.black,
+    final customActive = current == _Period.custom;
+    return Column(
+      children: [
+        Row(
+          children: options.map((opt) {
+            final active = current == opt.$1;
+            return Expanded(
+              child: GestureDetector(
+                onTap: () => onChanged(opt.$1),
+                child: Container(
+                  margin: EdgeInsets.only(
+                    right: opt.$1 != _Period.year ? 8 : 0,
+                  ),
+                  padding: const EdgeInsets.symmetric(vertical: 10),
+                  decoration: BoxDecoration(
+                    color: active ? Colors.black : Colors.transparent,
+                    border: Border.all(color: Colors.black, width: 2),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  alignment: Alignment.center,
+                  child: Text(
+                    opt.$2,
+                    style: TextStyle(
+                      fontFamily: 'FixelText',
+                      fontWeight: FontWeight.w600,
+                      fontSize: 14,
+                      color: active ? Colors.white : Colors.black,
+                    ),
+                  ),
                 ),
               ),
+            );
+          }).toList(),
+        ),
+        const SizedBox(height: 8),
+        GestureDetector(
+          onTap: () => onChanged(_Period.custom),
+          child: Container(
+            padding: const EdgeInsets.symmetric(vertical: 10),
+            decoration: BoxDecoration(
+              color: customActive ? Colors.black : Colors.transparent,
+              border: Border.all(color: Colors.black, width: 2),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            alignment: Alignment.center,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.date_range_outlined,
+                    size: 16,
+                    color: customActive ? Colors.white : Colors.black),
+                const SizedBox(width: 6),
+                Text(
+                  S.statsCustomRange,
+                  style: TextStyle(
+                    fontFamily: 'FixelText',
+                    fontWeight: FontWeight.w600,
+                    fontSize: 14,
+                    color: customActive ? Colors.white : Colors.black,
+                  ),
+                ),
+              ],
             ),
           ),
-        );
-      }).toList(),
+        ),
+      ],
     );
   }
 }
@@ -252,6 +331,37 @@ class _PeriodNavigator extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+// ── Custom range row ──────────────────────────────────────────────────────────
+
+class _CustomRangeRow extends StatelessWidget {
+  const _CustomRangeRow({required this.label, required this.onTap});
+
+  final String label;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Icon(Icons.date_range_outlined, size: 16, color: Colors.black54),
+          const SizedBox(width: 6),
+          Text(
+            label,
+            style: const TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              color: Colors.black,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -464,9 +574,10 @@ class _FillCard extends StatelessWidget {
     // Build list of days oldest → newest (full period including future).
     final days = List.generate(total, (i) => periodStart.add(Duration(days: i)));
 
-    // For year: show smaller dots; otherwise standard size.
-    final dotSize = period == _Period.year ? 8.0 : 14.0;
-    final dotGap = period == _Period.year ? 3.0 : 5.0;
+    // For year or large custom range: show smaller dots.
+    final smallDots = period == _Period.year || (period == _Period.custom && total > 60);
+    final dotSize = smallDots ? 8.0 : 14.0;
+    final dotGap = smallDots ? 3.0 : 5.0;
 
     return _Card(
       title: S.statsSectionFill,
