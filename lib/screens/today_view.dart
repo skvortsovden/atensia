@@ -109,10 +109,13 @@ class _TodayViewState extends State<TodayView> {
         entry.habits.values.any((v) => v);
     final displayN = provider.totalFilledDays + (todayFilled ? 0 : 1);
 
-    return SafeArea(
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(20, 20, 20, 32),
-        child: Column(
+    return GestureDetector(
+      behavior: HitTestBehavior.translucent,
+      onTap: () => FocusScope.of(context).unfocus(),
+      child: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.fromLTRB(20, 20, 20, 32),
+          child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
@@ -212,6 +215,7 @@ class _TodayViewState extends State<TodayView> {
           ],
         ),
       ),
+    ),
     );
   }
 }
