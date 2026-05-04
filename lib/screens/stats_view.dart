@@ -215,67 +215,48 @@ class _PeriodSelector extends StatelessWidget {
       (_Period.year, S.statsPeriodYear),
     ];
     final customActive = current == _Period.custom;
-    return Column(
+    return Row(
       children: [
-        Row(
-          children: options.map((opt) {
-            final active = current == opt.$1;
-            return Expanded(
-              child: GestureDetector(
-                onTap: () => onChanged(opt.$1),
-                child: Container(
-                  margin: EdgeInsets.only(
-                    right: opt.$1 != _Period.year ? 8 : 0,
-                  ),
-                  padding: const EdgeInsets.symmetric(vertical: 10),
-                  decoration: BoxDecoration(
-                    color: active ? Colors.black : Colors.transparent,
-                    border: Border.all(color: Colors.black, width: 2),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  alignment: Alignment.center,
-                  child: Text(
-                    opt.$2,
-                    style: TextStyle(
-                      fontFamily: 'FixelText',
-                      fontWeight: FontWeight.w600,
-                      fontSize: 14,
-                      color: active ? Colors.white : Colors.black,
-                    ),
+        ...options.map((opt) {
+          final active = current == opt.$1;
+          return Expanded(
+            child: GestureDetector(
+              onTap: () => onChanged(opt.$1),
+              child: Container(
+                margin: const EdgeInsets.only(right: 8),
+                padding: const EdgeInsets.symmetric(vertical: 10),
+                decoration: BoxDecoration(
+                  color: active ? Colors.black : Colors.transparent,
+                  border: Border.all(color: Colors.black, width: 2),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                alignment: Alignment.center,
+                child: Text(
+                  opt.$2,
+                  style: TextStyle(
+                    fontFamily: 'FixelText',
+                    fontWeight: FontWeight.w600,
+                    fontSize: 14,
+                    color: active ? Colors.white : Colors.black,
                   ),
                 ),
               ),
-            );
-          }).toList(),
-        ),
-        const SizedBox(height: 8),
+            ),
+          );
+        }),
         GestureDetector(
           onTap: () => onChanged(_Period.custom),
           child: Container(
-            padding: const EdgeInsets.symmetric(vertical: 10),
+            padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
               color: customActive ? Colors.black : Colors.transparent,
               border: Border.all(color: Colors.black, width: 2),
               borderRadius: BorderRadius.circular(8),
             ),
-            alignment: Alignment.center,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(Icons.date_range_outlined,
-                    size: 16,
-                    color: customActive ? Colors.white : Colors.black),
-                const SizedBox(width: 6),
-                Text(
-                  S.statsCustomRange,
-                  style: TextStyle(
-                    fontFamily: 'FixelText',
-                    fontWeight: FontWeight.w600,
-                    fontSize: 14,
-                    color: customActive ? Colors.white : Colors.black,
-                  ),
-                ),
-              ],
+            child: Icon(
+              Icons.date_range_outlined,
+              size: 18,
+              color: customActive ? Colors.white : Colors.black,
             ),
           ),
         ),
