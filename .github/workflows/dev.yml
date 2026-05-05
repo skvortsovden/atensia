@@ -221,6 +221,12 @@ jobs:
     permissions:
       contents: write
     steps:
+      - name: Checkout main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
       - name: Download Android APK
         uses: actions/download-artifact@v4
         with:
@@ -245,3 +251,23 @@ jobs:
           files: |
             atensia-dev.apk
             atensia-dev.ipa
+
+      - name: Update GitHub Pages dev build links
+        run: |
+          # Already on main (checked out above). Check if dev section is present.
+          if grep -q 'latest-dev' docs/index.html; then
+            echo "Dev build links already present on main – no update needed."
+            exit 0
+          fi
+
+          # Pull docs/index.html from the PR branch which has the dev section
+          git fetch origin ${{ github.head_ref }}
+          git checkout origin/${{ github.head_ref }} -- docs/index.html
+
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add docs/index.html
+          git diff --cached --quiet && { echo "No changes."; exit 0; }
+          git commit -m "docs: add dev build links to GitHub Pages [skip ci]"
+          git push origin HEAD:main
+          echo "GitHub Pages updated with dev build links."
