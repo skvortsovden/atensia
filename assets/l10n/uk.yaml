@@ -95,6 +95,7 @@ settings_import_done_message: Записи успішно додано.
 settings_import_done_btn: Зрозуміло
 settings_import_error_title: Помилка імпорту
 settings_import_error_btn: Зрозуміло
+settings_import_error_encoding: "Вибраний файл не є коректним UTF-8. Збережіть його у кодуванні UTF-8 та спробуйте ще раз."
 settings_privacy: Усі дані зберігаються лише на цьому пристрої.
 
 # ── Stats view ────────────────────────────────────────────────────────────────

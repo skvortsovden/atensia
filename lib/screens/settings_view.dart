@@ -1,11 +1,12 @@
-import 'package:flutter/material.dart';
+import 'dart:convert';
+import 'dart:io';
+
 import 'package:file_picker/file_picker.dart';
+import 'package:flutter/material.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
-import 'dart:convert';
-import 'dart:io';
 
 import '../l10n/strings.dart';
 import '../providers/app_provider.dart';
@@ -37,6 +38,36 @@ class _SettingsViewState extends State<SettingsView> {
     _nameController.dispose();
     super.dispose();
   }
+
+  Future<void> _showEncodingErrorDialog(BuildContext context) => showDialog<void>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          backgroundColor: Colors.white,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+          title: Text(
+            S.settingsImportErrorTitle,
+            style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 18),
+          ),
+          content: Text(
+            S.settingsImportErrorEncoding,
+            style: const TextStyle(fontSize: 14, height: 1.6, color: Colors.black87),
+          ),
+          actions: [
+            ElevatedButton(
+              onPressed: () => Navigator.of(ctx).pop(),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.black,
+                foregroundColor: Colors.white,
+                elevation: 0,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              child: Text(S.settingsImportErrorBtn),
+            ),
+          ],
+        ),
+      );
 
   Future<void> _showImportDialog(BuildContext context) async {
     final action = await showDialog<String>(
@@ -116,9 +147,21 @@ class _SettingsViewState extends State<SettingsView> {
     final path  = result.files.first.path;
     final String csvContent;
     if (bytes != null) {
-      csvContent = utf8.decode(bytes);
+      try {
+        csvContent = utf8.decode(bytes);
+      } on FormatException {
+        if (!context.mounted) return;
+        await _showEncodingErrorDialog(context);
+        return;
+      }
     } else if (path != null) {
-      csvContent = await File(path).readAsString();
+      try {
+        csvContent = await File(path).readAsString();
+      } on FormatException {
+        if (!context.mounted) return;
+        await _showEncodingErrorDialog(context);
+        return;
+      }
     } else {
       return;
     }
