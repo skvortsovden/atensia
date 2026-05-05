@@ -236,9 +236,20 @@ class AppProvider extends ChangeNotifier {
 
   /// Repairs comment fields that were corrupted by the UTF-8/Latin-1 encoding
   /// bug (previously `String.fromCharCodes(bytes)` was used instead of
-  /// `utf8.decode(bytes)` during CSV import).
-  /// Returns the number of entries whose comment was actually fixed.
+  /// `utf8.decode(bytes)` during CSV import). Persists and notifies listeners
+  /// when any entry is changed. Returns the number of repaired entries.
   int repairEncodingIssues() {
+    final count = _repairEncodingInMemory();
+    if (count > 0) {
+      _persistEntries();
+      notifyListeners();
+    }
+    return count;
+  }
+
+  /// Mutates [_entries] in-place to fix any mojibake comments.
+  /// Returns the number of entries changed.
+  int _repairEncodingInMemory() {
     int count = 0;
     final updated = <String, DailyEntry>{};
     for (final e in _entries.entries) {
@@ -250,8 +261,6 @@ class AppProvider extends ChangeNotifier {
     }
     if (count > 0) {
       _entries = {..._entries, ...updated};
-      _persistEntries();
-      notifyListeners();
     }
     return count;
   }
@@ -344,7 +353,9 @@ class AppProvider extends ChangeNotifier {
       }
 
       final commentRaw = hasCommentCol ? cells.last.trim() : null;
-      final comment = (commentRaw?.isEmpty ?? true) ? null : commentRaw;
+      final comment = (commentRaw?.isEmpty ?? true)
+          ? null
+          : _tryFixMojibake(commentRaw);
 
       final key = dateKey(date);
       imported[key] = DailyEntry(
@@ -359,6 +370,8 @@ class AppProvider extends ChangeNotifier {
     }
 
     _entries = {..._entries, ...imported};
+    // Repair any pre-existing mojibake alongside the new entries.
+    _repairEncodingInMemory();
     _persistEntries();
     notifyListeners();
     return null;

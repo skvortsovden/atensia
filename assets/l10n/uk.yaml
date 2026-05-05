@@ -95,15 +95,6 @@ settings_import_done_message: Записи успішно додано.
 settings_import_done_btn: Зрозуміло
 settings_import_error_title: Помилка імпорту
 settings_import_error_btn: Зрозуміло
-settings_repair_btn: Виправити нотатки
-settings_repair_title: Виправити нотатки
-settings_repair_message: "Виправляє нотатки, які могли бути пошкоджені через помилку кодування при імпорті. Стосується лише записів, імпортованих до виправлення цього недоліку."
-settings_repair_run: Виправити
-settings_repair_cancel: Скасувати
-settings_repair_done_title: Готово
-settings_repair_done_fixed: "Виправлено {count} записів."
-settings_repair_done_none: Пошкоджених записів не знайдено.
-settings_repair_done_btn: Зрозуміло
 settings_privacy: Усі дані зберігаються лише на цьому пристрої.
 
 # ── Stats view ────────────────────────────────────────────────────────────────
