@@ -55,6 +55,19 @@ class NotificationService {
     return true;
   }
 
+  /// Check whether notifications are currently enabled at OS level.
+  /// Use this as a fallback when [requestPermission] returns false on OEMs
+  /// where the callback fires before the system registers the new grant.
+  Future<bool> isPermissionGranted() async {
+    final android = _plugin.resolvePlatformSpecificImplementation<
+        AndroidFlutterLocalNotificationsPlugin>();
+    if (android != null) {
+      return await android.areNotificationsEnabled() ?? true;
+    }
+    // On iOS the permission state is managed via requestPermission only.
+    return true;
+  }
+
   /// Schedule (or reschedule) a daily notification at [time].
   /// Call with [enabled] = false to cancel.
   Future<void> schedule(TimeOfDay time, {required bool enabled}) async {
