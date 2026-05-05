@@ -201,16 +201,16 @@ class AppProvider extends ChangeNotifier {
     }
     _remindersEnabled = enabled;
     _prefs.setBool(_remindersKey, enabled);
-    NotificationService.instance.schedule(_reminderTime, enabled: enabled);
+    await NotificationService.instance.schedule(_reminderTime, enabled: enabled);
     notifyListeners();
   }
 
-  void setReminderTime(TimeOfDay time) {
+  Future<void> setReminderTime(TimeOfDay time) async {
     _reminderTime = time;
     _prefs.setString(_reminderTimeKey,
         '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}');
     if (_remindersEnabled) {
-      NotificationService.instance.schedule(time, enabled: true);
+      await NotificationService.instance.schedule(time, enabled: true);
     }
     notifyListeners();
   }

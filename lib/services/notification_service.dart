@@ -73,29 +73,47 @@ class NotificationService {
       scheduled = scheduled.add(const Duration(days: 1));
     }
 
-    await _plugin.zonedSchedule(
-      _notifId,
-      'Атенція',
-      'час звернути увагу на себе',
-      scheduled,
-      const NotificationDetails(
-        android: AndroidNotificationDetails(
-          _channelId,
-          'Щоденне нагадування',
-          channelDescription: 'Нагадування звернути увагу на себе',
-          importance: Importance.high,
-          priority: Priority.high,
-        ),
-        iOS: DarwinNotificationDetails(
-          presentAlert: true,
-          presentBadge: true,
-          presentSound: true,
-        ),
+    const details = NotificationDetails(
+      android: AndroidNotificationDetails(
+        _channelId,
+        'Щоденне нагадування',
+        channelDescription: 'Нагадування звернути увагу на себе',
+        importance: Importance.high,
+        priority: Priority.high,
       ),
-      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-      uiLocalNotificationDateInterpretation:
-          UILocalNotificationDateInterpretation.absoluteTime,
-      matchDateTimeComponents: DateTimeComponents.time,
+      iOS: DarwinNotificationDetails(
+        presentAlert: true,
+        presentBadge: true,
+        presentSound: true,
+      ),
     );
+
+    try {
+      await _plugin.zonedSchedule(
+        _notifId,
+        'Атенція',
+        'час звернути увагу на себе',
+        scheduled,
+        details,
+        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+        uiLocalNotificationDateInterpretation:
+            UILocalNotificationDateInterpretation.absoluteTime,
+        matchDateTimeComponents: DateTimeComponents.time,
+      );
+    } on PlatformException catch (e) {
+      // Exact alarm permission not granted (Android 12+); fall back to inexact.
+      debugPrint('NotificationService: exact alarm unavailable ($e), falling back to inexact.');
+      await _plugin.zonedSchedule(
+        _notifId,
+        'Атенція',
+        'час звернути увагу на себе',
+        scheduled,
+        details,
+        androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+        uiLocalNotificationDateInterpretation:
+            UILocalNotificationDateInterpretation.absoluteTime,
+        matchDateTimeComponents: DateTimeComponents.time,
+      );
+    }
   }
 }
