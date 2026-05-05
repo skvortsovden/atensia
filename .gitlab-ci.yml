@@ -1,0 +1,180 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Atensia – GitLab CI/CD pipeline
+#
+# Triggered automatically for every tag that matches the pattern v<major>.<minor>.<patch>
+# (e.g. v1.7.2).  Two build jobs run in parallel:
+#
+#   • build:android  – produces a release APK on a Linux runner.
+#   • build:ios      – produces a release IPA on a macOS runner (tag: macos).
+#
+# Both artefacts are then uploaded to the GitLab Generic Package Registry and a
+# GitLab Release is created with download links for each package.
+#
+# Required CI/CD variables (Settings → CI/CD → Variables):
+#
+#   Android signing (optional – omit to build unsigned):
+#     ANDROID_KEYSTORE_BASE64   Base-64-encoded JKS keystore file.
+#     ANDROID_STORE_PASSWORD    Keystore password.
+#     ANDROID_KEY_ALIAS         Key alias inside the keystore.
+#     ANDROID_KEY_PASSWORD      Key password.
+#
+#   iOS code-signing (optional – omit to build unsigned):
+#     IOS_CERTIFICATE_BASE64    Base-64-encoded .p12 distribution certificate.
+#     IOS_CERTIFICATE_PASSWORD  Password for the .p12 file.
+#     IOS_PROVISIONING_BASE64   Base-64-encoded .mobileprovision profile.
+# ─────────────────────────────────────────────────────────────────────────────
+
+stages:
+  - build
+  - upload
+  - release
+
+variables:
+  FLUTTER_VERSION: "3.29.3"
+  # URL prefix used when uploading/downloading packages from the Generic Package Registry.
+  PACKAGE_REGISTRY_URL: "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/atensia/${CI_COMMIT_TAG}"
+
+# Shared rules anchor – all jobs run only on version tags (v1.2.3).
+.version_tag:
+  rules:
+    - if: '$CI_COMMIT_TAG =~ /^v\d+\.\d+\.\d+/'
+
+# ─── Android build ────────────────────────────────────────────────────────────
+build:android:
+  stage: build
+  image: ghcr.io/cirruslabs/flutter:${FLUTTER_VERSION}
+  extends: .version_tag
+  before_script:
+    - flutter pub get
+    # Set up Android release signing when keystore credentials are provided.
+    - |
+      if [ -n "${ANDROID_KEYSTORE_BASE64}" ]; then
+        echo "${ANDROID_KEYSTORE_BASE64}" | base64 -d > android/app/release.jks
+        printf 'storePassword=%s\nkeyPassword=%s\nkeyAlias=%s\nstoreFile=release.jks\n' \
+          "${ANDROID_STORE_PASSWORD}" \
+          "${ANDROID_KEY_PASSWORD}" \
+          "${ANDROID_KEY_ALIAS}" \
+          > android/key.properties
+        echo "Android signing configured."
+      else
+        echo "ANDROID_KEYSTORE_BASE64 not set – building unsigned APK."
+      fi
+  script:
+    - VERSION="${CI_COMMIT_TAG#v}"
+    - |
+      flutter build apk \
+        --release \
+        --build-name="${VERSION}" \
+        --build-number="${CI_PIPELINE_IID}"
+    - mv build/app/outputs/flutter-apk/app-release.apk atensia.apk
+  artifacts:
+    name: "atensia-${CI_COMMIT_TAG}-android"
+    paths:
+      - atensia.apk
+    expire_in: 30 days
+
+# ─── iOS build ────────────────────────────────────────────────────────────────
+build:ios:
+  stage: build
+  # Requires a GitLab runner registered with the 'macos' tag.
+  tags:
+    - macos
+  extends: .version_tag
+  before_script:
+    - flutter pub get
+    # Import distribution certificate when credentials are provided.
+    - |
+      if [ -n "${IOS_CERTIFICATE_BASE64}" ]; then
+        echo "${IOS_CERTIFICATE_BASE64}" | base64 -d > /tmp/dist.p12
+        KEYCHAIN_PASSWORD=$(openssl rand -hex 32)
+        security create-keychain -p "${KEYCHAIN_PASSWORD}" build.keychain
+        security import /tmp/dist.p12 -k build.keychain \
+          -P "${IOS_CERTIFICATE_PASSWORD}" \
+          -T /usr/bin/codesign
+        security list-keychains -s build.keychain
+        security default-keychain -s build.keychain
+        security unlock-keychain -p "${KEYCHAIN_PASSWORD}" build.keychain
+        security set-keychain-settings -t 3600 build.keychain
+        echo "iOS certificate imported."
+      else
+        echo "IOS_CERTIFICATE_BASE64 not set – building without code signing."
+      fi
+    # Install provisioning profile when provided.
+    - |
+      if [ -n "${IOS_PROVISIONING_BASE64}" ]; then
+        mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
+        echo "${IOS_PROVISIONING_BASE64}" | base64 -d \
+          > ~/Library/MobileDevice/Provisioning\ Profiles/app.mobileprovision
+        echo "Provisioning profile installed."
+      fi
+  script:
+    - VERSION="${CI_COMMIT_TAG#v}"
+    - |
+      if [ -n "${IOS_CERTIFICATE_BASE64}" ] && [ -n "${IOS_PROVISIONING_BASE64}" ]; then
+        flutter build ipa \
+          --release \
+          --build-name="${VERSION}" \
+          --build-number="${CI_PIPELINE_IID}"
+      else
+        flutter build ipa \
+          --release \
+          --build-name="${VERSION}" \
+          --build-number="${CI_PIPELINE_IID}" \
+          --no-codesign
+      fi
+    - mv build/ios/ipa/*.ipa atensia.ipa
+  after_script:
+    # Delete the temporary keychain to avoid leaving signing credentials on the runner.
+    - security delete-keychain build.keychain 2>/dev/null || true
+  artifacts:
+    name: "atensia-${CI_COMMIT_TAG}-ios"
+    paths:
+      - atensia.ipa
+    expire_in: 30 days
+
+# ─── Upload to Generic Package Registry ──────────────────────────────────────
+upload:
+  stage: upload
+  image: curlimages/curl:latest
+  extends: .version_tag
+  needs:
+    - job: build:android
+      artifacts: true
+    - job: build:ios
+      artifacts: true
+  script:
+    - |
+      curl --fail --silent --show-error \
+           --header "JOB-TOKEN: ${CI_JOB_TOKEN}" \
+           --upload-file atensia.apk \
+           "${PACKAGE_REGISTRY_URL}/atensia-${CI_COMMIT_TAG}.apk"
+    - |
+      curl --fail --silent --show-error \
+           --header "JOB-TOKEN: ${CI_JOB_TOKEN}" \
+           --upload-file atensia.ipa \
+           "${PACKAGE_REGISTRY_URL}/atensia-${CI_COMMIT_TAG}.ipa"
+
+# ─── Create GitLab Release ────────────────────────────────────────────────────
+release:
+  stage: release
+  image: registry.gitlab.com/gitlab-org/release-cli:latest
+  extends: .version_tag
+  needs:
+    - job: upload
+  script:
+    - echo "Creating GitLab Release for ${CI_COMMIT_TAG}"
+  release:
+    tag_name: ${CI_COMMIT_TAG}
+    name: "Atensia ${CI_COMMIT_TAG}"
+    description: |
+      Flutter release ${CI_COMMIT_TAG} — built by GitLab CI.
+
+      Download the packages below or install directly on your device.
+    assets:
+      links:
+        - name: "Android APK"
+          url: "${PACKAGE_REGISTRY_URL}/atensia-${CI_COMMIT_TAG}.apk"
+          link_type: package
+        - name: "iOS IPA"
+          url: "${PACKAGE_REGISTRY_URL}/atensia-${CI_COMMIT_TAG}.ipa"
+          link_type: package
