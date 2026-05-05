@@ -1,0 +1,123 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Atensia – GitHub Actions dev-build pipeline
+#
+# Triggered automatically for every new commit pushed to a pull request
+# (events: opened, synchronize, reopened).  Two build jobs run in parallel:
+#
+#   • build-android  – produces a release APK (unsigned) on ubuntu-latest.
+#   • build-ios      – produces a release IPA (no code-sign) on macos-latest.
+#
+# Both artifacts are uploaded as workflow artifacts (retained 7 days) and
+# are also attached to a rolling GitHub Pre-Release that is created or updated
+# on every run.  The release uses the fixed tag "latest-dev" so it always
+# reflects the most recent PR build.  The release name carries the "-dev"
+# suffix as required.
+# ─────────────────────────────────────────────────────────────────────────────
+
+name: Dev Build
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+
+  # ─── Android build ──────────────────────────────────────────────────────────
+  build-android:
+    name: Build Android APK (dev)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.29.3'
+          channel: stable
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Build APK
+        run: |
+          VERSION=$(grep '^version:' pubspec.yaml | sed 's/version: //' | cut -d'+' -f1)
+          flutter build apk \
+            --release \
+            --build-name="${VERSION}-dev" \
+            --build-number="${GITHUB_RUN_NUMBER}"
+          mv build/app/outputs/flutter-apk/app-release.apk atensia-dev.apk
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-apk-dev
+          path: atensia-dev.apk
+          retention-days: 7
+
+  # ─── iOS build ──────────────────────────────────────────────────────────────
+  build-ios:
+    name: Build iOS IPA (dev)
+    runs-on: macos-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.29.3'
+          channel: stable
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Build IPA
+        run: |
+          VERSION=$(grep '^version:' pubspec.yaml | sed 's/version: //' | cut -d'+' -f1)
+          flutter build ipa \
+            --release \
+            --build-name="${VERSION}-dev" \
+            --build-number="${GITHUB_RUN_NUMBER}" \
+            --no-codesign
+          mv build/ios/ipa/*.ipa atensia-dev.ipa
+
+      - name: Upload IPA artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-ipa-dev
+          path: atensia-dev.ipa
+          retention-days: 7
+
+  # ─── Publish rolling dev release ────────────────────────────────────────────
+  release:
+    name: Publish Dev Release
+    needs: [build-android, build-ios]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Download Android APK
+        uses: actions/download-artifact@v4
+        with:
+          name: android-apk-dev
+
+      - name: Download iOS IPA
+        uses: actions/download-artifact@v4
+        with:
+          name: ios-ipa-dev
+
+      - name: Publish GitHub Pre-Release (latest-dev)
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: latest-dev
+          name: "Atensia latest-dev"
+          body: |
+            **Dev build** – automatically generated from PR #${{ github.event.pull_request.number }} (commit `${{ github.sha }}`).
+
+            > This is a pre-release build and may be unstable.
+          prerelease: true
+          make_latest: false
+          files: |
+            atensia-dev.apk
+            atensia-dev.ipa
