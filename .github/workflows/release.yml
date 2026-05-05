@@ -76,13 +76,16 @@ jobs:
             --release \
             --build-name="${VERSION}" \
             --build-number="${GITHUB_RUN_NUMBER}"
-          mv build/app/outputs/flutter-apk/app-release.apk atensia.apk
+          cp build/app/outputs/flutter-apk/app-release.apk "atensia-${GITHUB_REF_NAME}.apk"
+          cp "atensia-${GITHUB_REF_NAME}.apk" atensia.apk
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
           name: android-apk
-          path: atensia.apk
+          path: |
+            atensia-${{ github.ref_name }}.apk
+            atensia.apk
           retention-days: 30
 
   # ─── iOS build ──────────────────────────────────────────────────────────────
@@ -196,7 +199,8 @@ jobs:
             -exportPath "$PWD/build/ios/ipa-patched" \
             -exportOptionsPlist /tmp/ExportOptions.plist
 
-          mv "$PWD/build/ios/ipa-patched/"*.ipa atensia.ipa
+          cp "$PWD/build/ios/ipa-patched/"*.ipa "atensia-${GITHUB_REF_NAME}.ipa"
+          cp "atensia-${GITHUB_REF_NAME}.ipa" atensia.ipa
 
       - name: Clean up keychain
         if: always()
@@ -206,7 +210,9 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ios-ipa
-          path: atensia.ipa
+          path: |
+            atensia-${{ github.ref_name }}.ipa
+            atensia.ipa
           retention-days: 30
 
       - name: Upload to App Store Connect
@@ -252,28 +258,9 @@ jobs:
           name: "Atensia ${{ github.ref_name }}"
           generate_release_notes: true
           files: |
+            atensia-${{ github.ref_name }}.apk
+            atensia-${{ github.ref_name }}.ipa
             atensia.apk
             atensia.ipa
 
-      - name: Update GitHub Pages Android link
-        run: |
-          # Derive slug: v1.7.4 → 1-7-4
-          VERSION="${GITHUB_REF_NAME#v}"
-          SLUG="${VERSION//./-}"
-          APK_FILENAME="atensia-${SLUG}.apk"
 
-          # Checkout main so we can commit docs changes
-          git fetch origin main
-          git checkout main
-
-          # Copy APK into docs/
-          cp atensia.apk "docs/${APK_FILENAME}"
-
-          # Update href in index.html to point to the new file
-          sed -i "s|href=\"atensia-[0-9][0-9-]*.apk\"|href=\"${APK_FILENAME}\"|g" docs/index.html
-
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add "docs/${APK_FILENAME}" docs/index.html
-          git commit -m "docs: update Android download link to ${APK_FILENAME}"
-          git push origin main
