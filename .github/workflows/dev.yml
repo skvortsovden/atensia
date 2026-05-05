@@ -59,7 +59,7 @@ jobs:
           flutter build apk \
             --release \
             --build-name="${VERSION}-dev" \
-            --build-number="${GITHUB_RUN_NUMBER}"
+            --build-number="${GITHUB_RUN_NUMBER}${GITHUB_RUN_ATTEMPT}"
           mv build/app/outputs/flutter-apk/app-release.apk atensia-dev.apk
 
       - name: Upload APK artifact
@@ -167,7 +167,7 @@ jobs:
           flutter build ipa \
             --release \
             --build-name="${VERSION}-dev" \
-            --build-number="${GITHUB_RUN_NUMBER}" \
+            --build-number="${GITHUB_RUN_NUMBER}${GITHUB_RUN_ATTEMPT}" \
             --export-options-plist=/tmp/ExportOptions.plist
 
           # Patch missing MinimumOSVersion in App.framework (Flutter known issue)
