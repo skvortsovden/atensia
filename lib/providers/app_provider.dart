@@ -234,6 +234,48 @@ class AppProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Repairs comment fields that were corrupted by the UTF-8/Latin-1 encoding
+  /// bug (previously `String.fromCharCodes(bytes)` was used instead of
+  /// `utf8.decode(bytes)` during CSV import).
+  /// Returns the number of entries whose comment was actually fixed.
+  int repairEncodingIssues() {
+    int count = 0;
+    final updated = <String, DailyEntry>{};
+    for (final e in _entries.entries) {
+      final fixed = _tryFixMojibake(e.value.comment);
+      if (fixed != e.value.comment) {
+        updated[e.key] = e.value.copyWith(comment: fixed);
+        count++;
+      }
+    }
+    if (count > 0) {
+      _entries = {..._entries, ...updated};
+      _persistEntries();
+      notifyListeners();
+    }
+    return count;
+  }
+
+  /// Attempts to fix a string that was corrupted by treating UTF-8 bytes as
+  /// Latin-1 code points. Returns the corrected string, or the original value
+  /// if the repair is not applicable or not possible.
+  static String? _tryFixMojibake(String? text) {
+    if (text == null || text.isEmpty) return text;
+    // All code units must be ≤ 255 (i.e., the string looks like raw bytes
+    // shoved into Latin-1 characters), otherwise it is already valid Unicode.
+    if (text.codeUnits.any((c) => c > 255)) return text;
+    try {
+      final fixed = utf8.decode(text.codeUnits);
+      // Only apply when the result is different and contains non-ASCII chars.
+      if (fixed != text && fixed.codeUnits.any((c) => c > 127)) {
+        return fixed;
+      }
+    } catch (_) {
+      // Byte sequence is not valid UTF-8 — leave unchanged.
+    }
+    return text;
+  }
+
   // ── Import ────────────────────────────────────────────────────────────────
 
   /// Parses [csv] content and merges it into existing entries.

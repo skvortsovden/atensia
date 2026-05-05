@@ -119,6 +119,16 @@ class S {
   static String get settingsImportDoneBtn => _s('settings_import_done_btn');
   static String get settingsImportErrorTitle => _s('settings_import_error_title');
   static String get settingsImportErrorBtn => _s('settings_import_error_btn');
+  static String get settingsRepairBtn => _s('settings_repair_btn');
+  static String get settingsRepairTitle => _s('settings_repair_title');
+  static String get settingsRepairMessage => _s('settings_repair_message');
+  static String get settingsRepairRun => _s('settings_repair_run');
+  static String get settingsRepairCancel => _s('settings_repair_cancel');
+  static String get settingsRepairDoneTitle => _s('settings_repair_done_title');
+  static String settingsRepairDoneFixed(int count) =>
+      _s('settings_repair_done_fixed').replaceFirst('{count}', '$count');
+  static String get settingsRepairDoneNone => _s('settings_repair_done_none');
+  static String get settingsRepairDoneBtn => _s('settings_repair_done_btn');
   static String get settingsPrivacy => _s('settings_privacy');
 
   // ── Stats ────────────────────────────────────────────────────────────────

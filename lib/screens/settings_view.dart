@@ -218,6 +218,89 @@ class _SettingsViewState extends State<SettingsView> {
     );
   }
 
+  Future<void> _showRepairDialog(BuildContext context) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+        title: Text(
+          S.settingsRepairTitle,
+          style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 18),
+        ),
+        content: Text(
+          S.settingsRepairMessage,
+          style: const TextStyle(fontSize: 14, height: 1.6, color: Colors.black87),
+        ),
+        actions: [
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              ElevatedButton(
+                onPressed: () => Navigator.of(ctx).pop(true),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.black,
+                  foregroundColor: Colors.white,
+                  elevation: 0,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+                child: Text(S.settingsRepairRun),
+              ),
+              const SizedBox(height: 4),
+              TextButton(
+                onPressed: () => Navigator.of(ctx).pop(false),
+                child: Text(
+                  S.settingsRepairCancel,
+                  style: const TextStyle(color: Colors.black54),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true) return;
+    if (!context.mounted) return;
+
+    final fixed = context.read<AppProvider>().repairEncodingIssues();
+    if (!context.mounted) return;
+
+    await showDialog<void>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+        title: Text(
+          S.settingsRepairDoneTitle,
+          style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 18),
+        ),
+        content: Text(
+          fixed > 0
+              ? S.settingsRepairDoneFixed(fixed)
+              : S.settingsRepairDoneNone,
+          style: const TextStyle(fontSize: 14, height: 1.6, color: Colors.black87),
+        ),
+        actions: [
+          ElevatedButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.black,
+              foregroundColor: Colors.white,
+              elevation: 0,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+            child: Text(S.settingsRepairDoneBtn),
+          ),
+        ],
+      ),
+    );
+  }
+
   Future<void> _showClearDataDialog(BuildContext context) async {
     final result = await showDialog<String>(
       context: context,
@@ -571,6 +654,34 @@ class _SettingsViewState extends State<SettingsView> {
                     ),
                     const Spacer(),
                     const Icon(Icons.upload_outlined, size: 18),
+                  ],
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 8),
+
+            // ── Repair broken notes ──────────────────────────────────────────
+            GestureDetector(
+              onTap: () => _showRepairDialog(context),
+              child: Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                decoration: BoxDecoration(
+                  border: Border.all(color: Colors.black, width: 2),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  children: [
+                    Text(
+                      S.settingsRepairBtn,
+                      style: Theme.of(context)
+                          .textTheme
+                          .bodyLarge
+                          ?.copyWith(fontWeight: FontWeight.w600),
+                    ),
+                    const Spacer(),
+                    const Icon(Icons.auto_fix_high_outlined, size: 18),
                   ],
                 ),
               ),
