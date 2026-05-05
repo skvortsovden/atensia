@@ -83,6 +83,11 @@ jobs:
           flutter-version: '3.29.3'
           channel: stable
 
+      - name: Select Xcode 26
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: 'latest-stable'
+
       - name: Install dependencies
         run: flutter pub get
 
@@ -164,7 +169,23 @@ jobs:
             --build-name="${VERSION}-dev" \
             --build-number="${GITHUB_RUN_NUMBER}" \
             --export-options-plist=/tmp/ExportOptions.plist
-          mv build/ios/ipa/*.ipa atensia-dev.ipa
+
+          # Patch missing MinimumOSVersion in App.framework (Flutter known issue)
+          XCARCHIVE="$PWD/build/ios/archive/Runner.xcarchive"
+          APP_PLIST="${XCARCHIVE}/Products/Applications/Runner.app/Frameworks/App.framework/Info.plist"
+          if [ -f "$APP_PLIST" ]; then
+            /usr/libexec/PlistBuddy -c "Delete :MinimumOSVersion" "$APP_PLIST" 2>/dev/null || true
+            /usr/libexec/PlistBuddy -c "Add :MinimumOSVersion string 13.0" "$APP_PLIST"
+            echo "Patched MinimumOSVersion=13.0 in App.framework/Info.plist"
+          fi
+
+          # Re-export IPA from patched xcarchive so the fix is included
+          xcodebuild -exportArchive \
+            -archivePath "${XCARCHIVE}" \
+            -exportPath "$PWD/build/ios/ipa-patched" \
+            -exportOptionsPlist /tmp/ExportOptions.plist
+
+          mv "$PWD/build/ios/ipa-patched/"*.ipa atensia-dev.ipa
 
       - name: Upload IPA artifact
         uses: actions/upload-artifact@v4
