@@ -28,6 +28,11 @@ name: Dev Build
 on:
   pull_request:
     types: [opened, synchronize, reopened]
+    paths-ignore:
+      - '**/*.md'
+      - '**/*.txt'
+      - 'docs/**'
+      - '.github/*.md'
 
 jobs:
 
