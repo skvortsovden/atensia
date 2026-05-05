@@ -33,17 +33,23 @@ void main() async {
   final appProvider = AppProvider();
   await appProvider.init();
 
-  await NotificationService.instance.init();
-  if (appProvider.remindersEnabled) {
-    try {
-      await NotificationService.instance.schedule(
-        appProvider.reminderTime,
-        enabled: true,
-      );
-    } catch (e) {
-      // Notification scheduling failed (e.g. permission revoked); continue startup.
-      debugPrint('NotificationService: failed to schedule on startup ($e).');
+  try {
+    await NotificationService.instance.init();
+    if (appProvider.remindersEnabled) {
+      try {
+        await NotificationService.instance.schedule(
+          appProvider.reminderTime,
+          enabled: true,
+        );
+      } catch (e) {
+        // Notification scheduling failed (e.g. permission revoked); continue startup.
+        debugPrint('NotificationService: failed to schedule on startup ($e).');
+      }
     }
+  } catch (e) {
+    // Notification service failed to initialize (e.g. method channel not yet
+    // available on this platform/build); continue startup without notifications.
+    debugPrint('NotificationService: init failed on startup ($e).');
   }
 
   runApp(
