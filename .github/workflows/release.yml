@@ -107,75 +107,96 @@ jobs:
       - name: Install dependencies
         run: flutter pub get
 
-      - name: Configure iOS signing
+      - name: Import signing certificate
         env:
-          IOS_CERTIFICATE_BASE64: ${{ secrets.IOS_CERTIFICATE_BASE64 }}
-          IOS_CERTIFICATE_PASSWORD: ${{ secrets.IOS_CERTIFICATE_PASSWORD }}
-          IOS_PROVISIONING_BASE64: ${{ secrets.IOS_PROVISIONING_BASE64 }}
+          P12_BASE64: ${{ secrets.IOS_P12_BASE64 }}
+          P12_PASSWORD: ${{ secrets.IOS_P12_PASSWORD }}
         run: |
-          if [ -n "${IOS_CERTIFICATE_BASE64}" ]; then
-            echo "${IOS_CERTIFICATE_BASE64}" | base64 -d > /tmp/dist.p12
-            KEYCHAIN_PASSWORD=$(openssl rand -hex 32)
-            security create-keychain -p "${KEYCHAIN_PASSWORD}" build.keychain
-            security import /tmp/dist.p12 -k build.keychain \
-              -P "${IOS_CERTIFICATE_PASSWORD}" \
-              -T /usr/bin/codesign
-            security list-keychains -s build.keychain
-            security default-keychain -s build.keychain
-            security unlock-keychain -p "${KEYCHAIN_PASSWORD}" build.keychain
-            security set-keychain-settings -t 3600 build.keychain
-            security set-key-partition-list -S apple-tool:,apple: -s -k "${KEYCHAIN_PASSWORD}" build.keychain
-            echo "iOS certificate imported."
-          else
-            echo "IOS_CERTIFICATE_BASE64 not set – building without code signing."
-          fi
+          echo "$P12_BASE64" | base64 --decode -o /tmp/cert.p12
+          KEYCHAIN_PASSWORD=$(openssl rand -hex 32)
+          security create-keychain -p "${KEYCHAIN_PASSWORD}" build.keychain
+          security default-keychain -s build.keychain
+          security unlock-keychain -p "${KEYCHAIN_PASSWORD}" build.keychain
+          security list-keychains -s build.keychain
+          security import /tmp/cert.p12 -k build.keychain -P "$P12_PASSWORD" -T /usr/bin/codesign
+          security set-keychain-settings -t 3600 build.keychain
+          security set-key-partition-list -S apple-tool:,apple: -s -k "${KEYCHAIN_PASSWORD}" build.keychain
 
-          if [ -n "${IOS_PROVISIONING_BASE64}" ]; then
-            mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
-            echo "${IOS_PROVISIONING_BASE64}" | base64 -d \
-              > /tmp/app.mobileprovision
-            UUID=$(security cms -D -i /tmp/app.mobileprovision | plutil -extract UUID xml1 - -o - | sed -n 's/.*<string>\(.*\)<\/string>.*/\1/p')
-            cp /tmp/app.mobileprovision ~/Library/MobileDevice/Provisioning\ Profiles/"${UUID}".mobileprovision
-            echo "Provisioning profile installed with UUID: ${UUID}bileprovision | plutil -extract UUID xml1 - -o - | sed -n 's/.*<string>\(.*\)<\/string>.*/\1/p')
-            cp /tmp/app.mobileprovision ~/Library/MobileDevice/Provisioning\ Profiles/"${UUID}".mobileprovision
-            echo "Provisioning profile installed with UUID: ${UUID}"
-          fi
+      - name: Install provisioning profile
+        env:
+          PP_BASE64: ${{ secrets.IOS_PROVISION_BASE64 }}
+        run: |
+          echo "$PP_BASE64" | base64 --decode -o /tmp/profile.mobileprovision
+          mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
+          UUID=$(security cms -D -i /tmp/profile.mobileprovision | plutil -extract UUID xml1 - -o - | sed -n 's/.*<string>\(.*\)<\/string>.*/\1/p')
+          PROFILE_NAME=$(security cms -D -i /tmp/profile.mobileprovision | plutil -extract Name xml1 - -o - | sed -n 's/.*<string>\(.*\)<\/string>.*/\1/p')
+          cp /tmp/profile.mobileprovision ~/Library/MobileDevice/Provisioning\ Profiles/"${UUID}".mobileprovision
+          echo "Provisioning profile installed: ${PROFILE_NAME} (${UUID})"
+          echo "PROFILE_NAME=${PROFILE_NAME}" >> $GITHUB_ENV
+          echo "PROFILE_UUID=${UUID}" >> $GITHUB_ENV
+
+      - name: Configure Xcode manual signing
+        env:
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: |
+          sed -i '' \
+            -e 's/"CODE_SIGN_IDENTITY\[sdk=iphoneos\*\]" = "iPhone Developer";/"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "Apple Distribution";/g' \
+            -e 's/CODE_SIGN_IDENTITY = "Apple Development";/CODE_SIGN_IDENTITY = "Apple Distribution";/g' \
+            -e 's/CODE_SIGN_STYLE = Automatic;/CODE_SIGN_STYLE = Manual;/g' \
+            -e "s/PROVISIONING_PROFILE_SPECIFIER = \"\";/PROVISIONING_PROFILE_SPECIFIER = \"${PROFILE_NAME}\";/g" \
+            ios/Runner.xcodeproj/project.pbxproj
+          echo "Xcode project patched for manual signing."
 
       - name: Build IPA
         env:
-          IOS_CERTIFICATE_BASE64: ${{ secrets.IOS_CERTIFICATE_BASE64 }}
-          IOS_PROVISIONING_BASE64: ${{ secrets.IOS_PROVISIONING_BASE64 }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
         run: |
           VERSION="${GITHUB_REF_NAME#v}"
-          if [ -n "${IOS_CERTIFICATE_BASE64}" ] && [ -n "${IOS_PROVISIONING_BASE64}" ]; then
-            flutter build ipa \
-              --release \
-              --build-name="${VERSION}" \
-              --build-number="${GITHUB_RUN_NUMBER}"
+          cat > /tmp/ExportOptions.plist << EOF
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+              <key>method</key>
+              <string>app-store</string>
+              <key>teamID</key>
+              <string>${APPLE_TEAM_ID}</string>
+              <key>signingStyle</key>
+              <string>manual</string>
+              <key>provisioningProfiles</key>
+              <dict>
+                  <key>com.texapp.atensia</key>
+                  <string>${PROFILE_NAME}</string>
+              </dict>
+              <key>stripSwiftSymbols</key>
+              <true/>
+              <key>compileBitcode</key>
+              <false/>
+          </dict>
+          </plist>
+          EOF
+          flutter build ipa \
+            --release \
+            --build-name="${VERSION}" \
+            --build-number="${GITHUB_RUN_NUMBER}" \
+            --export-options-plist=/tmp/ExportOptions.plist
 
-            # Patch missing MinimumOSVersion in App.framework (Flutter known issue)
-            XCARCHIVE="$PWD/build/ios/archive/Runner.xcarchive"
-            APP_PLIST="${XCARCHIVE}/Products/Applications/Runner.app/Frameworks/App.framework/Info.plist"
-            if [ -f "$APP_PLIST" ]; then
-              /usr/libexec/PlistBuddy -c "Delete :MinimumOSVersion" "$APP_PLIST" 2>/dev/null || true
-              /usr/libexec/PlistBuddy -c "Add :MinimumOSVersion string 13.0" "$APP_PLIST"
-              echo "Patched MinimumOSVersion=13.0 in App.framework/Info.plist"
-            fi
-
-            # Re-export IPA from patched xcarchive so the fix is included
-            xcodebuild -exportArchive \
-              -archivePath "${XCARCHIVE}" \
-              -exportPath "$PWD/build/ios/ipa-patched" \
-              -exportOptionsPlist /tmp/ExportOptions.plist
-            mv "$PWD/build/ios/ipa-patched/"*.ipa atensia.ipa
-          else
-            flutter build ipa \
-              --release \
-              --build-name="${VERSION}" \
-              --build-number="${GITHUB_RUN_NUMBER}" \
-              --no-codesign
-            mv build/ios/ipa/*.ipa atensia.ipa
+          # Patch missing MinimumOSVersion in App.framework (Flutter known issue)
+          XCARCHIVE="$PWD/build/ios/archive/Runner.xcarchive"
+          APP_PLIST="${XCARCHIVE}/Products/Applications/Runner.app/Frameworks/App.framework/Info.plist"
+          if [ -f "$APP_PLIST" ]; then
+            /usr/libexec/PlistBuddy -c "Delete :MinimumOSVersion" "$APP_PLIST" 2>/dev/null || true
+            /usr/libexec/PlistBuddy -c "Add :MinimumOSVersion string 13.0" "$APP_PLIST"
+            echo "Patched MinimumOSVersion=13.0 in App.framework/Info.plist"
           fi
+
+          # Re-export IPA from patched xcarchive so the fix is included
+          xcodebuild -exportArchive \
+            -archivePath "${XCARCHIVE}" \
+            -exportPath "$PWD/build/ios/ipa-patched" \
+            -exportOptionsPlist /tmp/ExportOptions.plist
+
+          mv "$PWD/build/ios/ipa-patched/"*.ipa atensia.ipa
 
       - name: Clean up keychain
         if: always()
@@ -187,6 +208,25 @@ jobs:
           name: ios-ipa
           path: atensia.ipa
           retention-days: 30
+
+      - name: Upload to App Store Connect
+        env:
+          ASC_API_KEY_ID: ${{ secrets.ASC_API_KEY_ID }}
+          ASC_API_ISSUER_ID: ${{ secrets.ASC_API_ISSUER_ID }}
+          ASC_API_KEY_BASE64: ${{ secrets.ASC_API_KEY_BASE64 }}
+        run: |
+          if [ -z "${ASC_API_KEY_ID}" ]; then
+            echo "ASC_API_KEY_ID not set – skipping App Store Connect upload."
+            exit 0
+          fi
+          mkdir -p ~/.appstoreconnect/private_keys
+          echo "${ASC_API_KEY_BASE64}" | base64 --decode > ~/.appstoreconnect/private_keys/AuthKey_${ASC_API_KEY_ID}.p8
+          xcrun altool --upload-app \
+            --type ios \
+            --file atensia.ipa \
+            --apiKey "${ASC_API_KEY_ID}" \
+            --apiIssuer "${ASC_API_ISSUER_ID}"
+          echo "Uploaded to App Store Connect."
 
   # ─── Create GitHub Release ──────────────────────────────────────────────────
   release:
@@ -214,3 +254,26 @@ jobs:
           files: |
             atensia.apk
             atensia.ipa
+
+      - name: Update GitHub Pages Android link
+        run: |
+          # Derive slug: v1.7.4 → 1-7-4
+          VERSION="${GITHUB_REF_NAME#v}"
+          SLUG="${VERSION//./-}"
+          APK_FILENAME="atensia-${SLUG}.apk"
+
+          # Checkout main so we can commit docs changes
+          git fetch origin main
+          git checkout main
+
+          # Copy APK into docs/
+          cp atensia.apk "docs/${APK_FILENAME}"
+
+          # Update href in index.html to point to the new file
+          sed -i "s|href=\"atensia-[0-9][0-9-]*.apk\"|href=\"${APK_FILENAME}\"|g" docs/index.html
+
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add "docs/${APK_FILENAME}" docs/index.html
+          git commit -m "docs: update Android download link to ${APK_FILENAME}"
+          git push origin main
