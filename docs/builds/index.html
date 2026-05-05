@@ -136,10 +136,15 @@
         return r.json();
       })
       .then(release => {
-        // Only show versioned APKs, e.g. atensia-1.7.3-dev-20.apk
-        const apks = release.assets
+        // Versioned APKs: atensia-1.x.x-dev-NN.apk  (preferred)
+        // Fallback: atensia-dev.apk (fixed-name alias for latest)
+        const versioned = release.assets
           .filter(a => /^atensia-.+-dev-\d+\.apk$/.test(a.name))
           .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+
+        const apks = versioned.length > 0
+          ? versioned
+          : release.assets.filter(a => a.name === 'atensia-dev.apk');
 
         const container = document.getElementById('builds');
         const status    = document.getElementById('status');
@@ -155,13 +160,14 @@
           // Parse version from filename: atensia-{version}-dev-{build}.apk
           const match = asset.name.match(/^atensia-(.+)-dev-(\d+)\.apk$/);
           const version = match ? match[1] : '—';
-          const build   = match ? match[2] : '—';
+          const build   = match ? `#${match[2]}` : 'latest';
+          const label   = match ? `v${version} <span style="font-weight:400;color:#aaa">${build}</span>` : 'latest dev';
 
           const row = document.createElement('div');
           row.className = 'build-row';
           row.innerHTML = `
             <div class="build-info">
-              <div class="build-name">v${version} <span style="font-weight:400;color:#aaa">#${build}</span>${i === 0 ? ' <span style="font-size:11px;background:#000;color:#fff;border-radius:4px;padding:1px 6px;margin-left:4px">latest</span>' : ''}</div>
+              <div class="build-name">${label}${i === 0 ? ' <span style="font-size:11px;background:#000;color:#fff;border-radius:4px;padding:1px 6px;margin-left:4px">latest</span>' : ''}</div>
               <div class="build-meta">${formatDate(asset.created_at)} · ${formatSize(asset.size)}</div>
             </div>
             <a class="download-btn" href="${asset.browser_download_url}" download>
