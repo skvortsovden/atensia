@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Атенція — Dev Builds</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #fff;
+      color: #000;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 40px 24px;
+    }
+
+    .back {
+      align-self: flex-start;
+      font-size: 13px;
+      color: #aaa;
+      text-decoration: none;
+      margin-bottom: 32px;
+    }
+    .back:hover { color: #000; }
+
+    h1 {
+      font-size: 24px;
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+
+    .subtitle {
+      font-size: 14px;
+      color: #888;
+      margin-bottom: 32px;
+    }
+
+    .builds {
+      width: 100%;
+      max-width: 560px;
+    }
+
+    .build-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 0;
+      border-bottom: 1px solid #f0f0f0;
+      gap: 12px;
+    }
+
+    .build-row:first-child { border-top: 1px solid #f0f0f0; }
+
+    .build-info { flex: 1; min-width: 0; }
+
+    .build-name {
+      font-size: 14px;
+      font-weight: 600;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .build-meta {
+      font-size: 12px;
+      color: #aaa;
+      margin-top: 2px;
+    }
+
+    .download-btn {
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 14px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      text-decoration: none;
+      background: #000;
+      color: #fff;
+      transition: opacity 0.15s;
+    }
+    .download-btn:hover { opacity: 0.75; }
+
+    .status {
+      font-size: 14px;
+      color: #aaa;
+      margin-top: 24px;
+      text-align: center;
+    }
+
+    .error { color: #c00; }
+
+    footer {
+      margin-top: 48px;
+      font-size: 12px;
+      color: #ccc;
+    }
+  </style>
+</head>
+<body>
+  <a class="back" href="../">← Назад</a>
+
+  <h1>🛠 Dev Builds</h1>
+  <p class="subtitle">Android APK — автоматичні збірки з pull request</p>
+
+  <div class="builds" id="builds">
+    <p class="status" id="status">Завантаження…</p>
+  </div>
+
+  <footer>© 2026 Denys Skvortsov</footer>
+
+  <script>
+    const REPO = 'skvortsovden/atensia';
+    const TAG  = 'latest-dev';
+
+    function formatSize(bytes) {
+      return (bytes / 1024 / 1024).toFixed(1) + ' MB';
+    }
+
+    function formatDate(iso) {
+      return new Date(iso).toLocaleDateString('uk-UA', {
+        day: '2-digit', month: 'short', year: 'numeric',
+        hour: '2-digit', minute: '2-digit'
+      });
+    }
+
+    fetch(`https://api.github.com/repos/${REPO}/releases/tags/${TAG}`)
+      .then(r => {
+        if (!r.ok) throw new Error(`GitHub API: ${r.status}`);
+        return r.json();
+      })
+      .then(release => {
+        // Only show versioned APKs, e.g. atensia-1.7.3-dev-20.apk
+        const apks = release.assets
+          .filter(a => /^atensia-.+-dev-\d+\.apk$/.test(a.name))
+          .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+
+        const container = document.getElementById('builds');
+        const status    = document.getElementById('status');
+
+        if (apks.length === 0) {
+          status.textContent = 'Збірок поки немає.';
+          return;
+        }
+
+        status.remove();
+
+        apks.forEach((asset, i) => {
+          // Parse version from filename: atensia-{version}-dev-{build}.apk
+          const match = asset.name.match(/^atensia-(.+)-dev-(\d+)\.apk$/);
+          const version = match ? match[1] : '—';
+          const build   = match ? match[2] : '—';
+
+          const row = document.createElement('div');
+          row.className = 'build-row';
+          row.innerHTML = `
+            <div class="build-info">
+              <div class="build-name">v${version} <span style="font-weight:400;color:#aaa">#${build}</span>${i === 0 ? ' <span style="font-size:11px;background:#000;color:#fff;border-radius:4px;padding:1px 6px;margin-left:4px">latest</span>' : ''}</div>
+              <div class="build-meta">${formatDate(asset.created_at)} · ${formatSize(asset.size)}</div>
+            </div>
+            <a class="download-btn" href="${asset.browser_download_url}" download>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M5 20h14v-2H5v2zm7-18v12.17l-4.59-4.58L6 11l6 6 6-6-1.41-1.41L13 14.17V2h-1z"/>
+              </svg>
+              APK
+            </a>
+          `;
+          container.appendChild(row);
+        });
+      })
+      .catch(err => {
+        document.getElementById('status').className = 'status error';
+        document.getElementById('status').textContent = `Помилка: ${err.message}`;
+      });
+  </script>
+</body>
+</html>
