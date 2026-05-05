@@ -256,7 +256,6 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           name: "Atensia ${{ github.ref_name }}"
-          generate_release_notes: true
           files: |
             atensia-${{ github.ref_name }}.apk
             atensia-${{ github.ref_name }}.ipa
