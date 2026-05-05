@@ -338,24 +338,33 @@ class _GuidePage extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Spacer(flex: 2),
-          Text(
-            S.onboardingGuideTitle,
-            style: const TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.w700,
+          Expanded(
+            child: SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const SizedBox(height: 32),
+                  Text(
+                    S.onboardingGuideTitle,
+                    style: const TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  Text(
+                    S.onboardingGuideText,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      height: 1.6,
+                      color: Colors.black87,
+                    ),
+                  ),
+                  const SizedBox(height: 32),
+                ],
+              ),
             ),
           ),
-          const SizedBox(height: 20),
-          Text(
-            S.onboardingGuideText,
-            style: const TextStyle(
-              fontSize: 16,
-              height: 1.6,
-              color: Colors.black87,
-            ),
-          ),
-          const Spacer(flex: 3),
           _PrimaryButton(label: S.onboardingGuideBtn, onTap: onFinish),
           const SizedBox(height: 32),
         ],
