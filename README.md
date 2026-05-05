@@ -18,3 +18,15 @@
 <img src="screenshots/Simulator%20Screenshot%20-%20iPhone%2014%20Plus%20-%202026-04-28%20at%2011.58.20.png" width="180">
 <img src="screenshots/Simulator%20Screenshot%20-%20iPhone%2014%20Plus%20-%202026-04-28%20at%2011.58.57.png" width="180">
 <img src="screenshots/Simulator%20Screenshot%20-%20iPhone%2014%20Plus%20-%202026-04-28%20at%2011.59.04.png" width="180">
+
+## Список змін
+
+### 1.7.3
+
+#### Виправлення помилки
+
+- Додано прокрутку на сторінці «Як користуватись» під час першого, щоб кнопка «Далі» завжди була доступна
+
+## Подяки
+
+Дякую [@asilichenko](https://github.com/asilichenko)(Android) та [Alexander Perepelitsyn](https://www.linkedin.com/in/alexander-perepelitsyn-37488240/)(iOS) за знайдену помилку при першому запуску на екрані "Як користуватись додатком", яку вже виправлено у версії 1.7.3.
