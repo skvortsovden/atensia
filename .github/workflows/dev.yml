@@ -115,14 +115,13 @@ jobs:
         env:
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
         run: |
+          /usr/libexec/PlistBuddy -c "Set :objects:13B07F941A680F5B00A75B9A:buildSettings:CODE_SIGN_STYLE Manual" ios/Runner.xcodeproj/project.pbxproj 2>/dev/null || true
           sed -i '' \
-            -e "s/DEVELOPMENT_TEAM = [^;]*/DEVELOPMENT_TEAM = ${APPLE_TEAM_ID}/g" \
+            -e 's/"CODE_SIGN_IDENTITY\[sdk=iphoneos\*\]" = "iPhone Developer";/"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "Apple Distribution";/g' \
+            -e 's/CODE_SIGN_IDENTITY = "Apple Development";/CODE_SIGN_IDENTITY = "Apple Distribution";/g' \
             -e 's/CODE_SIGN_STYLE = Automatic;/CODE_SIGN_STYLE = Manual;/g' \
             ios/Runner.xcodeproj/project.pbxproj
-          # Set provisioning profile specifier
-          sed -i '' \
-            -e "s/PROVISIONING_PROFILE_SPECIFIER = [^;]*;/PROVISIONING_PROFILE_SPECIFIER = \"${PROFILE_NAME}\";/g" \
-            ios/Runner.xcodeproj/project.pbxproj
+          echo "Xcode project patched for manual signing."
 
       - name: Update build number in pubspec.yaml
         run: |
@@ -161,7 +160,14 @@ jobs:
             --release \
             --build-name="${VERSION}-dev" \
             --build-number="${GITHUB_RUN_NUMBER}" \
-            --export-options-plist=/tmp/ExportOptions.plist
+            --export-options-plist=/tmp/ExportOptions.plist \
+            --dart-define=FLUTTER_BUILD_NUMBER="${GITHUB_RUN_NUMBER}" \
+            --codesign-identity="Apple Distribution" \
+            -- \
+            CODE_SIGN_STYLE=Manual \
+            CODE_SIGN_IDENTITY="Apple Distribution" \
+            DEVELOPMENT_TEAM="${APPLE_TEAM_ID}" \
+            PROVISIONING_PROFILE_SPECIFIER="${PROFILE_NAME}"
           mv build/ios/ipa/*.ipa atensia-dev.ipa
 
       - name: Upload IPA artifact
