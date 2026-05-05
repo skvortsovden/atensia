@@ -105,8 +105,24 @@ jobs:
           echo "$PP_BASE64" | base64 --decode -o /tmp/profile.mobileprovision
           mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
           UUID=$(security cms -D -i /tmp/profile.mobileprovision | plutil -extract UUID xml1 - -o - | sed -n 's/.*<string>\(.*\)<\/string>.*/\1/p')
+          PROFILE_NAME=$(security cms -D -i /tmp/profile.mobileprovision | plutil -extract Name xml1 - -o - | sed -n 's/.*<string>\(.*\)<\/string>.*/\1/p')
           cp /tmp/profile.mobileprovision ~/Library/MobileDevice/Provisioning\ Profiles/"${UUID}".mobileprovision
-          echo "Provisioning profile installed with UUID: ${UUID}"
+          echo "Provisioning profile installed: ${PROFILE_NAME} (${UUID})"
+          echo "PROFILE_NAME=${PROFILE_NAME}" >> $GITHUB_ENV
+          echo "PROFILE_UUID=${UUID}" >> $GITHUB_ENV
+
+      - name: Configure Xcode manual signing
+        env:
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: |
+          sed -i '' \
+            -e "s/DEVELOPMENT_TEAM = [^;]*/DEVELOPMENT_TEAM = ${APPLE_TEAM_ID}/g" \
+            -e 's/CODE_SIGN_STYLE = Automatic;/CODE_SIGN_STYLE = Manual;/g' \
+            ios/Runner.xcodeproj/project.pbxproj
+          # Set provisioning profile specifier
+          sed -i '' \
+            -e "s/PROVISIONING_PROFILE_SPECIFIER = [^;]*;/PROVISIONING_PROFILE_SPECIFIER = \"${PROFILE_NAME}\";/g" \
+            ios/Runner.xcodeproj/project.pbxproj
 
       - name: Update build number in pubspec.yaml
         run: |
@@ -124,11 +140,16 @@ jobs:
           <plist version="1.0">
           <dict>
               <key>method</key>
-              <string>ad-hoc</string>
+              <string>app-store</string>
               <key>teamID</key>
               <string>${APPLE_TEAM_ID}</string>
               <key>signingStyle</key>
               <string>manual</string>
+              <key>provisioningProfiles</key>
+              <dict>
+                  <key>com.texapp.atensia</key>
+                  <string>${PROFILE_NAME}</string>
+              </dict>
               <key>stripSwiftSymbols</key>
               <true/>
               <key>compileBitcode</key>
