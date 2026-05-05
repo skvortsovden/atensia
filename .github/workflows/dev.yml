@@ -65,13 +65,13 @@ jobs:
             --release \
             --build-name="${VERSION}-dev" \
             --build-number="${GITHUB_RUN_NUMBER}${GITHUB_RUN_ATTEMPT}"
-          mv build/app/outputs/flutter-apk/app-release.apk atensia-dev.apk
+          mv build/app/outputs/flutter-apk/app-release.apk "atensia-${VERSION}-dev-${GITHUB_RUN_NUMBER}.apk"
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
           name: android-apk-dev
-          path: atensia-dev.apk
+          path: atensia-*-dev-*.apk
           retention-days: 7
 
   # ─── iOS build ──────────────────────────────────────────────────────────────
@@ -242,6 +242,11 @@ jobs:
         with:
           name: ios-ipa-dev
 
+      - name: Prepare release assets
+        run: |
+          # Keep a fixed-name copy so the GitHub Pages download link stays stable
+          cp atensia-*-dev-*.apk atensia-dev.apk
+
       - name: Publish GitHub Pre-Release (latest-dev)
         uses: softprops/action-gh-release@v2
         with:
@@ -254,6 +259,7 @@ jobs:
           prerelease: true
           make_latest: false
           files: |
+            atensia-*-dev-*.apk
             atensia-dev.apk
             atensia-dev.ipa
 
