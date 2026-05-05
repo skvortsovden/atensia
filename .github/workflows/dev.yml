@@ -161,8 +161,6 @@ jobs:
             --build-name="${VERSION}-dev" \
             --build-number="${GITHUB_RUN_NUMBER}" \
             --export-options-plist=/tmp/ExportOptions.plist \
-            --dart-define=FLUTTER_BUILD_NUMBER="${GITHUB_RUN_NUMBER}" \
-            --codesign-identity="Apple Distribution" \
             -- \
             CODE_SIGN_STYLE=Manual \
             CODE_SIGN_IDENTITY="Apple Distribution" \
