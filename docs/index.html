@@ -101,10 +101,35 @@
       flex-shrink: 0;
     }
 
-    footer {
-      margin-top: 64px;
+    .btn-dev {
+      background: #f5f5f5;
+      color: #000;
+      border: 2px solid #e0e0e0;
       font-size: 13px;
+    }
+
+    .dev-section {
+      margin-top: 24px;
+      width: 100%;
+      max-width: 280px;
+      text-align: center;
+    }
+
+    .dev-section summary {
+      font-size: 12px;
       color: #aaa;
+      cursor: pointer;
+      user-select: none;
+      margin-bottom: 12px;
+    }
+
+    .dev-section summary:hover { color: #555; }
+
+    .dev-note {
+      font-size: 11px;
+      color: #aaa;
+      margin-top: 8px;
+      line-height: 1.5;
     }
 
     .description {
@@ -212,12 +237,27 @@
       </svg>
       App Store
     </a>
-    <a class="btn btn-android" href="atensia-1-7-3.apk" download>
+    <a class="btn btn-android" href="atensia-1-7-2.apk" download>
       <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
         <path d="M3.18 23.76c.3.17.64.22.98.15l12.09-6.98-2.54-2.54zm15.8-10.24L16.65 12l2.33-1.52L21 8.71a1.23 1.23 0 0 0 0-2.14l-2.33-1.27zm-2.54-7.27L4.16.07a1.16 1.16 0 0 0-1.17.1l9.67 9.67zm-12.08.92v17.66l9.2-8.83z"/>
       </svg>
       Завантажити APK (Android)
     </a>
+  </div>
+
+  </div>
+
+  <div class="dev-section">
+    <details>
+      <summary>🛠 Dev builds</summary>
+      <a class="btn btn-dev" href="https://github.com/skvortsovden/atensia/releases/download/latest-dev/atensia-dev.apk" download>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M3.18 23.76c.3.17.64.22.98.15l12.09-6.98-2.54-2.54zm15.8-10.24L16.65 12l2.33-1.52L21 8.71a1.23 1.23 0 0 0 0-2.14l-2.33-1.27zm-2.54-7.27L4.16.07a1.16 1.16 0 0 0-1.17.1l9.67 9.67zm-12.08.92v17.66l9.2-8.83z"/>
+        </svg>
+        Android APK (dev)
+      </a>
+      <p class="dev-note">iOS IPA — <a href="https://github.com/skvortsovden/atensia/releases/tag/latest-dev" target="_blank" rel="noopener">завантажити з GitHub Releases</a><br>(встановлюється через Apple Configurator 2 або Xcode)</p>
+    </details>
   </div>
 
   <footer>© 2026 Denys Skvortsov</footer>

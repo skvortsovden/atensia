@@ -29,4 +29,4 @@
 
 ## Подяки
 
-Дякую [@asilichenko](https://github.com/asilichenko) та [Alexander Perepelitsyn](https://www.linkedin.com/in/alexander-perepelitsyn-37488240/) за знайдену помилку при першому запуску на екрані "Як користуватись додатком", яку вже виправлено у версії 1.7.3.
+Дякую [@asilichenko](https://github.com/asilichenko)(Android) та [Alexander Perepelitsyn](https://www.linkedin.com/in/alexander-perepelitsyn-37488240/)(iOS) за знайдену помилку при першому запуску на екрані "Як користуватись додатком", яку вже виправлено у версії 1.7.3.
