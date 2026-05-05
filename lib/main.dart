@@ -35,10 +35,15 @@ void main() async {
 
   await NotificationService.instance.init();
   if (appProvider.remindersEnabled) {
-    await NotificationService.instance.schedule(
-      appProvider.reminderTime,
-      enabled: true,
-    );
+    try {
+      await NotificationService.instance.schedule(
+        appProvider.reminderTime,
+        enabled: true,
+      );
+    } catch (e) {
+      // Notification scheduling failed (e.g. permission revoked); continue startup.
+      debugPrint('NotificationService: failed to schedule on startup ($e).');
+    }
   }
 
   runApp(

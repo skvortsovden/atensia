@@ -48,8 +48,23 @@ class NotificationService {
         AndroidFlutterLocalNotificationsPlugin>();
     if (android != null) {
       final granted = await android.requestNotificationsPermission();
-      return granted ?? false;
+      // null means POST_NOTIFICATIONS is not a runtime permission on this
+      // Android version (< 13 / API 33) — treat as granted.
+      return granted ?? true;
     }
+    return true;
+  }
+
+  /// Check whether notifications are currently enabled at OS level.
+  /// Use this as a fallback when [requestPermission] returns false on OEMs
+  /// where the callback fires before the system registers the new grant.
+  Future<bool> isPermissionGranted() async {
+    final android = _plugin.resolvePlatformSpecificImplementation<
+        AndroidFlutterLocalNotificationsPlugin>();
+    if (android != null) {
+      return await android.areNotificationsEnabled() ?? true;
+    }
+    // On iOS the permission state is managed via requestPermission only.
     return true;
   }
 
@@ -73,29 +88,47 @@ class NotificationService {
       scheduled = scheduled.add(const Duration(days: 1));
     }
 
-    await _plugin.zonedSchedule(
-      _notifId,
-      'Атенція',
-      'час звернути увагу на себе',
-      scheduled,
-      const NotificationDetails(
-        android: AndroidNotificationDetails(
-          _channelId,
-          'Щоденне нагадування',
-          channelDescription: 'Нагадування звернути увагу на себе',
-          importance: Importance.high,
-          priority: Priority.high,
-        ),
-        iOS: DarwinNotificationDetails(
-          presentAlert: true,
-          presentBadge: true,
-          presentSound: true,
-        ),
+    const details = NotificationDetails(
+      android: AndroidNotificationDetails(
+        _channelId,
+        'Щоденне нагадування',
+        channelDescription: 'Нагадування звернути увагу на себе',
+        importance: Importance.high,
+        priority: Priority.high,
       ),
-      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-      uiLocalNotificationDateInterpretation:
-          UILocalNotificationDateInterpretation.absoluteTime,
-      matchDateTimeComponents: DateTimeComponents.time,
+      iOS: DarwinNotificationDetails(
+        presentAlert: true,
+        presentBadge: true,
+        presentSound: true,
+      ),
     );
+
+    try {
+      await _plugin.zonedSchedule(
+        _notifId,
+        'Атенція',
+        'час звернути увагу на себе',
+        scheduled,
+        details,
+        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+        uiLocalNotificationDateInterpretation:
+            UILocalNotificationDateInterpretation.absoluteTime,
+        matchDateTimeComponents: DateTimeComponents.time,
+      );
+    } on PlatformException catch (e) {
+      // Exact alarm permission not granted (Android 12+); fall back to inexact.
+      debugPrint('NotificationService: exact alarm unavailable ($e), falling back to inexact.');
+      await _plugin.zonedSchedule(
+        _notifId,
+        'Атенція',
+        'час звернути увагу на себе',
+        scheduled,
+        details,
+        androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+        uiLocalNotificationDateInterpretation:
+            UILocalNotificationDateInterpretation.absoluteTime,
+        matchDateTimeComponents: DateTimeComponents.time,
+      );
+    }
   }
 }

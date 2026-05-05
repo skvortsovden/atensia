@@ -196,21 +196,32 @@ class AppProvider extends ChangeNotifier {
 
   Future<void> setReminders(bool enabled) async {
     if (enabled) {
-      final granted = await NotificationService.instance.requestPermission();
-      if (!granted) return;
+      // Request the OS permission. On some Android OEMs the callback can fire
+      // before the system registers the grant, so we also do a direct check.
+      final requested = await NotificationService.instance.requestPermission();
+      final actuallyGranted = requested ||
+          await NotificationService.instance.isPermissionGranted();
+      if (!actuallyGranted) {
+        notifyListeners(); // ensure UI snaps back to disabled
+        return;
+      }
     }
     _remindersEnabled = enabled;
     _prefs.setBool(_remindersKey, enabled);
-    NotificationService.instance.schedule(_reminderTime, enabled: enabled);
+    try {
+      await NotificationService.instance.schedule(_reminderTime, enabled: enabled);
+    } catch (_) {
+      // schedule() errors are non-fatal; reminders stay enabled in prefs.
+    }
     notifyListeners();
   }
 
-  void setReminderTime(TimeOfDay time) {
+  Future<void> setReminderTime(TimeOfDay time) async {
     _reminderTime = time;
     _prefs.setString(_reminderTimeKey,
         '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}');
     if (_remindersEnabled) {
-      NotificationService.instance.schedule(time, enabled: true);
+      await NotificationService.instance.schedule(time, enabled: true);
     }
     notifyListeners();
   }
