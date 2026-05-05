@@ -48,7 +48,9 @@ class NotificationService {
         AndroidFlutterLocalNotificationsPlugin>();
     if (android != null) {
       final granted = await android.requestNotificationsPermission();
-      return granted ?? false;
+      // null means POST_NOTIFICATIONS is not a runtime permission on this
+      // Android version (< 13 / API 33) — treat as granted.
+      return granted ?? true;
     }
     return true;
   }
