@@ -1,3 +1,4 @@
+---
 name: pubspec-sentry
 description: Manages pub.dev dependencies, checking for version conflicts and native SDK requirements.
 ---
