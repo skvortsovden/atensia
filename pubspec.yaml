@@ -1,6 +1,6 @@
 name: atensia
 description: Атенція - це увага до себе
-version: 1.7.5+4
+version: 1.7.6+5
 publish_to: 'none'
 
 environment:
