@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -33,6 +35,25 @@ void main() async {
   final appProvider = AppProvider();
   await appProvider.init();
 
+  // Start the UI immediately — never block runApp() on notification init.
+  // The channel calls inside NotificationService.init() can stall on a fresh
+  // iOS install before the SceneDelegate has registered the handler, which
+  // previously kept the app frozen on the splash screen.
+  runApp(
+    ChangeNotifierProvider.value(
+      value: appProvider,
+      child: const AtensiaApp(),
+    ),
+  );
+
+  // Initialize notifications in the background after the first frame.
+  unawaited(_initNotifications(appProvider));
+}
+
+/// Initializes the notification service and schedules the daily reminder.
+/// Runs after [runApp] so that a hung or failing platform channel cannot
+/// prevent the app from rendering.
+Future<void> _initNotifications(AppProvider appProvider) async {
   try {
     await NotificationService.instance.init();
     if (appProvider.remindersEnabled) {
@@ -42,22 +63,12 @@ void main() async {
           enabled: true,
         );
       } catch (e) {
-        // Notification scheduling failed (e.g. permission revoked); continue startup.
         debugPrint('NotificationService: failed to schedule on startup ($e).');
       }
     }
   } catch (e) {
-    // Notification service failed to initialize (e.g. method channel not yet
-    // available on this platform/build); continue startup without notifications.
     debugPrint('NotificationService: init failed on startup ($e).');
   }
-
-  runApp(
-    ChangeNotifierProvider.value(
-      value: appProvider,
-      child: const AtensiaApp(),
-    ),
-  );
 }
 
 class AtensiaApp extends StatelessWidget {
