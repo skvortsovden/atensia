@@ -1,140 +1,205 @@
-Flutter Implementation Guide: Proso (Просо)
+# Атенція — Product Requirements
 
-This guide provides a structured prompt and architectural plan to rebuild the React prototype as a high-quality Flutter mobile application named Proso, featuring a Ukrainian interface, a minimalist black-and-white design, and local-only storage.
+**Version:** 1.7.5  
+**Platform:** Flutter (iOS primary, Android secondary)  
+**Language:** Ukrainian only (`uk_UA`)  
+**Storage:** Local-only, no cloud, no authentication
 
-1. Copilot Prompt
+---
 
-Copy and paste this prompt into Copilot (or a similar tool) to generate the base project structure:
+## 1. Architecture
 
-"Act as a Senior Flutter Developer. Create a minimal, single-package mobile app for habit and health tracking named 'Proso' (Просо).
+| Concern | Solution |
+|---|---|
+| State management | `provider` (`ChangeNotifier`) |
+| Local persistence | `shared_preferences` (JSON-encoded entries) |
+| Notifications | `flutter_local_notifications` + native timezone `MethodChannel` |
+| Localisation | Single YAML file (`assets/l10n/uk.yaml`), loaded synchronously at startup |
+| Navigation | `BottomNavigationBar` with 4 tabs |
+| Startup | `runApp()` is called immediately; `SharedPreferences.init()` runs asynchronously afterward to avoid blocking the UI on a fresh install |
 
-Language Requirements:
+---
 
-The entire interface must be in Ukrainian.
+## 2. Data Model — `DailyEntry`
 
-Main question: 'Як ся маєш?' (How do you feel?).
+Each day is stored as a keyed JSON object under `SharedPreferences` key `atensia_entries`. The map key is an ISO date string (`YYYY-MM-DD`).
 
-Mood states: 'Виснажено', 'Добре', 'Бадьоро'.
+| Field | Type | Description |
+|---|---|---|
+| `date` | `DateTime` | Calendar day |
+| `valence` | `double?` | Mood pleasantness: −1.0 / 0.0 / +1.0, `null` = not set |
+| `arousal` | `double?` | Energy level: −1.0 / 0.0 / +1.0, `null` = not set |
+| `isSick` | `bool` | Health toggle — illness |
+| `hasPain` | `bool` | Health toggle — pain |
+| `habits` | `Map<String, bool>` | Named habit checkboxes |
+| `comment` | `String?` | Optional free-text note (max 140 chars) |
 
-Health toggles: 'Відчуваю хворобу' (Sick), 'Відчуваю біль' (In pain).
+An entry is considered "empty" (and is deleted from storage) when all fields are at their default/null values.
 
-Navigation tabs: 'Сьогодні' (Today), 'Календар' (History), 'Налаштування' (Settings).
+### Migration
+On first launch after renaming from "Proso" to "Атенція", keys prefixed `proso_*` are migrated to `atensia_*` and then removed.
 
-Habits: 'Прогулянка' (Walking), 'Фізичні вправи' (Physical activity), 'Читання' (Reading).
+---
 
-Architecture:
+## 3. Russell's Circumplex Model
 
-Use Provider or flutter_riverpod for state management.
+Emotional state is represented as a point in valence × arousal space. The UI uses two 3-button segmented controls (Погано / Нормально / Чудово for valence; Виснажено / Нормально / Бадьоро for arousal). Tapping the already-selected button clears that axis.
 
-Use shared_preferences or hive for local-only data persistence (no cloud/auth).
+Nine named quadrant labels are shown to the user:
 
-Structure: One main screen with a BottomNavigationBar switching between three widgets: TodayView, HistoryView (Calendar), and SettingsView.
+| | Arousal high (+1) | Arousal mid (0) | Arousal low (−1) |
+|---|---|---|---|
+| **Valence high (+1)** | На підйомі | Спокійно | Приємна втома |
+| **Valence mid (0)** | В тонусі | В рівновазі | Мляво |
+| **Valence low (−1)** | Стресово | Пригнічено | Виснажено |
 
-Features:
+---
 
-TodayView: A list of habit checkboxes, a selectable grid for mood, and toggle buttons for health status.
+## 4. Default Habits
 
-HistoryView: Use table_calendar to show a monthly view. Highlight days with dots: Black for 'Sick' and a clean outline or heavy black circle for 'Healthy/Habits completed'.
+Five habits are defined as the default set (localised via `uk.yaml`):
 
-SettingsView: A simple text field to edit 'Ім'я користувача' and a toggle for 'Нагадування'.
+1. Прогулянка
+2. Руханка
+3. Читання
+4. Творчість
+5. Байдикування
 
-UI Style (Minimalist Black & White):
+---
 
-Theme: Pure high-contrast Black and White.
+## 5. Navigation Tabs
 
-Colors: Background #FFFFFF, Primary Text #000000, Secondary Accents #F2F2F2.
+| Tab | Label | Screen |
+|---|---|---|
+| 0 | Сьогодні | `TodayView` |
+| 1 | Календар | `HistoryView` |
+| 2 | Звіт | `StatsView` |
+| 3 | Налаштування | `SettingsView` |
 
-Typography: Use the Fixel font family by MacPaw (specifically Fixel Display for headers and Fixel Text for body).
+---
 
-Design: Sharp lines or very subtle rounded corners (8dp), no shadows, using heavy borders (2px) instead of depth for cards.
+## 6. Screens
 
-Ensure all data is saved locally on every change."
+### 6.1 Splash Screen
+- Displays app logo, name, and tagline with a fade-in animation.
+- After a short delay: navigates to **Onboarding** on first launch, otherwise to **MainScreen**.
 
-2. Recommended Package Dependencies
+### 6.2 Onboarding (4 pages, shown only on first launch)
+1. **Name input** — asks for the user's name (optional, max 30 chars).
+2. **Greeting** — personalised welcome message.
+3. **Notifications** — enable/disable daily reminder and choose the time.
+4. **Guide** — how to use the app; finishing marks the app as launched.
 
-Add these to your pubspec.yaml:
+### 6.3 Today View (`TodayView`)
+- Personalised greeting: "Вітаю, {name}!" or "Вітаю, друже!"
+- Current date in Ukrainian format (e.g. "понеділок, 6 травня").
+- Streak line: "Твій N-й день записів" (optionally "поспіль" when streak ≥ 2).
+- **Circumplex selector** (`CircumplexButtons`) for today's state.
+  - Animated quadrant label shown below section title.
+- **Health toggles** (animated segmented control): Хвороба / Біль.
+- **Habit checkboxes** for all 5 default habits.
+- **Note field** — multiline text input, max 140 chars.
+- All changes are persisted immediately on every interaction.
+- Tapping the logo in the header opens the **Guide** bottom sheet.
 
-dependencies:
-  flutter:
-    sdk: flutter
-  flutter_localizations: 
-    sdk: flutter
-  lucide_icons: ^0.3.0
-  table_calendar: ^3.1.0
-  shared_preferences: ^2.2.2
-  provider: ^6.1.2
+### 6.4 History / Calendar View (`HistoryView`)
+- Monthly calendar (`table_calendar`, Ukrainian locale, week starts Monday).
+- **Day markers** (shown below the date number):
+  - Filled black dot → Хвороба logged.
+  - Filled larger black circle → all habits completed.
+  - Outlined black circle → partial activity (some habits or state set).
+- Selected day **detail panel** below the calendar:
+  - Date, circumplex quadrant label, health items, leisure habits done, note.
+  - "Додати" / "Змінити" button → opens `EditDayScreen`.
+  - Future day → "Цей день ще не настав".
+  - No data → "Дані за цей день відсутні" + "Додати" button.
 
-flutter:
-  fonts:
-    - family: Fixel
-      fonts:
-        - asset: assets/fonts/FixelText-Regular.ttf
-        - asset: assets/fonts/FixelText-Bold.ttf
-          weight: 700
+### 6.5 Edit Day Screen (`EditDayScreen`)
+- Full editing form for any past (or today) date.
+- Same fields as Today View: circumplex, health, habits, note.
+- Changes are saved only when the user taps **Зберегти** (batch save).
 
+### 6.6 Stats / Report View (`StatsView`)
+- **Period selector**: Тиждень / Місяць / Рік / Custom range.
+- **Period navigator**: ← → arrows to go back/forward; disabled at current period.
+- **Custom range**: date range picker (Material, B&W themed).
+- **Stat cards** (shown when data exists for the selected period):
+  - **Fill card** — percentage and count of days with entries.
+  - **Trend chart** (`TrendChartCard`) — line chart of valence over time; health events shown as separate line. Weekly aggregation applied for year view.
+  - **Circumplex distribution** (`_CircumplexCard`) — bar chart of quadrant label frequencies.
+  - **Health card** — sick days and pain days with progress bars.
+  - **Habit streak card** (`HabitStreakCard`) — per-habit completion counts, current streak, max streak.
+- **Share button** — renders the stats cards as an image and shares via `share_plus`.
+- Empty state shown when no data exists for the period.
 
-3. Key Implementation Logic
+### 6.7 Settings View (`SettingsView`)
+- **Username field** — editable, max 30 chars, saved immediately.
+- **Reminders toggle** — requests OS permission when enabled; snaps back if denied.
+  - **Time picker** — 24-hour format, shown when reminders are enabled.
+- **Export data** — exports all entries as CSV via share sheet.
+- **Import data** — picks a CSV file; merges with existing data (imported rows win for matching dates).
+  - Template download available.
+  - UTF-8 encoding enforced; mojibake repair applied to imported comments.
+- **Clear all data** — confirm dialog with option to export first.
+- **Guide** — bottom sheet with usage instructions.
+- **App info** — app name, tagline, version (from `package_info_plus`), privacy note, copyright.
 
-Data Model
+---
 
-Define a simple class to represent a daily entry:
+## 7. Notifications
 
-class DailyEntry {
-  final DateTime date;
-  final Map<String, bool> habits;
-  final String mood;
-  final bool isSick;
-  final bool hasPain;
+- Daily scheduled reminder at a user-configured time.
+- Timezone resolved via a native `MethodChannel` (`com.texapp.atensia/timezone`); falls back to UTC on failure.
+- Android: requests `POST_NOTIFICATIONS` permission at runtime (API 33+); uses exact alarms with fallback to inexact.
+- iOS: permission requested via `flutter_local_notifications` when the user enables reminders.
+- Notification is rescheduled on every app start if reminders are enabled.
 
-  DailyEntry({
-    required this.date,
-    required this.habits,
-    required this.mood,
-    required this.isSick,
-    required this.hasPain,
-  });
+---
 
-  // Include toJson and fromJson for local storage
-}
+## 8. Data Import / Export (CSV)
 
+### Export format
+```
+date,valence,arousal,sick,pain,Прогулянка,Руханка,Читання,Творчість,Байдикування,comment
+2026-05-01,1.000,0.000,false,false,true,false,true,false,false,"Great day"
+```
 
-Local Storage Strategy
+### Import
+- Accepts the current format above and a legacy format (`date,mood,sick,pain,...`).
+- Merges with existing entries; imported rows overwrite existing rows for the same date.
+- Returns a user-readable error string on parse failure.
+- Template CSV (header + 3 blank example rows) available for download.
 
-Since you want no cloud data, use shared_preferences for the username and settings, and path_provider + a JSON file (or a library like Hive) to store the Map<String, DailyEntry> where the key is a date string like 2024-05-15.
+---
 
-Calendar Integration (Ukrainian)
+## 9. UI Design System
 
-To ensure the calendar displays months and days in Ukrainian, wrap your MaterialApp with localizations:
+| Token | Value |
+|---|---|
+| Background | `#FFFFFF` |
+| Primary text | `#000000` |
+| Border | 2px solid black |
+| Corner radius | 8–12 dp |
+| Shadows | None |
+| Active state | Black fill, white text |
+| Inactive state | White fill, black text |
+| Header font | Fixel Display |
+| Body font | Fixel Text |
+| Haptic feedback | `HapticFeedback.mediumImpact()` on toggles |
+| Orientation | Portrait only |
+| Status bar | Light icons on white background |
 
-return MaterialApp(
-  theme: ThemeData(
-    brightness: Brightness.light,
-    scaffoldBackgroundColor: Colors.white,
-    fontFamily: 'Fixel', // Set Fixel as the default font
-    textTheme: TextTheme(
-      headlineLarge: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
-      bodyMedium: TextStyle(color: Colors.black),
-    ),
-  ),
-  localizationsDelegates: [
-    GlobalMaterialLocalizations.delegate,
-    GlobalWidgetsLocalizations.delegate,
-    GlobalCupertinoLocalizations.delegate,
-  ],
-  supportedLocales: [
-    Locale('uk', 'UA'),
-  ],
-  locale: Locale('uk', 'UA'),
-  // ...
-);
+---
 
+## 10. Metrics Tracked in the App
 
-4. UI Layout Tips
-
-B&W Aesthetic: Use Colors.black for active states and Colors.white for the background. For inactive habits, use a thin Border.all(color: Colors.black12).
-
-Typography: Leverage Fixel's excellent readability by using different weights (Bold for headers, Regular for labels) rather than different colors.
-
-Vibration: Add HapticFeedback.mediumImpact() when a status is toggled to reinforce the physical feel of the minimalist UI.
-
-Safe Area: Ensure buttons aren't clipped by the home indicator by using SafeArea and Padding.
+| Metric | Where shown |
+|---|---|
+| Total filled days | Today view subtitle |
+| Current consecutive streak | Today view subtitle |
+| Period fill rate (%) | Stats — Fill card |
+| Valence trend over time | Stats — Trend chart |
+| Health days (sick / pain) | Stats — Health card |
+| Circumplex quadrant frequency | Stats — Mood card |
+| Per-habit completion count | Stats — Habits card |
+| Current & max habit streak | Stats — Habits card |
