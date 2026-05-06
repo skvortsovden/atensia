@@ -110,9 +110,17 @@ class NotificationService {
   /// Schedule (or reschedule) a daily notification at [time].
   /// Call with [enabled] = false to cancel.
   Future<void> schedule(TimeOfDay time, {required bool enabled}) async {
+    if (!enabled) {
+      // Cancel best-effort without waiting for init: a notification may have
+      // been scheduled in a previous session even if init is slow or failing
+      // now. Swallow any error — if the plugin isn't ready the notification
+      // will be cleaned up on the next successful init.
+      try {
+        await _plugin.cancel(_notifId);
+      } catch (_) {}
+      return;
+    }
     if (!await _awaitReady()) return;
-    await _plugin.cancel(_notifId);
-    if (!enabled) return;
 
     final now = tz.TZDateTime.now(tz.local);
     var scheduled = tz.TZDateTime(
