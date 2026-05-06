@@ -1,3 +1,4 @@
+---
 name: mobile-architect
 description: Manages Flutter documentation, asset registration, and native configuration mapping.
 ---
