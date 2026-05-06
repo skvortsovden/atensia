@@ -17,6 +17,9 @@ class _SplashScreenState extends State<SplashScreen>
     with SingleTickerProviderStateMixin {
   late final AnimationController _ctrl;
   late final Animation<double> _fade;
+  // Kept so the listener can be removed on dispose if init() outlasts the screen.
+  AppProvider? _providerRef;
+  VoidCallback? _initListener;
 
   @override
   void initState() {
@@ -29,38 +32,55 @@ class _SplashScreenState extends State<SplashScreen>
     _fade = CurvedAnimation(parent: _ctrl, curve: Curves.easeIn);
     _ctrl.forward();
 
-    final provider = context.read<AppProvider>();
-    final isFirst = provider.isFirstLaunch;
-    final delay = isFirst
-        ? const Duration(milliseconds: 1800)
-        : const Duration(milliseconds: 1400);
+    // Minimum splash display time before we attempt navigation.
+    Future.delayed(const Duration(milliseconds: 1400), _onDelayComplete);
+  }
 
-    Future.delayed(delay, () {
-      if (!mounted) return;
-      if (isFirst) {
-        Navigator.of(context).pushReplacement(
-          PageRouteBuilder(
-            pageBuilder: (_, __, ___) => const OnboardingScreen(),
-            transitionsBuilder: (_, anim, __, child) =>
-                FadeTransition(opacity: anim, child: child),
-            transitionDuration: const Duration(milliseconds: 400),
-          ),
-        );
-      } else {
-        Navigator.of(context).pushReplacement(
-          PageRouteBuilder(
-            pageBuilder: (_, __, ___) => const MainScreen(),
-            transitionsBuilder: (_, anim, __, child) =>
-                FadeTransition(opacity: anim, child: child),
-            transitionDuration: const Duration(milliseconds: 400),
-          ),
-        );
-      }
-    });
+  /// Called after the minimum splash duration has elapsed. Navigates
+  /// immediately when [AppProvider.isInitialized] is already true, otherwise
+  /// waits for the provider to signal completion — avoids the race condition
+  /// where [isFirstLaunch] is read before SharedPreferences has loaded.
+  void _onDelayComplete() {
+    if (!mounted) return;
+    final provider = context.read<AppProvider>();
+    if (provider.isInitialized) {
+      _navigate(provider);
+    } else {
+      // init() hasn't finished yet — add a one-shot listener.
+      _providerRef = provider;
+      _initListener = () {
+        if (!provider.isInitialized) return;
+        _removeInitListener();
+        if (!mounted) return;
+        _navigate(provider);
+      };
+      provider.addListener(_initListener!);
+    }
+  }
+
+  void _removeInitListener() {
+    if (_initListener != null) {
+      _providerRef?.removeListener(_initListener!);
+    }
+    _providerRef = null;
+    _initListener = null;
+  }
+
+  void _navigate(AppProvider provider) {
+    Navigator.of(context).pushReplacement(
+      PageRouteBuilder(
+        pageBuilder: (_, __, ___) =>
+            provider.isFirstLaunch ? const OnboardingScreen() : const MainScreen(),
+        transitionsBuilder: (_, anim, __, child) =>
+            FadeTransition(opacity: anim, child: child),
+        transitionDuration: const Duration(milliseconds: 400),
+      ),
+    );
   }
 
   @override
   void dispose() {
+    _removeInitListener();
     _ctrl.dispose();
     super.dispose();
   }

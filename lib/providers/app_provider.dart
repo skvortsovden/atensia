@@ -12,6 +12,8 @@ class AppProvider extends ChangeNotifier {
   String _username = '';
   bool _remindersEnabled = false;
   TimeOfDay _reminderTime = const TimeOfDay(hour: 20, minute: 0);
+  // Cached launched flag so isFirstLaunch is independent of _prefs being null.
+  bool _hasLaunched = false;
 
   SharedPreferences? _prefs;
   bool _isInitialized = false;
@@ -37,7 +39,7 @@ class AppProvider extends ChangeNotifier {
   String get username => _username;
   bool get remindersEnabled => _remindersEnabled;
   TimeOfDay get reminderTime => _reminderTime;
-  bool get isFirstLaunch => !(_prefs?.getBool(_launchedKey) ?? false);
+  bool get isFirstLaunch => !_hasLaunched;
   bool get isInitialized => _isInitialized;
 
   int get currentStreak {
@@ -81,6 +83,9 @@ class AppProvider extends ChangeNotifier {
         }
         await _prefs!.remove(e.key);
       }
+      // Load launched flag AFTER migration so that the proso_launched →
+      // atensia_launched migration above has already written the new key.
+      _hasLaunched = _prefs!.getBool(_launchedKey) ?? false;
       _username = _prefs!.getString(_usernameKey) ?? '';
       _remindersEnabled = _prefs!.getBool(_remindersKey) ?? false;
       final timeStr = _prefs!.getString(_reminderTimeKey);
@@ -203,7 +208,9 @@ class AppProvider extends ChangeNotifier {
   }
 
   void markLaunched() {
+    _hasLaunched = true;
     _prefs?.setBool(_launchedKey, true);
+    notifyListeners();
   }
 
   Future<void> setReminders(bool enabled) async {
