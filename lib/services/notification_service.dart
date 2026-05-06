@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
@@ -15,7 +17,31 @@ class NotificationService {
   static const _channelId = 'atensia_daily';
   static const _notifId = 1;
 
+  bool _initialized = false;
+  // Completed (with or without error) once init() finishes.
+  Completer<void>? _readyCompleter;
+
   Future<void> init() async {
+    // Re-entrancy guard: if init() was already called (in-flight or done),
+    // do nothing. Callers that need to wait for readiness use _awaitReady().
+    if (_readyCompleter != null) return;
+    // Capture in a local variable so the finally block always completes THIS
+    // completer, regardless of any future state changes to _readyCompleter.
+    final completer = Completer<void>();
+    _readyCompleter = completer;
+    try {
+      // 10 s hard cap: the completer is guaranteed to be completed within this
+      // window, so _awaitReady() callers never wait indefinitely.
+      await _doInit().timeout(const Duration(seconds: 10));
+      _initialized = true;
+    } catch (e) {
+      debugPrint('NotificationService: init failed or timed out ($e).');
+    } finally {
+      completer.complete();
+    }
+  }
+
+  Future<void> _doInit() async {
     tz.initializeTimeZones();
     try {
       final tzName = await _tzChannel.invokeMethod<String>('getLocalTimezone') ?? 'UTC';
@@ -25,7 +51,6 @@ class NotificationService {
       debugPrint('NotificationService: timezone init failed ($e), using UTC.');
       tz.setLocalLocation(tz.UTC);
     }
-
     const android = AndroidInitializationSettings('@mipmap/ic_launcher');
     const ios = DarwinInitializationSettings(
       requestAlertPermission: false,
@@ -37,9 +62,26 @@ class NotificationService {
     );
   }
 
+  // Waits for init() to finish (bounded by init's own 10 s timeout) and
+  // returns whether initialisation succeeded. Returns false immediately if
+  // init() has not been called yet. Logs when the plugin is not ready so
+  // silent no-ops are visible in the debug output.
+  Future<bool> _awaitReady() async {
+    if (_readyCompleter == null) {
+      debugPrint('NotificationService: _awaitReady() called before init().');
+      return false;
+    }
+    await _readyCompleter!.future;
+    if (!_initialized) {
+      debugPrint('NotificationService: plugin not ready — action skipped.');
+    }
+    return _initialized;
+  }
+
   /// Request notification permissions from the user.
   /// Call this only when the user explicitly enables reminders.
   Future<bool> requestPermission() async {
+    if (!await _awaitReady()) return false;
     final ios = _plugin.resolvePlatformSpecificImplementation<
         IOSFlutterLocalNotificationsPlugin>();
     if (ios != null) {
@@ -77,8 +119,17 @@ class NotificationService {
   /// Schedule (or reschedule) a daily notification at [time].
   /// Call with [enabled] = false to cancel.
   Future<void> schedule(TimeOfDay time, {required bool enabled}) async {
-    await _plugin.cancel(_notifId);
-    if (!enabled) return;
+    if (!enabled) {
+      // Cancel best-effort without waiting for init: a notification may have
+      // been scheduled in a previous session even if init is slow or failing
+      // now. Swallow any error — if the plugin isn't ready the notification
+      // will be cleaned up on the next successful init.
+      try {
+        await _plugin.cancel(_notifId);
+      } catch (_) {}
+      return;
+    }
+    if (!await _awaitReady()) return;
 
     final now = tz.TZDateTime.now(tz.local);
     var scheduled = tz.TZDateTime(

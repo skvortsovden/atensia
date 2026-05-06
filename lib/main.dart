@@ -49,30 +49,33 @@ void main() async {
   unawaited(_initAppData(appProvider));
 }
 
-/// Loads persisted data then initializes the notification service.
+/// Loads persisted data and initializes the notification plugin concurrently.
 /// Both run after [runApp] so that no platform channel call can prevent
 /// the app from rendering.
 Future<void> _initAppData(AppProvider appProvider) async {
+  // Kick off notification plugin init at the same time as data loading so the
+  // plugin is ready (or very nearly so) by the time the UI becomes interactive.
+  unawaited(_initNotificationPlugin());
   await appProvider.init();
-  await _initNotifications(appProvider);
+  // Schedule the daily reminder now that both data and the plugin are ready.
+  // NotificationService.schedule() internally waits for plugin init to finish.
+  if (appProvider.remindersEnabled) {
+    try {
+      await NotificationService.instance.schedule(
+        appProvider.reminderTime,
+        enabled: true,
+      );
+    } catch (e) {
+      debugPrint('NotificationService: failed to schedule on startup ($e).');
+    }
+  }
 }
 
-/// Initializes the notification service and schedules the daily reminder.
-/// Runs after [runApp] so that a hung or failing platform channel cannot
-/// prevent the app from rendering.
-Future<void> _initNotifications(AppProvider appProvider) async {
+/// Initializes the notification plugin. Errors are caught so a stalled or
+/// failing channel cannot prevent the rest of the app from working.
+Future<void> _initNotificationPlugin() async {
   try {
     await NotificationService.instance.init();
-    if (appProvider.remindersEnabled) {
-      try {
-        await NotificationService.instance.schedule(
-          appProvider.reminderTime,
-          enabled: true,
-        );
-      } catch (e) {
-        debugPrint('NotificationService: failed to schedule on startup ($e).');
-      }
-    }
   } catch (e) {
     debugPrint('NotificationService: init failed on startup ($e).');
   }
