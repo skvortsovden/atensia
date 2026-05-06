@@ -30,7 +30,7 @@ class _SettingsViewState extends State<SettingsView> {
         TextEditingController(text: context.read<AppProvider>().username);
     PackageInfo.fromPlatform().then((info) {
       if (mounted) setState(() => _appVersion = info.version);
-    });
+    }).catchError((_) {});
   }
 
   @override
@@ -163,6 +163,8 @@ class _SettingsViewState extends State<SettingsView> {
         return;
       }
     } else {
+      if (!context.mounted) return;
+      await _showEncodingErrorDialog(context);
       return;
     }
     if (!context.mounted) return;
@@ -392,7 +394,17 @@ class _SettingsViewState extends State<SettingsView> {
               ElevatedButton(
                 onPressed: () async {
                   Navigator.of(ctx).pop();
-                  await _saveCsv(context);
+                  try {
+                    await _saveCsv(context);
+                  } catch (_) {
+                    if (!context.mounted) return;
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(S.settingsClearExportError),
+                        behavior: SnackBarBehavior.floating,
+                      ),
+                    );
+                  }
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.black,

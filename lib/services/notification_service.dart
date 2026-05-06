@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
@@ -15,31 +17,56 @@ class NotificationService {
   static const _channelId = 'atensia_daily';
   static const _notifId = 1;
 
-  Future<void> init() async {
-    tz.initializeTimeZones();
-    try {
-      final tzName = await _tzChannel.invokeMethod<String>('getLocalTimezone') ?? 'UTC';
-      tz.setLocalLocation(tz.getLocation(tzName));
-    } catch (e) {
-      // Method channel not available yet or unknown timezone — fall back to UTC.
-      debugPrint('NotificationService: timezone init failed ($e), using UTC.');
-      tz.setLocalLocation(tz.UTC);
-    }
+  bool _initialized = false;
+  // Completed (with or without error) once init() finishes.
+  Completer<void>? _readyCompleter;
 
-    const android = AndroidInitializationSettings('@mipmap/ic_launcher');
-    const ios = DarwinInitializationSettings(
-      requestAlertPermission: false,
-      requestBadgePermission: false,
-      requestSoundPermission: false,
-    );
-    await _plugin.initialize(
-      const InitializationSettings(android: android, iOS: ios),
-    );
+  Future<void> init() async {
+    _readyCompleter = Completer<void>();
+    try {
+      tz.initializeTimeZones();
+      try {
+        final tzName = await _tzChannel.invokeMethod<String>('getLocalTimezone') ?? 'UTC';
+        tz.setLocalLocation(tz.getLocation(tzName));
+      } catch (e) {
+        // Method channel not available yet or unknown timezone — fall back to UTC.
+        debugPrint('NotificationService: timezone init failed ($e), using UTC.');
+        tz.setLocalLocation(tz.UTC);
+      }
+
+      const android = AndroidInitializationSettings('@mipmap/ic_launcher');
+      const ios = DarwinInitializationSettings(
+        requestAlertPermission: false,
+        requestBadgePermission: false,
+        requestSoundPermission: false,
+      );
+      await _plugin.initialize(
+        const InitializationSettings(android: android, iOS: ios),
+      );
+      _initialized = true;
+    } catch (e) {
+      debugPrint('NotificationService: plugin init failed ($e).');
+    } finally {
+      _readyCompleter!.complete();
+    }
+  }
+
+  // Waits up to 3 s for init() to finish and returns whether it succeeded.
+  // Returns false immediately if init() was never called.
+  Future<bool> _awaitReady() async {
+    if (_readyCompleter == null) return false;
+    try {
+      await _readyCompleter!.future.timeout(const Duration(seconds: 3));
+    } catch (_) {
+      return false;
+    }
+    return _initialized;
   }
 
   /// Request notification permissions from the user.
   /// Call this only when the user explicitly enables reminders.
   Future<bool> requestPermission() async {
+    if (!await _awaitReady()) return false;
     final ios = _plugin.resolvePlatformSpecificImplementation<
         IOSFlutterLocalNotificationsPlugin>();
     if (ios != null) {
@@ -77,6 +104,7 @@ class NotificationService {
   /// Schedule (or reschedule) a daily notification at [time].
   /// Call with [enabled] = false to cancel.
   Future<void> schedule(TimeOfDay time, {required bool enabled}) async {
+    if (!await _awaitReady()) return;
     await _plugin.cancel(_notifId);
     if (!enabled) return;
 

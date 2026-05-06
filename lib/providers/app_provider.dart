@@ -37,7 +37,10 @@ class AppProvider extends ChangeNotifier {
   String get username => _username;
   bool get remindersEnabled => _remindersEnabled;
   TimeOfDay get reminderTime => _reminderTime;
-  bool get isFirstLaunch => !(_prefs?.getBool(_launchedKey) ?? false);
+  // Return false (not first launch) when _prefs is null: SharedPreferences
+  // failed to initialize, so we must not trigger onboarding and make
+  // markLaunched() a no-op — that would trap the user in an infinite loop.
+  bool get isFirstLaunch => _prefs != null && !(_prefs!.getBool(_launchedKey) ?? false);
   bool get isInitialized => _isInitialized;
 
   int get currentStreak {
