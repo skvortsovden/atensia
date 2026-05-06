@@ -31,15 +31,56 @@ on:
     tags:
       - 'v[0-9]+.[0-9]+.[0-9]+'
 
+permissions:
+  contents: write
+
 jobs:
+
+  # ─── Bump pubspec.yaml and commit ───────────────────────────────────────────
+  bump-version:
+    name: Bump pubspec.yaml version
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          # Use a token that can push to protected branches if needed
+          token: ${{ secrets.GITHUB_TOKEN }}
+          # Fetch the branch the tag points to so we can push back
+          fetch-depth: 0
+
+      - name: Update pubspec.yaml and commit
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          sed -i "s/^version: .*/version: ${VERSION}+${GITHUB_RUN_NUMBER}/" pubspec.yaml
+          echo "pubspec.yaml → $(grep '^version:' pubspec.yaml)"
+
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          # Determine the branch the tag was created from and push there
+          BRANCH=$(git branch -r --contains "${GITHUB_REF_NAME}" \
+            | grep -v HEAD \
+            | sed 's|origin/||' \
+            | head -n1 \
+            | xargs)
+          BRANCH="${BRANCH:-main}"
+
+          git add pubspec.yaml
+          git commit -m "chore: bump version to ${VERSION}+${GITHUB_RUN_NUMBER} [skip ci]"
+          git push origin "HEAD:${BRANCH}"
 
   # ─── Android build ──────────────────────────────────────────────────────────
   build-android:
     name: Build Android APK
     runs-on: ubuntu-latest
+    needs: bump-version
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          # Check out the commit that bump-version just pushed (includes updated pubspec.yaml)
+          ref: ${{ github.ref_name }}
 
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
@@ -92,9 +133,13 @@ jobs:
   build-ios:
     name: Build iOS IPA
     runs-on: macos-latest
+    needs: bump-version
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          # Check out the commit that bump-version just pushed (includes updated pubspec.yaml)
+          ref: ${{ github.ref_name }}
 
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
