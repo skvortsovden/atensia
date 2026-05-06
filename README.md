@@ -19,6 +19,24 @@
 <img src="screenshots/Simulator%20Screenshot%20-%20iPhone%2014%20Plus%20-%202026-04-28%20at%2011.58.57.png" width="180">
 <img src="screenshots/Simulator%20Screenshot%20-%20iPhone%2014%20Plus%20-%202026-04-28%20at%2011.59.04.png" width="180">
 
+## Як релізити нову версію
+
+1. Переконайся, що всі зміни закомічено та запушено у гілку `main`.
+2. Відкрий репозиторій на GitHub → **Releases** → **Draft a new release**.
+3. У полі **Choose a tag** введи нову версію (наприклад `v1.8.0`) та натисни **Create new tag**.
+4. Напиши нотатки до релізу у текстовому полі.
+5. Натисни **Publish release**.
+
+CI-пайплайн запуститься автоматично:
+- оновить `pubspec.yaml` до нової версії та закомітить зміни у `main`
+- зберить APK (Android) та IPA (iOS)
+- прикріпить обидва артефакти до релізу
+
+> Альтернативно, через термінал:
+> ```bash
+> gh release create v1.8.0 --title "Atensia v1.8.0" --notes "Що нового..."
+> ```
+
 ## Список змін
 
 ### 1.7.3
