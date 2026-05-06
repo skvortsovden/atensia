@@ -13,7 +13,8 @@ class AppProvider extends ChangeNotifier {
   bool _remindersEnabled = false;
   TimeOfDay _reminderTime = const TimeOfDay(hour: 20, minute: 0);
 
-  late SharedPreferences _prefs;
+  SharedPreferences? _prefs;
+  bool _isInitialized = false;
 
   static const _entriesKey = 'atensia_entries';
   static const _usernameKey = 'atensia_username';
@@ -36,7 +37,8 @@ class AppProvider extends ChangeNotifier {
   String get username => _username;
   bool get remindersEnabled => _remindersEnabled;
   TimeOfDay get reminderTime => _reminderTime;
-  bool get isFirstLaunch => !(_prefs.getBool(_launchedKey) ?? false);
+  bool get isFirstLaunch => !(_prefs?.getBool(_launchedKey) ?? false);
+  bool get isInitialized => _isInitialized;
 
   int get currentStreak {
     final now = DateTime.now();
@@ -68,41 +70,51 @@ class AppProvider extends ChangeNotifier {
   // ── Init ─────────────────────────────────────────────────────────────────
 
   Future<void> init() async {
-    _prefs = await SharedPreferences.getInstance();
-    // One-time migration from proso_* keys to atensia_*
-    for (final e in _oldKeys.entries) {
-      if (_prefs.containsKey(e.key) && !_prefs.containsKey(e.value)) {
-        final v = _prefs.get(e.key);
-        if (v is String) await _prefs.setString(e.value, v);
-        if (v is bool) await _prefs.setBool(e.value, v);
+    try {
+      _prefs = await SharedPreferences.getInstance();
+      // One-time migration from proso_* keys to atensia_*
+      for (final e in _oldKeys.entries) {
+        if (_prefs!.containsKey(e.key) && !_prefs!.containsKey(e.value)) {
+          final v = _prefs!.get(e.key);
+          if (v is String) await _prefs!.setString(e.value, v);
+          if (v is bool) await _prefs!.setBool(e.value, v);
+        }
+        await _prefs!.remove(e.key);
       }
-      await _prefs.remove(e.key);
-    }
-    _username = _prefs.getString(_usernameKey) ?? '';
-    _remindersEnabled = _prefs.getBool(_remindersKey) ?? false;
-    final timeStr = _prefs.getString(_reminderTimeKey);
-    if (timeStr != null) {
-      final parts = timeStr.split(':');
-      if (parts.length == 2) {
-        _reminderTime = TimeOfDay(
-          hour: int.tryParse(parts[0]) ?? 20,
-          minute: int.tryParse(parts[1]) ?? 0,
-        );
+      _username = _prefs!.getString(_usernameKey) ?? '';
+      _remindersEnabled = _prefs!.getBool(_remindersKey) ?? false;
+      final timeStr = _prefs!.getString(_reminderTimeKey);
+      if (timeStr != null) {
+        final parts = timeStr.split(':');
+        if (parts.length == 2) {
+          _reminderTime = TimeOfDay(
+            hour: int.tryParse(parts[0]) ?? 20,
+            minute: int.tryParse(parts[1]) ?? 0,
+          );
+        }
       }
-    }
 
-    final raw = _prefs.getString(_entriesKey);
-    if (raw != null) {
-      try {
-        final Map<String, dynamic> decoded =
-            jsonDecode(raw) as Map<String, dynamic>;
-        _entries = decoded.map(
-          (k, v) =>
-              MapEntry(k, DailyEntry.fromJson(v as Map<String, dynamic>)),
-        );
-      } catch (_) {
-        _entries = {};
+      final raw = _prefs!.getString(_entriesKey);
+      if (raw != null) {
+        try {
+          final Map<String, dynamic> decoded =
+              jsonDecode(raw) as Map<String, dynamic>;
+          _entries = decoded.map(
+            (k, v) =>
+                MapEntry(k, DailyEntry.fromJson(v as Map<String, dynamic>)),
+          );
+        } catch (_) {
+          _entries = {};
+        }
       }
+    } catch (e) {
+      // SharedPreferences unavailable (e.g. platform channel stalled on a fresh
+      // install). The app starts in a degraded in-memory-only state — data will
+      // not be persisted this session, but the user can still use the app.
+      debugPrint('AppProvider: init failed ($e). Using empty in-memory state.');
+    } finally {
+      _isInitialized = true;
+      notifyListeners();
     }
   }
 
@@ -186,12 +198,12 @@ class AppProvider extends ChangeNotifier {
 
   void setUsername(String name) {
     _username = name;
-    _prefs.setString(_usernameKey, name);
+    _prefs?.setString(_usernameKey, name);
     notifyListeners();
   }
 
   void markLaunched() {
-    _prefs.setBool(_launchedKey, true);
+    _prefs?.setBool(_launchedKey, true);
   }
 
   Future<void> setReminders(bool enabled) async {
@@ -207,7 +219,7 @@ class AppProvider extends ChangeNotifier {
       }
     }
     _remindersEnabled = enabled;
-    _prefs.setBool(_remindersKey, enabled);
+    _prefs?.setBool(_remindersKey, enabled);
     try {
       await NotificationService.instance.schedule(_reminderTime, enabled: enabled);
     } catch (_) {
@@ -218,7 +230,7 @@ class AppProvider extends ChangeNotifier {
 
   Future<void> setReminderTime(TimeOfDay time) async {
     _reminderTime = time;
-    _prefs.setString(_reminderTimeKey,
+    _prefs?.setString(_reminderTimeKey,
         '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}');
     if (_remindersEnabled) {
       await NotificationService.instance.schedule(time, enabled: true);
@@ -230,7 +242,7 @@ class AppProvider extends ChangeNotifier {
 
   Future<void> clearAllData() async {
     _entries = {};
-    await _prefs.remove(_entriesKey);
+    if (_prefs != null) await _prefs!.remove(_entriesKey);
     notifyListeners();
   }
 
@@ -479,9 +491,10 @@ class AppProvider extends ChangeNotifier {
   // ── Persistence ───────────────────────────────────────────────────────────
 
   Future<void> _persistEntries() async {
+    if (_prefs == null) return;
     final encoded = jsonEncode(
       _entries.map((k, v) => MapEntry(k, v.toJson())),
     );
-    await _prefs.setString(_entriesKey, encoded);
+    await _prefs!.setString(_entriesKey, encoded);
   }
 }

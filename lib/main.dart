@@ -33,12 +33,11 @@ void main() async {
   );
 
   final appProvider = AppProvider();
-  await appProvider.init();
 
-  // Start the UI immediately — never block runApp() on notification init.
-  // The channel calls inside NotificationService.init() can stall on a fresh
-  // iOS install before the SceneDelegate has registered the handler, which
-  // previously kept the app frozen on the splash screen.
+  // Never block runApp() — SharedPreferences.getInstance() is a platform
+  // channel call that can stall on a fresh iOS install (same root cause as the
+  // timezone channel hang). runApp() is called immediately; the app shows a
+  // blank white screen until initialization completes (isInitialized = true).
   runApp(
     ChangeNotifierProvider.value(
       value: appProvider,
@@ -46,8 +45,16 @@ void main() async {
     ),
   );
 
-  // Initialize notifications in the background after the first frame.
-  unawaited(_initNotifications(appProvider));
+  // Load persisted data, then initialize notifications — both in the background.
+  unawaited(_initAppData(appProvider));
+}
+
+/// Loads persisted data then initializes the notification service.
+/// Both run after [runApp] so that no platform channel call can prevent
+/// the app from rendering.
+Future<void> _initAppData(AppProvider appProvider) async {
+  await appProvider.init();
+  await _initNotifications(appProvider);
 }
 
 /// Initializes the notification service and schedules the daily reminder.
@@ -149,9 +156,18 @@ class AtensiaApp extends StatelessWidget {
         ),
       ),
 
-      home: context.read<AppProvider>().isFirstLaunch
-          ? const OnboardingScreen()
-          : const MainScreen(),
+      home: Consumer<AppProvider>(
+        builder: (_, provider, __) {
+          if (!provider.isInitialized) {
+            // Blank white screen that visually continues the native launch
+            // screen while SharedPreferences and other platform channels load.
+            return const Scaffold(backgroundColor: Colors.white);
+          }
+          return provider.isFirstLaunch
+              ? const OnboardingScreen()
+              : const MainScreen();
+        },
+      ),
     );
   }
 }
