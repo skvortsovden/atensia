@@ -27,9 +27,8 @@
 name: Release
 
 on:
-  push:
-    tags:
-      - 'v[0-9]+.[0-9]+.[0-9]+'
+  release:
+    types: [published]
 
 permissions:
   contents: write
@@ -297,10 +296,11 @@ jobs:
         with:
           name: ios-ipa
 
-      - name: Publish GitHub Release
+      - name: Attach artifacts to existing GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          name: "Atensia ${{ github.ref_name }}"
+          # Release already exists (created from UI or gh CLI) – just upload files.
+          # Name, tag, and release notes are preserved as written.
           files: |
             atensia-${{ github.ref_name }}.apk
             atensia-${{ github.ref_name }}.ipa
