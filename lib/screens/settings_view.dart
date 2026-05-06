@@ -30,7 +30,10 @@ class _SettingsViewState extends State<SettingsView> {
         TextEditingController(text: context.read<AppProvider>().username);
     PackageInfo.fromPlatform().then((info) {
       if (mounted) setState(() => _appVersion = info.version);
-    }).catchError((_) {});
+    }).catchError((Object e) {
+      debugPrint('SettingsView: PackageInfo.fromPlatform() failed ($e).');
+      if (mounted) setState(() => _appVersion = '—');
+    });
   }
 
   @override
