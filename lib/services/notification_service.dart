@@ -17,8 +17,14 @@ class NotificationService {
 
   Future<void> init() async {
     tz.initializeTimeZones();
-    final tzName = await _tzChannel.invokeMethod<String>('getLocalTimezone') ?? 'UTC';
-    tz.setLocalLocation(tz.getLocation(tzName));
+    try {
+      final tzName = await _tzChannel.invokeMethod<String>('getLocalTimezone') ?? 'UTC';
+      tz.setLocalLocation(tz.getLocation(tzName));
+    } catch (e) {
+      // Method channel not available yet or unknown timezone — fall back to UTC.
+      debugPrint('NotificationService: timezone init failed ($e), using UTC.');
+      tz.setLocalLocation(tz.UTC);
+    }
 
     const android = AndroidInitializationSettings('@mipmap/ic_launcher');
     const ios = DarwinInitializationSettings(

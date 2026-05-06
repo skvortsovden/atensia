@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -31,27 +33,49 @@ void main() async {
   );
 
   final appProvider = AppProvider();
-  await appProvider.init();
 
-  await NotificationService.instance.init();
-  if (appProvider.remindersEnabled) {
-    try {
-      await NotificationService.instance.schedule(
-        appProvider.reminderTime,
-        enabled: true,
-      );
-    } catch (e) {
-      // Notification scheduling failed (e.g. permission revoked); continue startup.
-      debugPrint('NotificationService: failed to schedule on startup ($e).');
-    }
-  }
-
+  // Never block runApp() — SharedPreferences.getInstance() is a platform
+  // channel call that can stall on a fresh iOS install (same root cause as the
+  // timezone channel hang). runApp() is called immediately; the app shows a
+  // blank white screen until initialization completes (isInitialized = true).
   runApp(
     ChangeNotifierProvider.value(
       value: appProvider,
       child: const AtensiaApp(),
     ),
   );
+
+  // Load persisted data, then initialize notifications — both in the background.
+  unawaited(_initAppData(appProvider));
+}
+
+/// Loads persisted data then initializes the notification service.
+/// Both run after [runApp] so that no platform channel call can prevent
+/// the app from rendering.
+Future<void> _initAppData(AppProvider appProvider) async {
+  await appProvider.init();
+  await _initNotifications(appProvider);
+}
+
+/// Initializes the notification service and schedules the daily reminder.
+/// Runs after [runApp] so that a hung or failing platform channel cannot
+/// prevent the app from rendering.
+Future<void> _initNotifications(AppProvider appProvider) async {
+  try {
+    await NotificationService.instance.init();
+    if (appProvider.remindersEnabled) {
+      try {
+        await NotificationService.instance.schedule(
+          appProvider.reminderTime,
+          enabled: true,
+        );
+      } catch (e) {
+        debugPrint('NotificationService: failed to schedule on startup ($e).');
+      }
+    }
+  } catch (e) {
+    debugPrint('NotificationService: init failed on startup ($e).');
+  }
 }
 
 class AtensiaApp extends StatelessWidget {
@@ -132,9 +156,18 @@ class AtensiaApp extends StatelessWidget {
         ),
       ),
 
-      home: context.read<AppProvider>().isFirstLaunch
-          ? const OnboardingScreen()
-          : const MainScreen(),
+      home: Consumer<AppProvider>(
+        builder: (_, provider, __) {
+          if (!provider.isInitialized) {
+            // Blank white screen that visually continues the native launch
+            // screen while SharedPreferences and other platform channels load.
+            return const Scaffold(backgroundColor: Colors.white);
+          }
+          return provider.isFirstLaunch
+              ? const OnboardingScreen()
+              : const MainScreen();
+        },
+      ),
     );
   }
 }

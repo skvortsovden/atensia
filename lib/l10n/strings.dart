@@ -119,6 +119,7 @@ class S {
   static String get settingsImportDoneBtn => _s('settings_import_done_btn');
   static String get settingsImportErrorTitle => _s('settings_import_error_title');
   static String get settingsImportErrorBtn => _s('settings_import_error_btn');
+  static String get settingsImportErrorEncoding => _s('settings_import_error_encoding');
   static String get settingsPrivacy => _s('settings_privacy');
 
   // ── Stats ────────────────────────────────────────────────────────────────
