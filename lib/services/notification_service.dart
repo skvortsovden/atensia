@@ -22,7 +22,13 @@ class NotificationService {
   Completer<void>? _readyCompleter;
 
   Future<void> init() async {
-    _readyCompleter = Completer<void>();
+    // Re-entrancy guard: if init() was already called (in-flight or done),
+    // do nothing. Callers that need to wait for readiness use _awaitReady().
+    if (_readyCompleter != null) return;
+    // Capture in a local variable so the finally block always completes THIS
+    // completer, regardless of any future state changes to _readyCompleter.
+    final completer = Completer<void>();
+    _readyCompleter = completer;
     try {
       tz.initializeTimeZones();
       try {
@@ -47,7 +53,7 @@ class NotificationService {
     } catch (e) {
       debugPrint('NotificationService: plugin init failed ($e).');
     } finally {
-      _readyCompleter!.complete();
+      completer.complete();
     }
   }
 
