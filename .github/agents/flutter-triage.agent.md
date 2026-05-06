@@ -1,3 +1,4 @@
+---
 name: flutter-triage
 description: Analyzes Flutter-specific issues, focusing on device models, OS versions, and 'flutter doctor' output.
 ---
