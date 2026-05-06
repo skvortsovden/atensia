@@ -1,3 +1,4 @@
+---
 name: flutter-guardian
 description: Specialized Flutter reviewer focused on Widget performance, Dart best practices, and cross-platform consistency.
 ---
