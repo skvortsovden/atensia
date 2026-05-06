@@ -30,41 +30,50 @@ class NotificationService {
     final completer = Completer<void>();
     _readyCompleter = completer;
     try {
-      tz.initializeTimeZones();
-      try {
-        final tzName = await _tzChannel.invokeMethod<String>('getLocalTimezone') ?? 'UTC';
-        tz.setLocalLocation(tz.getLocation(tzName));
-      } catch (e) {
-        // Method channel not available yet or unknown timezone — fall back to UTC.
-        debugPrint('NotificationService: timezone init failed ($e), using UTC.');
-        tz.setLocalLocation(tz.UTC);
-      }
-
-      const android = AndroidInitializationSettings('@mipmap/ic_launcher');
-      const ios = DarwinInitializationSettings(
-        requestAlertPermission: false,
-        requestBadgePermission: false,
-        requestSoundPermission: false,
-      );
-      await _plugin.initialize(
-        const InitializationSettings(android: android, iOS: ios),
-      );
+      // 10 s hard cap: the completer is guaranteed to be completed within this
+      // window, so _awaitReady() callers never wait indefinitely.
+      await _doInit().timeout(const Duration(seconds: 10));
       _initialized = true;
     } catch (e) {
-      debugPrint('NotificationService: plugin init failed ($e).');
+      debugPrint('NotificationService: init failed or timed out ($e).');
     } finally {
       completer.complete();
     }
   }
 
-  // Waits up to 3 s for init() to finish and returns whether it succeeded.
-  // Returns false immediately if init() was never called.
-  Future<bool> _awaitReady() async {
-    if (_readyCompleter == null) return false;
+  Future<void> _doInit() async {
+    tz.initializeTimeZones();
     try {
-      await _readyCompleter!.future.timeout(const Duration(seconds: 3));
-    } catch (_) {
+      final tzName = await _tzChannel.invokeMethod<String>('getLocalTimezone') ?? 'UTC';
+      tz.setLocalLocation(tz.getLocation(tzName));
+    } catch (e) {
+      // Method channel not available yet or unknown timezone — fall back to UTC.
+      debugPrint('NotificationService: timezone init failed ($e), using UTC.');
+      tz.setLocalLocation(tz.UTC);
+    }
+    const android = AndroidInitializationSettings('@mipmap/ic_launcher');
+    const ios = DarwinInitializationSettings(
+      requestAlertPermission: false,
+      requestBadgePermission: false,
+      requestSoundPermission: false,
+    );
+    await _plugin.initialize(
+      const InitializationSettings(android: android, iOS: ios),
+    );
+  }
+
+  // Waits for init() to finish (bounded by init's own 10 s timeout) and
+  // returns whether initialisation succeeded. Returns false immediately if
+  // init() has not been called yet. Logs when the plugin is not ready so
+  // silent no-ops are visible in the debug output.
+  Future<bool> _awaitReady() async {
+    if (_readyCompleter == null) {
+      debugPrint('NotificationService: _awaitReady() called before init().');
       return false;
+    }
+    await _readyCompleter!.future;
+    if (!_initialized) {
+      debugPrint('NotificationService: plugin not ready — action skipped.');
     }
     return _initialized;
   }
