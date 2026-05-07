@@ -18,8 +18,7 @@ import android.widget.RemoteViews
  *
  * Tapping any part of the widget opens the main activity.
  */
-class AtensiaWidgetProvider : AppWidgetProvider() {
-
+open class AtensiaWidgetProvider : AppWidgetProvider() {
     override fun onUpdate(
         context: Context,
         appWidgetManager: AppWidgetManager,
