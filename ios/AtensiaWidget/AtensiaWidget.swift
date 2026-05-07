@@ -92,7 +92,11 @@ struct AtensiaSmallView: View {
     }
 
     private func streakSuffix(_ n: Int) -> String {
-        "день"
+        let mod10 = n % 10
+        let mod100 = n % 100
+        if mod10 == 1 && mod100 != 11 { return "день" }
+        if mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14) { return "дні" }
+        return "днів"
     }
 }
 
@@ -140,7 +144,7 @@ struct AtensiaMediumView: View {
                 Image(systemName: "checkmark.circle.fill")
                     .font(.system(size: 10))
                     .foregroundColor(entry.hasEntry ? .primary : .secondary)
-                Text("\(entry.streak)-й день")
+                Text("\(entry.streak) \(streakSuffix(entry.streak))")
                     .font(.system(size: 11))
                     .foregroundColor(.secondary)
             }
@@ -149,6 +153,14 @@ struct AtensiaMediumView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
         .background(Color.white)
         .widgetURL(widgetURL)
+    }
+
+    private func streakSuffix(_ n: Int) -> String {
+        let mod10 = n % 10
+        let mod100 = n % 100
+        if mod10 == 1 && mod100 != 11 { return "день" }
+        if mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14) { return "дні" }
+        return "днів"
     }
 }
 

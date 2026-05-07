@@ -52,7 +52,7 @@ class AtensiaWidgetProvider : AppWidgetProvider() {
 
         val displayQuadrant = if (hasEntry && quadrant.isNotEmpty()) quadrant else "—"
         views.setTextViewText(R.id.widget_quadrant, displayQuadrant)
-        views.setTextViewText(R.id.widget_streak, streak.toString())
+        views.setTextViewText(R.id.widget_streak, "${streak} ${streakSuffix(streak)}")
 
         if (isMedium) {
             views.setTextViewText(
@@ -76,5 +76,13 @@ class AtensiaWidgetProvider : AppWidgetProvider() {
         views.setOnClickPendingIntent(R.id.widget_root, pendingIntent)
 
         appWidgetManager.updateAppWidget(appWidgetId, views)
+    }
+
+    private fun streakSuffix(n: Int): String {
+        val mod10 = n % 10
+        val mod100 = n % 100
+        if (mod10 == 1 && mod100 != 11) return "день"
+        if (mod10 in 2..4 && mod100 !in 12..14) return "дні"
+        return "днів"
     }
 }
