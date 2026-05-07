@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:home_widget/home_widget.dart';
 import 'package:provider/provider.dart';
 
 import 'l10n/strings.dart';
@@ -13,6 +14,7 @@ import 'screens/onboarding_screen.dart';
 import 'screens/stats_view.dart';
 import 'screens/today_view.dart';
 import 'services/notification_service.dart';
+import 'services/widget_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -47,6 +49,8 @@ void main() async {
 
   // Load persisted data, then initialize notifications — both in the background.
   unawaited(_initAppData(appProvider));
+  // Initialize home_widget App Group ID so the widget can share data.
+  unawaited(WidgetService.init());
 }
 
 /// Loads persisted data and initializes the notification plugin concurrently.
@@ -187,6 +191,30 @@ class MainScreen extends StatefulWidget {
 class _MainScreenState extends State<MainScreen> {
   int _index = 1;
   int _historyKey = 0;
+  StreamSubscription<Uri?>? _widgetClickSub;
+
+  static const _todayTabIndex = 1;
+
+  @override
+  void initState() {
+    super.initState();
+    // If the app was cold-started by tapping the widget, open Today tab.
+    HomeWidget.initiallyLaunchedFromHomeWidget().then(_handleWidgetUri);
+    // Handle taps on the widget while the app is already running.
+    _widgetClickSub = HomeWidget.widgetClicked.listen(_handleWidgetUri);
+  }
+
+  @override
+  void dispose() {
+    _widgetClickSub?.cancel();
+    super.dispose();
+  }
+
+  void _handleWidgetUri(Uri? uri) {
+    if (uri != null && mounted) {
+      setState(() => _index = _todayTabIndex);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
