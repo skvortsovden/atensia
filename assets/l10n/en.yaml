@@ -1,0 +1,181 @@
+# ── Onboarding ────────────────────────────────────────────────────────────────
+onboarding_name_title: "What should I call you?"
+onboarding_name_hint: "Enter your name…"
+onboarding_name_btn: Next
+onboarding_greeting_title: "Hello, {name}!"
+onboarding_greeting_title_default: "Hello, friend!"
+onboarding_greeting_text: "I'm glad you're paying attention to yourself. Atensia will help you with that."
+onboarding_greeting_btn: Next
+onboarding_notifications_title: Reminders
+onboarding_notifications_desc: "Get a daily reminder at a convenient time so you don't forget to make entries."
+onboarding_notifications_skip: Skip
+onboarding_notifications_done: Done
+onboarding_guide_title: How to use the app?
+onboarding_guide_text: "1. Open the «Today» screen every day and make entries — it only takes a few seconds.\n\n2. Missed a day? Open «Calendar» and add entries for past days.\n\n3. Forgetting to record? Enable reminders in «Settings», for example in the evening.\n\n4. Regularly check «Report» to notice changes and trends in your wellbeing.\n\n5. Share your achievements — tap «Share» on the «Report» screen and send the image to friends or social media.\n\n6. Want to analyze data further? Export and save your data to a file via «Settings».\n\n7. Use it with care for yourself."
+onboarding_guide_btn: Got it
+
+# ── App ───────────────────────────────────────────────────────────────────────
+app_title: Atensia
+app_tagline: attention to yourself
+
+# ── Navigation tabs ───────────────────────────────────────────────────────────
+tab_calendar: Calendar
+tab_today: Today
+tab_stats: Report
+tab_settings: Settings
+
+# ── Today view ────────────────────────────────────────────────────────────────
+today_greeting_named: "Hello, {name}!"
+today_greeting_default: "Hello, there!"
+today_date_prefix: Today is
+today_subtitle: How are you?
+today_section_health: Any concerns?
+today_section_leisure: Otium
+today_valence_label: "mood"
+today_arousal_label: "energy"
+today_valence_min: Unpleasant
+today_valence_max: Pleasant
+today_arousal_min: Calm
+today_arousal_max: Active
+today_valence_low: Bad
+today_valence_mid: Okay
+today_valence_high: Great
+today_arousal_low: Drained
+today_arousal_mid: Okay
+today_arousal_high: Energized
+
+# ── Edit day screen (past tense) ──────────────────────────────────────────────
+edit_subtitle: How were you feeling?
+edit_section_health: Any concerns?
+edit_section_leisure: Otium
+edit_section_note: Note
+edit_note_hint: What important happened today?
+edit_btn_save: Save
+
+# ── Calendar / History view ───────────────────────────────────────────────────
+calendar_title: Calendar
+calendar_future_day: This day hasn't come yet
+calendar_no_data: No data for this day
+calendar_btn_add: Add
+calendar_btn_edit: Edit
+calendar_row_feel: Feeling
+calendar_row_health: Concerns
+calendar_row_leisure: Otium
+calendar_row_note: Note
+
+# ── Settings view ─────────────────────────────────────────────────────────────
+settings_title: Settings
+settings_name_label: "What should I call you?"
+settings_name_hint: "Enter name here…"
+settings_reminders: Reminders
+settings_reminder_time: Reminder time
+settings_export_btn: Export data
+settings_export_title: Data export
+settings_export_message: "Privacy first.\nAll your data is stored only on your phone. Export lets you access this data and use it for your own purposes.\nData will be saved in CSV format."
+settings_export_save: Save
+settings_export_cancel: Cancel
+settings_clear_btn: Delete data
+settings_clear_title: Delete all data?
+settings_clear_message: "All your entries will be permanently deleted.\nWould you like to save them to a file first?"
+settings_clear_export: Save and delete
+settings_clear_erase: Just delete
+settings_clear_cancel: Cancel
+settings_clear_export_error: Failed to save file. Data was not deleted.
+settings_clear_done_title: Data deleted
+settings_clear_done_message: All your entries have been successfully deleted.
+settings_clear_done_btn: Got it
+settings_import_btn: Import data
+settings_import_title: Data import
+settings_import_message: "Select a CSV file on your phone.\nExisting entries are kept, new ones are added or update existing ones. You can download a template or export your data and use it as a sample."
+settings_import_template: Download template
+settings_import_choose: Choose file
+settings_import_cancel: Cancel
+settings_import_done_title: Data imported
+settings_import_done_message: Entries successfully added.
+settings_import_done_btn: Got it
+settings_import_error_title: Import error
+settings_import_error_btn: Got it
+settings_import_error_encoding: "The selected file is not valid UTF-8. Save it in UTF-8 encoding and try again."
+settings_privacy: All data is stored only on this device.
+settings_language_label: Language
+settings_version: Version
+
+# ── Date formatting ───────────────────────────────────────────────────────────
+date_locale: en
+
+# ── Today streak ──────────────────────────────────────────────────────────────
+today_streak_before: "Day "
+today_streak_day: "{n}"
+today_streak_after: " of your entries."
+today_streak_after_streak: " of entries in a row."
+
+# ── Stats period label ────────────────────────────────────────────────────────
+stats_period_week_prefix: "week "
+
+# ── Stats view ────────────────────────────────────────────────────────────────
+stats_title: Report
+stats_period_week: Week
+stats_period_month: Month
+stats_period_year: Year
+stats_section_trend: Trend
+stats_section_mood: Wellbeing
+stats_section_health: Health
+stats_section_habits: Leisure
+stats_section_fill: Entries
+stats_days_suffix: "d."
+stats_sick_label: Illness
+stats_pain_label: Pain
+stats_max_streak: "max."
+stats_share_btn: Share
+stats_story_leisure_title: My leisure
+stats_story_period_prefix: "for"
+stats_no_data: Not enough data for this period
+stats_custom_range: Custom range
+stats_pick_dates: Pick dates
+stats_streak_suffix: " in a row"
+stats_habits_all_have_data: "All habits have data for this period."
+stats_habits_filter_label: "Remove empty data?"
+stats_habits_filter_no: "No"
+stats_habits_filter_yes: "Yes"
+stats_share_image_hint: "a generated image you can share on social media or send to friends"
+
+# ── Shared labels ─────────────────────────────────────────────────────────────
+label_sick: Illness
+label_pain: Pain
+
+# ── Moods (kept for backward-compat migration of old saved data) ──────────────
+mood_exhausted: Drained
+mood_good: Good
+mood_energetic: Energized
+
+# ── Circumplex combination labels (valence × arousal) ───────────────────────
+circumplex_hh: On a high
+circumplex_hm: Content
+circumplex_hl: Pleasant tiredness
+circumplex_mh: In the zone
+circumplex_mm: Balanced
+circumplex_ml: Sluggish
+circumplex_lh: Stressed
+circumplex_lm: Low
+circumplex_ll: Exhausted
+circumplex_no_data: State not set
+
+# ── Notifications ─────────────────────────────────────────────────────────────
+notif_channel_name: Daily reminder
+notif_channel_desc: Reminder to check in with yourself
+notif_title: Atensia
+notif_body: time to check in with yourself
+
+# ── Default habits ────────────────────────────────────────────────────────────
+habits:
+  - Walk
+  - Exercise
+  - Reading
+  - Creativity
+  - Doing nothing
+habit_descriptions:
+  Walk: A gentle walk outdoors or walking the dog — even 10 minutes a day can improve how you feel.
+  Exercise: Gym, yoga, dancing, running or cycling — cardio or strength, the choice is yours. Just keep moving.
+  Reading: A book, article, or blog — a great way to unwind, broaden your horizons, and get new ideas.
+  Creativity: Drawing, music, singing, writing, crafts — anything that helps you express yourself, relieve tension, and enjoy the process.
+  Doing nothing: Niksen — the Dutch way of spending leisure time, which literally means "doing nothing." The idea is to find time to just be, and let your mind wander wherever it wants.

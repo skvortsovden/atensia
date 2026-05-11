@@ -62,7 +62,7 @@ class _EditDayScreenState extends State<EditDayScreen> {
   @override
   Widget build(BuildContext context) {
     final dateLabel =
-        DateFormat('d MMMM yyyy', 'uk_UA').format(widget.date);
+        DateFormat('d MMMM yyyy', S.dateLocale).format(widget.date);
 
     // Rebuild _habits keys if provider adds new habits (first open)
     final providerHabits =
@@ -329,14 +329,18 @@ class _HabitList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final displayNames = S.defaultHabits;
+    final storedKeys = entry.habits.keys.toList();
+
     return Column(
-      children: entry.habits.entries.map((e) {
-        final checked = e.value;
+      children: List.generate(displayNames.length, (i) {
+        final storedKey = i < storedKeys.length ? storedKeys[i] : displayNames[i];
+        final checked = entry.habits[storedKey] ?? false;
 
         return GestureDetector(
           onTap: () {
             HapticFeedback.mediumImpact();
-            onHabitChanged(e.key, !checked);
+            onHabitChanged(storedKey, !checked);
           },
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 140),
@@ -368,7 +372,7 @@ class _HabitList extends StatelessWidget {
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
-                    e.key,
+                    displayNames[i],
                     style: TextStyle(
                       color: checked ? Colors.white : Colors.black,
                       fontWeight: FontWeight.w600,
@@ -380,7 +384,7 @@ class _HabitList extends StatelessWidget {
             ),
           ),
         );
-      }).toList(),
+      }),
     );
   }
 }

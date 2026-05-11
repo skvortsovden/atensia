@@ -504,6 +504,55 @@ class _SettingsViewState extends State<SettingsView> {
 
             const SizedBox(height: 32),
 
+            // ── Language ────────────────────────────────────────────────────
+            Text(
+              S.settingsLanguageLabel.toUpperCase(),
+              style: const TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w700,
+                letterSpacing: 1.4,
+                color: Colors.black54,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                for (final opt in [('uk', 'Укр'), ('en', 'Eng')])
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: () => provider.setLocale(opt.$1),
+                      child: Container(
+                        margin: opt.$1 == 'uk'
+                            ? const EdgeInsets.only(right: 8)
+                            : EdgeInsets.zero,
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        decoration: BoxDecoration(
+                          color: provider.locale == opt.$1
+                              ? Colors.black
+                              : Colors.transparent,
+                          border: Border.all(color: Colors.black, width: 2),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        alignment: Alignment.center,
+                        child: Text(
+                          opt.$2,
+                          style: TextStyle(
+                            fontFamily: 'FixelText',
+                            fontWeight: FontWeight.w600,
+                            fontSize: 14,
+                            color: provider.locale == opt.$1
+                                ? Colors.white
+                                : Colors.black,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+
+            const SizedBox(height: 32),
+
             // ── Reminders ───────────────────────────────────────────────────
             Container(
               padding:
@@ -765,7 +814,7 @@ class _SettingsViewState extends State<SettingsView> {
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    'Версія $_appVersion',
+                    '${S.settingsVersion} $_appVersion',
                     style: const TextStyle(color: Colors.black38, fontSize: 13),
                   ),
                   const SizedBox(height: 4),
