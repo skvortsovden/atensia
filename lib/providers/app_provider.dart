@@ -224,6 +224,13 @@ class AppProvider extends ChangeNotifier {
     _locale = locale;
     _prefs?.setString(_localeKey, locale);
     await S.load(locale);
+    if (_remindersEnabled) {
+      try {
+        await NotificationService.instance.schedule(_reminderTime, enabled: true);
+      } catch (_) {
+        // schedule() errors are non-fatal; locale still updates successfully.
+      }
+    }
     notifyListeners();
   }
 
