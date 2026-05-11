@@ -95,8 +95,8 @@ class AppProvider extends ChangeNotifier {
       _username = _prefs!.getString(_usernameKey) ?? '';
       _remindersEnabled = _prefs!.getBool(_remindersKey) ?? false;
       _locale = S.normalizeLocale(_prefs!.getString(_localeKey));
+      _locale = await S.load(_locale);
       await _prefs!.setString(_localeKey, _locale);
-      if (_locale != 'uk') _locale = await S.load(_locale);
       final timeStr = _prefs!.getString(_reminderTimeKey);
       if (timeStr != null) {
         final parts = timeStr.split(':');
@@ -226,7 +226,7 @@ class AppProvider extends ChangeNotifier {
 
     if (loadedLocale != target) {
       debugPrint(
-          "AppProvider.setLocale: requested '$target' but loaded '$loadedLocale'.");
+          "Warning: AppProvider.setLocale requested '$target' but loaded '$loadedLocale'.");
     }
 
     _locale = loadedLocale;
@@ -238,7 +238,7 @@ class AppProvider extends ChangeNotifier {
             .schedule(_reminderTime, enabled: true);
       } catch (e) {
         debugPrint(
-            'AppProvider.setLocale: failed to reschedule reminder on locale change ($e).');
+            'Warning: AppProvider.setLocale failed to reschedule reminder on locale change ($e). Reminder notifications may display in the previous language until reminders are rescheduled.');
       }
       if (token != _localeRequestToken) return;
     }

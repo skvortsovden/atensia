@@ -12,6 +12,9 @@ class S {
   static int _loadToken = 0;
   static String _locale = 'uk';
 
+  /// Normalizes arbitrary locale identifiers to supported language codes.
+  /// Returns `'en'` for English-like inputs, `'uk'` for Ukrainian-like inputs,
+  /// and falls back to `'uk'` for anything else.
   static String normalizeLocale(String? locale) {
     final v = (locale ?? '').toLowerCase();
     if (v.startsWith('en')) return 'en';
@@ -46,8 +49,9 @@ class S {
     if (token == _loadToken) {
       _m = loaded;
       _locale = loadedLocale;
+      return _locale;
     }
-    return _locale;
+    return loadedLocale;
   }
 
   static String _s(String key) => _m[key] as String? ?? key;
