@@ -14,6 +14,7 @@ class AppProvider extends ChangeNotifier {
   bool _remindersEnabled = false;
   TimeOfDay _reminderTime = const TimeOfDay(hour: 20, minute: 0);
   String _locale = 'uk';
+  int _localeRequestToken = 0;
 
   SharedPreferences? _prefs;
   bool _isInitialized = false;
@@ -93,13 +94,9 @@ class AppProvider extends ChangeNotifier {
       }
       _username = _prefs!.getString(_usernameKey) ?? '';
       _remindersEnabled = _prefs!.getBool(_remindersKey) ?? false;
-      const supportedLocales = {'uk', 'en'};
-      final savedLocale = _prefs!.getString(_localeKey);
-      _locale =
-          savedLocale != null && supportedLocales.contains(savedLocale)
-              ? savedLocale
-              : 'uk';
-      if (_locale != 'uk') await S.load(_locale);
+      _locale = S.normalizeLocale(_prefs!.getString(_localeKey));
+      await _prefs!.setString(_localeKey, _locale);
+      if (_locale != 'uk') _locale = await S.load(_locale);
       final timeStr = _prefs!.getString(_reminderTimeKey);
       if (timeStr != null) {
         final parts = timeStr.split(':');
@@ -220,16 +217,30 @@ class AppProvider extends ChangeNotifier {
   }
 
   Future<void> setLocale(String locale) async {
-    if (_locale == locale) return;
-    _locale = locale;
-    _prefs?.setString(_localeKey, locale);
-    await S.load(locale);
+    final target = S.normalizeLocale(locale);
+    if (_locale == target) return;
+
+    final token = ++_localeRequestToken;
+    final loadedLocale = await S.load(target);
+    if (token != _localeRequestToken) return;
+
+    if (loadedLocale != target) {
+      debugPrint(
+          "AppProvider.setLocale: requested '$target' but loaded '$loadedLocale'.");
+    }
+
+    _locale = loadedLocale;
+    _prefs?.setString(_localeKey, _locale);
+
     if (_remindersEnabled) {
       try {
-        await NotificationService.instance.schedule(_reminderTime, enabled: true);
-      } catch (_) {
-        // schedule() errors are non-fatal; locale still updates successfully.
+        await NotificationService.instance
+            .schedule(_reminderTime, enabled: true);
+      } catch (e) {
+        debugPrint(
+            'AppProvider.setLocale: failed to reschedule reminder on locale change ($e).');
       }
+      if (token != _localeRequestToken) return;
     }
     notifyListeners();
   }

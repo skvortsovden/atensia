@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:yaml/yaml.dart';
 
@@ -8,10 +9,45 @@ class S {
   S._();
 
   static Map<String, dynamic> _m = {};
+  static int _loadToken = 0;
+  static String _locale = 'uk';
 
-  static Future<void> load([String locale = 'uk']) async {
+  static String normalizeLocale(String? locale) {
+    final v = (locale ?? '').toLowerCase();
+    if (v.startsWith('en')) return 'en';
+    if (v.startsWith('uk')) return 'uk';
+    return 'uk';
+  }
+
+  static Future<Map<String, dynamic>> _loadLocaleMap(String locale) async {
     final raw = await rootBundle.loadString('assets/l10n/$locale.yaml');
-    _m = Map<String, dynamic>.from(loadYaml(raw) as Map);
+    return Map<String, dynamic>.from(loadYaml(raw) as Map);
+  }
+
+  static Future<String> load([String locale = 'uk']) async {
+    final requested = normalizeLocale(locale);
+    final token = ++_loadToken;
+
+    Map<String, dynamic> loaded;
+    String loadedLocale = requested;
+    try {
+      loaded = await _loadLocaleMap(requested);
+    } catch (e) {
+      debugPrint("S.load: failed to load locale '$requested' ($e), falling back to 'uk'.");
+      loadedLocale = 'uk';
+      try {
+        loaded = await _loadLocaleMap('uk');
+      } catch (fallbackError) {
+        debugPrint("S.load: fallback 'uk' failed ($fallbackError). Keeping existing strings.");
+        return _locale;
+      }
+    }
+
+    if (token == _loadToken) {
+      _m = loaded;
+      _locale = loadedLocale;
+    }
+    return _locale;
   }
 
   static String _s(String key) => _m[key] as String? ?? key;
