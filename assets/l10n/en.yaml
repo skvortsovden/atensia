@@ -3,8 +3,8 @@ onboarding_name_title: "What should I call you?"
 onboarding_name_hint: "Enter your name…"
 onboarding_name_btn: Next
 onboarding_greeting_title: "Hello, {name}!"
-onboarding_greeting_title_default: "Hello, friend!"
-onboarding_greeting_text: "I'm glad you're paying attention to yourself. Atensia will help you with that."
+onboarding_greeting_title_default: "Hello, there!"
+onboarding_greeting_text: "I'm glad you're tending to yourself. Atensia will help you with that."
 onboarding_greeting_btn: Next
 onboarding_notifications_title: Reminders
 onboarding_notifications_desc: "Get a daily reminder at a convenient time so you don't forget to make entries."
@@ -16,7 +16,7 @@ onboarding_guide_btn: Got it
 
 # ── App ───────────────────────────────────────────────────────────────────────
 app_title: Atensia
-app_tagline: attention to yourself
+app_tagline: tending to oneself
 
 # ── Navigation tabs ───────────────────────────────────────────────────────────
 tab_calendar: Calendar
