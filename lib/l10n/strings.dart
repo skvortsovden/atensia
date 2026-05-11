@@ -15,6 +15,7 @@ class S {
   /// Normalizes arbitrary locale identifiers to supported language codes.
   /// Returns `'en'` for English-like inputs, `'uk'` for Ukrainian-like inputs,
   /// and falls back to `'uk'` for anything else.
+  /// `'uk'` is the default because Ukrainian is the app's original/base locale.
   static String normalizeLocale(String? locale) {
     final v = (locale ?? '').toLowerCase();
     if (v.startsWith('en')) return 'en';
@@ -49,9 +50,8 @@ class S {
     if (token == _loadToken) {
       _m = loaded;
       _locale = loadedLocale;
-      return _locale;
     }
-    return loadedLocale;
+    return _locale;
   }
 
   static String _s(String key) => _m[key] as String? ?? key;
