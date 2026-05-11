@@ -13,6 +13,8 @@ class S {
   static String _locale = 'uk';
 
   /// Normalizes arbitrary locale identifiers to supported language codes.
+  /// Accepts both language codes (`en`, `uk`) and locale identifiers
+  /// (`en_US`, `uk_UA`) by matching the language prefix.
   /// Returns `'en'` for English-like inputs, `'uk'` for Ukrainian-like inputs,
   /// and falls back to `'uk'` for anything else.
   /// `'uk'` is the default because Ukrainian is the app's original/base locale.
