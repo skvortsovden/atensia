@@ -225,7 +225,7 @@ class AppProvider extends ChangeNotifier {
 
     if (loadedLocale != target) {
       debugPrint(
-          "Warning: AppProvider.setLocale requested '$target' but loaded '$loadedLocale'.");
+          "Warning: AppProvider.setLocale requested '$target' but loaded '$loadedLocale' (fallback likely applied due to missing/invalid locale asset).");
     }
 
     _locale = loadedLocale;
