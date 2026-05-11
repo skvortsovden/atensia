@@ -93,7 +93,12 @@ class AppProvider extends ChangeNotifier {
       }
       _username = _prefs!.getString(_usernameKey) ?? '';
       _remindersEnabled = _prefs!.getBool(_remindersKey) ?? false;
-      _locale = _prefs!.getString(_localeKey) ?? 'uk';
+      const supportedLocales = {'uk', 'en'};
+      final savedLocale = _prefs!.getString(_localeKey);
+      _locale =
+          savedLocale != null && supportedLocales.contains(savedLocale)
+              ? savedLocale
+              : 'uk';
       if (_locale != 'uk') await S.load(_locale);
       final timeStr = _prefs!.getString(_reminderTimeKey);
       if (timeStr != null) {
