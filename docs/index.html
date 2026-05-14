@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="uk">
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Атенція — це увага до себе</title>
+  <title>Atensia — tending to oneself</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -17,6 +17,31 @@
       align-items: center;
       justify-content: center;
       padding: 40px 24px;
+    }
+
+    .lang-switch {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      display: flex;
+      gap: 6px;
+    }
+
+    .lang-btn {
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      border: 2px solid #000;
+      background: #fff;
+      color: #000;
+      transition: all 0.15s;
+    }
+
+    .lang-btn.active {
+      background: #000;
+      color: #fff;
     }
 
     .logo {
@@ -186,15 +211,37 @@
     .privacy a {
       color: #aaa;
     }
+
+    [data-lang] { display: none; }
   </style>
 </head>
 <body>
 
-  <img class="logo" src="icon.png" alt="Атенція" />
-  <h1>Атенція</h1>
-  <p class="tagline">це увага до себе</p>
+  <div class="lang-switch">
+    <button class="lang-btn" id="btn-en" onclick="setLang('en')">EN</button>
+    <button class="lang-btn" id="btn-uk" onclick="setLang('uk')">UK</button>
+  </div>
 
-  <div class="description">
+  <img class="logo" src="icon.png" alt="Atensia" />
+  <h1 data-lang="en">Atensia</h1>
+  <h1 data-lang="uk">Атенція</h1>
+
+  <p class="tagline" data-lang="en">tending to oneself</p>
+  <p class="tagline" data-lang="uk">це увага до себе</p>
+
+  <div class="description" data-lang="en">
+    <h2><em>Simple.<br>Attentive.<br>Private.</em></h2>
+    <p>Atensia is a free daily journal for tracking your mood, well-being, and activities. It helps you spot patterns and gain deeper self-insight. Your privacy comes first: all data stays strictly on your device. No accounts, no data collection, and no internet required.</p>
+    <p>The app features:</p>
+    <ul>
+      <li><strong>Daily entries</strong> about your wellbeing and activities</li>
+      <li><strong>Calendar</strong> to update entries for past days</li>
+      <li><strong>Report</strong> to understand changes over a period</li>
+      <li><strong>Reminders</strong> so you don't forget to log entries</li>
+    </ul>
+  </div>
+
+  <div class="description" data-lang="uk">
     <h2><em>Простий.<br>Уважний.<br>Приватний.</em></h2>
     <p>Атенція — це безкоштовний додаток для щоденних записів про твій настрій, самопочуття та дозвілля. Він допоможе тобі помічати зміни та краще розуміти себе. Усі дані зберігаються лише на твоєму пристрої. Додаток не вимагає реєстрації, не збирає жодних даних та не використовує інтернет.</p>
     <p>Функціонал додатку включає:</p>
@@ -207,9 +254,9 @@
   </div>
 
   <div class="screenshots">
-    <img src="main-screen.png" alt="Головний екран" />
-    <img src="calendar-screen.png" alt="Календар" />
-    <img src="report-screen.png" alt="Звіт" />
+    <img src="main-screen.png" alt="Main screen" />
+    <img src="calendar-screen.png" alt="Calendar" />
+    <img src="report-screen.png" alt="Report" />
   </div>
 
   <div class="buttons">
@@ -223,29 +270,60 @@
       <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
         <path d="M3.18 23.76c.3.17.64.22.98.15l12.09-6.98-2.54-2.54zm15.8-10.24L16.65 12l2.33-1.52L21 8.71a1.23 1.23 0 0 0 0-2.14l-2.33-1.27zm-2.54-7.27L4.16.07a1.16 1.16 0 0 0-1.17.1l9.67 9.67zm-12.08.92v17.66l9.2-8.83z"/>
       </svg>
-      Android .apk файл
+      Android .apk
     </a>
     <a class="btn btn-dev" href="builds/index.html">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
         <path d="M9.4 16.6L4.8 12l4.6-4.6L8 6l-6 6 6 6 1.4-1.4zm5.2 0l4.6-4.6-4.6-4.6L16 6l6 6-6 6-1.4-1.4z"/>
       </svg>
-      Усі dev збірки
+      Dev builds
     </a>
   </div>
 
   <div class="privacy" id="privacy">
-    <h3>Політика конфіденційності</h3>
-    <p>Останнє оновлення: 28 квітня 2026 р.</p>
-    <h4>Збір даних</h4>
-    <p>Додаток «Атенція» не збирає, не зберігає та не передає жодних персональних даних третім особам.</p>
-    <h4>Зберігання даних</h4>
-    <p>Усі дані (записи самопочуття, звички, налаштування) зберігаються виключно локально на вашому пристрої. Ніякі дані не надсилаються на зовнішні сервери.</p>
-    <h4>Сповіщення</h4>
-    <p>Якщо ви увімкнули нагадування, вони обробляються локально операційною системою iOS. Ніяка інформація не передається зовнішнім сервісам.</p>
-    <h4>Контакт</h4>
-    <p>Якщо у вас є запитання щодо конфіденційності, напишіть на: <a href="mailto:denys.skvortsov.dev@gmail.com">denys.skvortsov.dev@gmail.com</a></p>
+    <h3 data-lang="en">Privacy Policy</h3>
+    <h3 data-lang="uk">Політика конфіденційності</h3>
+
+    <p data-lang="en">Last updated: April 28, 2026</p>
+    <p data-lang="uk">Останнє оновлення: 28 квітня 2026 р.</p>
+
+    <h4 data-lang="en">Data Collection</h4>
+    <h4 data-lang="uk">Збір даних</h4>
+    <p data-lang="en">Atensia does not collect, store, or share any personal data with third parties.</p>
+    <p data-lang="uk">Додаток «Атенція» не збирає, не зберігає та не передає жодних персональних даних третім особам.</p>
+
+    <h4 data-lang="en">Data Storage</h4>
+    <h4 data-lang="uk">Зберігання даних</h4>
+    <p data-lang="en">All data (wellbeing entries, habits, settings) is stored exclusively on your device. Nothing is sent to external servers.</p>
+    <p data-lang="uk">Усі дані (записи самопочуття, звички, налаштування) зберігаються виключно локально на вашому пристрої. Ніякі дані не надсилаються на зовнішні сервери.</p>
+
+    <h4 data-lang="en">Notifications</h4>
+    <h4 data-lang="uk">Сповіщення</h4>
+    <p data-lang="en">If you enabled reminders, they are scheduled locally by iOS. No information is transmitted to any external service.</p>
+    <p data-lang="uk">Якщо ви увімкнули нагадування, вони обробляються локально операційною системою iOS. Ніяка інформація не передається зовнішнім сервісам.</p>
+
+    <h4 data-lang="en">Contact</h4>
+    <h4 data-lang="uk">Контакт</h4>
+    <p data-lang="en">Questions about privacy? Write to: <a href="mailto:denys.skvortsov.dev@gmail.com">denys.skvortsov.dev@gmail.com</a></p>
+    <p data-lang="uk">Якщо у вас є запитання щодо конфіденційності, напишіть на: <a href="mailto:denys.skvortsov.dev@gmail.com">denys.skvortsov.dev@gmail.com</a></p>
   </div>
 
   <footer>© 2026 Denys Skvortsov</footer>
+
+  <script>
+    function setLang(lang) {
+      document.querySelectorAll('[data-lang]').forEach(el => {
+        el.style.display = el.dataset.lang === lang ? 'block' : 'none';
+      });
+      document.getElementById('btn-en').classList.toggle('active', lang === 'en');
+      document.getElementById('btn-uk').classList.toggle('active', lang === 'uk');
+      localStorage.setItem('lang', lang);
+    }
+
+    const saved = localStorage.getItem('lang');
+    const browser = navigator.language.startsWith('uk') ? 'uk' : 'en';
+    setLang(saved || browser);
+  </script>
+
 </body>
 </html>
