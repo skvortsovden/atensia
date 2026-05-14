@@ -51,6 +51,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
   @override
   Widget build(BuildContext context) {
+    context.watch<AppProvider>(); // rebuild all pages when locale changes
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
@@ -61,7 +62,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               padding: const EdgeInsets.only(top: 24, bottom: 8),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
-                children: List.generate(4, (i) {
+                children: List.generate(5, (i) {
                   final active = i == _currentPage;
                   return AnimatedContainer(
                     duration: const Duration(milliseconds: 250),
@@ -83,6 +84,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 physics: const NeverScrollableScrollPhysics(),
                 onPageChanged: (i) => setState(() => _currentPage = i),
                 children: [
+                  _LanguagePage(onContinue: _nextPage),
                   _NamePage(
                     controller: _nameController,
                     onContinue: _nextPage,
@@ -98,6 +100,79 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+// ── Page 0: Language selection ──────────────────────────────────────────────
+
+class _LanguagePage extends StatelessWidget {
+  const _LanguagePage({required this.onContinue});
+
+  final VoidCallback onContinue;
+
+  @override
+  Widget build(BuildContext context) {
+    final provider = context.watch<AppProvider>();
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 32),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Spacer(flex: 2),
+          Center(
+            child: Image.asset('assets/atensia-logo.png', height: 56),
+          ),
+          const SizedBox(height: 40),
+          const Text(
+            'Мова / Language',
+            style: TextStyle(
+              fontSize: 28,
+              fontWeight: FontWeight.w700,
+              height: 1.2,
+            ),
+          ),
+          const SizedBox(height: 32),
+          Row(
+            children: [
+              for (final opt in [('uk', 'Українська'), ('en', 'English')])
+                Expanded(
+                  child: GestureDetector(
+                    onTap: () => provider.setLocale(opt.$1),
+                    child: Container(
+                      margin: opt.$1 == 'uk'
+                          ? const EdgeInsets.only(right: 8)
+                          : EdgeInsets.zero,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      decoration: BoxDecoration(
+                        color: provider.locale == opt.$1
+                            ? Colors.black
+                            : Colors.transparent,
+                        border: Border.all(color: Colors.black, width: 2),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      alignment: Alignment.center,
+                      child: Text(
+                        opt.$2,
+                        style: TextStyle(
+                          fontFamily: 'FixelText',
+                          fontWeight: FontWeight.w600,
+                          fontSize: 16,
+                          color: provider.locale == opt.$1
+                              ? Colors.white
+                              : Colors.black,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+            ],
+          ),
+          const Spacer(flex: 3),
+          _PrimaryButton(label: S.onboardingNameBtn, onTap: onContinue),
+          const SizedBox(height: 32),
+        ],
       ),
     );
   }

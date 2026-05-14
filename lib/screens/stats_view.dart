@@ -77,15 +77,15 @@ class _StatsViewState extends State<StatsView> {
     final end = _periodEnd;
     switch (_period) {
       case _Period.week:
-        return 'тиждень ${DateFormat('d MMM', 'uk').format(start)} – ${DateFormat('d MMM', 'uk').format(end)}';
+        return '${S.statsPeriodWeekPrefix}${DateFormat('d MMM', S.dateLocale).format(start)} – ${DateFormat('d MMM', S.dateLocale).format(end)}';
       case _Period.month:
-        return DateFormat('LLLL yyyy', 'uk').format(start);
+        return DateFormat('LLLL yyyy', S.dateLocale).format(start);
       case _Period.year:
-        return DateFormat('yyyy', 'uk').format(end);
+        return DateFormat('yyyy', S.dateLocale).format(end);
       case _Period.custom:
         if (_customRange == null) return S.statsPickDates;
-        if (start == end) return DateFormat('d MMM yyyy', 'uk').format(start);
-        return '${DateFormat('d MMM', 'uk').format(start)} – ${DateFormat('d MMM', 'uk').format(end)}';
+        if (start == end) return DateFormat('d MMM yyyy', S.dateLocale).format(start);
+        return '${DateFormat('d MMM', S.dateLocale).format(start)} – ${DateFormat('d MMM', S.dateLocale).format(end)}';
     }
   }
 
@@ -600,7 +600,7 @@ class _FillCard extends StatelessWidget {
               );
 
               return Tooltip(
-                message: DateFormat('d MMM', 'uk').format(d),
+                message: DateFormat('d MMM', S.dateLocale).format(d),
                 child: dot,
               );
             }).toList(),

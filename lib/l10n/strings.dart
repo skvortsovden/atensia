@@ -1,16 +1,59 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:yaml/yaml.dart';
 
-/// Static strings loaded from assets/l10n/uk.yaml.
-/// Call [S.load()] once in main() before runApp().
+/// Static strings loaded from assets/l10n/<locale>.yaml.
+/// Call [S.load()] once in main() before runApp(), and again whenever
+/// the locale changes (e.g. from AppProvider.setLocale()).
 class S {
   S._();
 
   static Map<String, dynamic> _m = {};
+  static int _loadToken = 0;
+  static String _locale = 'uk';
 
-  static Future<void> load() async {
-    final raw = await rootBundle.loadString('assets/l10n/uk.yaml');
-    _m = Map<String, dynamic>.from(loadYaml(raw) as Map);
+  /// Normalizes arbitrary locale identifiers to supported language codes.
+  /// Accepts both language codes (`en`, `uk`) and locale identifiers
+  /// (`en_US`, `uk_UA`) by matching the language prefix.
+  /// Returns `'en'` for English-like inputs, `'uk'` for Ukrainian-like inputs,
+  /// and falls back to `'uk'` for anything else.
+  /// `'uk'` is the default because Ukrainian is the app's original/base locale.
+  static String normalizeLocale(String? locale) {
+    final v = (locale ?? '').toLowerCase();
+    if (v.startsWith('en')) return 'en';
+    if (v.startsWith('uk')) return 'uk';
+    return 'uk';
+  }
+
+  static Future<Map<String, dynamic>> _loadLocaleMap(String locale) async {
+    final raw = await rootBundle.loadString('assets/l10n/$locale.yaml');
+    return Map<String, dynamic>.from(loadYaml(raw) as Map);
+  }
+
+  static Future<String> load([String locale = 'uk']) async {
+    final requested = normalizeLocale(locale);
+    final token = ++_loadToken;
+
+    Map<String, dynamic> loaded;
+    String loadedLocale = requested;
+    try {
+      loaded = await _loadLocaleMap(requested);
+    } catch (e) {
+      debugPrint("S.load: failed to load locale '$requested' ($e), falling back to 'uk'.");
+      loadedLocale = 'uk';
+      try {
+        loaded = await _loadLocaleMap('uk');
+      } catch (fallbackError) {
+        debugPrint("S.load: fallback 'uk' failed ($fallbackError). Keeping existing strings.");
+        return _locale;
+      }
+    }
+
+    if (token == _loadToken) {
+      _m = loaded;
+      _locale = loadedLocale;
+    }
+    return _locale;
   }
 
   static String _s(String key) => _m[key] as String? ?? key;
@@ -121,6 +164,8 @@ class S {
   static String get settingsImportErrorBtn => _s('settings_import_error_btn');
   static String get settingsImportErrorEncoding => _s('settings_import_error_encoding');
   static String get settingsPrivacy => _s('settings_privacy');
+  static String get settingsLanguageLabel => _s('settings_language_label');
+  static String get settingsVersion => _s('settings_version');
 
   // ── Stats ────────────────────────────────────────────────────────────────
   static String get statsTitle => _s('stats_title');
@@ -142,6 +187,12 @@ class S {
   static String get statsNoData => _s('stats_no_data');
   static String get statsCustomRange => _s('stats_custom_range');
   static String get statsPickDates => _s('stats_pick_dates');
+  static String get statsStreakSuffix => _s('stats_streak_suffix');
+  static String get statsHabitsAllHaveData => _s('stats_habits_all_have_data');
+  static String get statsHabitsFilterLabel => _s('stats_habits_filter_label');
+  static String get statsHabitsFilterNo => _s('stats_habits_filter_no');
+  static String get statsHabitsFilterYes => _s('stats_habits_filter_yes');
+  static String get statsShareImageHint => _s('stats_share_image_hint');
 
   // ── Shared labels ────────────────────────────────────────────────────────
   static String get labelSick => _s('label_sick');
@@ -170,8 +221,27 @@ class S {
   static String circumplexQuadrant(double valence, double arousal) {
     final v = valence >= 0.34 ? 'h' : (valence <= -0.34 ? 'l' : 'm');
     final a = arousal >= 0.34 ? 'h' : (arousal <= -0.34 ? 'l' : 'm');
-    return _s('circumplex_${v}${a}');
+    return _s('circumplex_$v$a');
   }
+
+  // ── Date formatting ──────────────────────────────────────────────────────
+  static String get dateLocale => _s('date_locale');
+
+  // ── Today streak ─────────────────────────────────────────────────────────
+  static String get todayStreakBefore => _s('today_streak_before');
+  static String todayStreakDay(int n) =>
+      _s('today_streak_day').replaceFirst('{n}', '$n');
+  static String get todayStreakAfter => _s('today_streak_after');
+  static String get todayStreakAfterStreak => _s('today_streak_after_streak');
+
+  // ── Stats period label ────────────────────────────────────────────────────
+  static String get statsPeriodWeekPrefix => _s('stats_period_week_prefix');
+
+  // ── Notifications ────────────────────────────────────────────────────────
+  static String get notifChannelName => _s('notif_channel_name');
+  static String get notifChannelDesc => _s('notif_channel_desc');
+  static String get notifTitle => _s('notif_title');
+  static String get notifBody => _s('notif_body');
 
   // ── Default habits ────────────────────────────────────────────────────────
   static List<String> get defaultHabits =>

@@ -97,6 +97,20 @@ settings_import_error_title: Помилка імпорту
 settings_import_error_btn: Зрозуміло
 settings_import_error_encoding: "Вибраний файл не є коректним UTF-8. Збережіть його у кодуванні UTF-8 та спробуйте ще раз."
 settings_privacy: Усі дані зберігаються лише на цьому пристрої.
+settings_language_label: Мова
+settings_version: Версія
+
+# ── Date formatting ───────────────────────────────────────────────────────────
+date_locale: uk
+
+# ── Today streak ──────────────────────────────────────────────────────────────
+today_streak_before: "Твій "
+today_streak_day: "{n}-й день"
+today_streak_after: " записів."
+today_streak_after_streak: " записів поспіль."
+
+# ── Stats period label ────────────────────────────────────────────────────────
+stats_period_week_prefix: "тиждень "
 
 # ── Stats view ────────────────────────────────────────────────────────────────
 stats_title: Звіт
@@ -118,6 +132,12 @@ stats_story_period_prefix: за
 stats_no_data: Недостатньо даних за цей період
 stats_custom_range: Свій діапазон
 stats_pick_dates: Обрати дати
+stats_streak_suffix: " поспіль"
+stats_habits_all_have_data: "Всі звички мають дані за цей період."
+stats_habits_filter_label: "Прибрати пусті дані?"
+stats_habits_filter_no: "Ні"
+stats_habits_filter_yes: "Так"
+stats_share_image_hint: "згенерована картинка, якою можна поділитись в соц.мережах або надіслати друзям"
 
 # ── Shared labels ─────────────────────────────────────────────────────────────
 label_sick: Хвороба
@@ -139,6 +159,12 @@ circumplex_lh: Стресово
 circumplex_lm: Пригнічено
 circumplex_ll: Виснажено
 circumplex_no_data: Стан не вказано
+
+# ── Notifications ─────────────────────────────────────────────────────────────
+notif_channel_name: Щоденне нагадування
+notif_channel_desc: Нагадування звернути увагу на себе
+notif_title: Атенція
+notif_body: час звернути увагу на себе
 
 # ── Default habits ────────────────────────────────────────────────────────────
 habits:

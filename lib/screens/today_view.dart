@@ -126,12 +126,14 @@ class _TodayViewState extends State<TodayView> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Вітаю, ${provider.username.isNotEmpty ? provider.username : 'друже'}!',
+                        provider.username.isNotEmpty
+                            ? S.greetingNamed(provider.username)
+                            : S.greetingDefault,
                         style: Theme.of(context).textTheme.headlineLarge,
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        '${S.todayDatePrefix} ${DateFormat('EEEE, d MMMM', 'uk').format(today)}.',
+                        '${S.todayDatePrefix} ${DateFormat('EEEE, d MMMM', S.dateLocale).format(today)}.',
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                           color: Colors.black54,
                         ),
@@ -143,13 +145,15 @@ class _TodayViewState extends State<TodayView> {
                               color: Colors.black54,
                             ),
                             children: [
-                              const TextSpan(text: 'Твій '),
+                              TextSpan(text: S.todayStreakBefore),
                               TextSpan(
-                                text: '$displayN-й день',
+                                text: S.todayStreakDay(displayN),
                                 style: const TextStyle(fontWeight: FontWeight.bold),
                               ),
                               TextSpan(
-                                text: streak >= 2 ? ' записів поспіль.' : ' записів.',
+                                text: streak >= 2
+                                    ? S.todayStreakAfterStreak
+                                    : S.todayStreakAfter,
                               ),
                             ],
                           ),
@@ -337,15 +341,18 @@ class _HabitList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final provider = context.read<AppProvider>();
+    final displayNames = S.defaultHabits;
+    final storedKeys = entry.habits.keys.toList();
 
     return Column(
-      children: entry.habits.entries.map((e) {
-        final checked = e.value;
+      children: List.generate(displayNames.length, (i) {
+        final storedKey = i < storedKeys.length ? storedKeys[i] : displayNames[i];
+        final checked = entry.habits[storedKey] ?? false;
 
         return GestureDetector(
           onTap: () {
             HapticFeedback.mediumImpact();
-            provider.toggleHabit(date, e.key);
+            provider.toggleHabit(date, storedKey);
           },
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 140),
@@ -377,7 +384,7 @@ class _HabitList extends StatelessWidget {
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
-                    e.key,
+                    displayNames[i],
                     style: TextStyle(
                       color: checked ? Colors.white : Colors.black,
                       fontWeight: FontWeight.w600,
@@ -389,7 +396,7 @@ class _HabitList extends StatelessWidget {
             ),
           ),
         );
-      }).toList(),
+      }),
     );
   }
 }

@@ -93,7 +93,7 @@ class _TrendChartCardState extends State<TrendChartCard> {
   @override
   Widget build(BuildContext context) {
     final start = widget.periodEnd.subtract(Duration(days: widget.totalDays - 1));
-    final aggregate = widget.totalDays > 30;
+    final aggregate = widget.totalDays > 60;
     final entryMap = {
       for (final e in widget.entries) AppProvider.dateKey(e.date): e
     };
@@ -122,12 +122,12 @@ class _TrendChartCardState extends State<TrendChartCard> {
 
       if (widget.totalDays <= 7) {
         xLabel = (v) =>
-            DateFormat('E', 'uk').format(start.add(Duration(days: v.round())));
+            DateFormat('E', S.dateLocale).format(start.add(Duration(days: v.round())));
       } else {
         xLabel = (v) {
           final i = v.round();
           if (i % 5 != 0) return '';
-          return DateFormat('d', 'uk').format(start.add(Duration(days: i)));
+          return DateFormat('d', S.dateLocale).format(start.add(Duration(days: i)));
         };
       }
     } else {
@@ -160,9 +160,9 @@ class _TrendChartCardState extends State<TrendChartCard> {
       xLabel = (v) {
         final wi = v.round();
         final d = start.add(Duration(days: wi * 7));
-        if (wi == 0) return DateFormat('MMM', 'uk').format(d);
+        if (wi == 0) return DateFormat('MMM', S.dateLocale).format(d);
         final prev = start.add(Duration(days: (wi - 1) * 7));
-        if (d.month != prev.month) return DateFormat('MMM', 'uk').format(d);
+        if (d.month != prev.month) return DateFormat('MMM', S.dateLocale).format(d);
         return '';
       };
     }
@@ -258,7 +258,7 @@ class _TrendChartCardState extends State<TrendChartCard> {
                             : start.add(Duration(days: dayIndex));
                         final e = entryMap[AppProvider.dateKey(tappedDate)];
                         final dateLabel =
-                            DateFormat('d MMM', 'uk').format(tappedDate);
+                            DateFormat('d MMM', S.dateLocale).format(tappedDate);
 
                         final children = <TextSpan>[];
                         if (e == null) {
@@ -518,7 +518,7 @@ class _HabitStreakCardState extends State<HabitStreakCard> {
                             const Icon(Icons.arrow_upward, size: 12, color: Colors.black),
                             const SizedBox(width: 2),
                             Text(
-                              '$currentStreak ${S.statsDaysSuffix} поспіль',
+                              '$currentStreak ${S.statsDaysSuffix}${S.statsStreakSuffix}',
                               style: const TextStyle(
                                   fontSize: 12, fontWeight: FontWeight.w700, color: Colors.black),
                             ),
@@ -532,7 +532,7 @@ class _HabitStreakCardState extends State<HabitStreakCard> {
                                 size: 12, color: Colors.black),
                             const SizedBox(width: 2),
                             Text(
-                              '$maxStreak ${S.statsDaysSuffix} поспіль',
+                              '$maxStreak ${S.statsDaysSuffix}${S.statsStreakSuffix}',
                               style: const TextStyle(
                                   fontSize: 12, fontWeight: FontWeight.w700, color: Colors.black),
                             ),
@@ -670,9 +670,9 @@ class _StoryPreviewSheetState extends State<_StoryPreviewSheet> {
     final empty = _computeEmptyHabits();
     if (empty.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Всі звички мають дані за цей період.'),
-          duration: Duration(seconds: 2),
+        SnackBar(
+          content: Text(S.statsHabitsAllHaveData),
+          duration: const Duration(seconds: 2),
         ),
       );
       return;
@@ -680,7 +680,7 @@ class _StoryPreviewSheetState extends State<_StoryPreviewSheet> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Прибрати пусті дані?'),
+        title: Text(S.statsHabitsFilterLabel),
         content: Text(
           empty.join(', '),
           style: const TextStyle(color: Colors.black54, fontSize: 13),
@@ -688,13 +688,13 @@ class _StoryPreviewSheetState extends State<_StoryPreviewSheet> {
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
-            child: const Text('Ні'),
+            child: Text(S.statsHabitsFilterNo),
           ),
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(true),
-            child: const Text(
-              'Так',
-              style: TextStyle(fontWeight: FontWeight.w700),
+            child: Text(
+              S.statsHabitsFilterYes,
+              style: const TextStyle(fontWeight: FontWeight.w700),
             ),
           ),
         ],
@@ -772,10 +772,10 @@ class _StoryPreviewSheetState extends State<_StoryPreviewSheet> {
               ),
             ),
             const SizedBox(height: 12),
-            const Text(
-              'згенерована картинка, якою можна поділитись в соц.мережах або надіслати друзям',
+            Text(
+              S.statsShareImageHint,
               textAlign: TextAlign.center,
-              style: TextStyle(
+              style: const TextStyle(
                 fontSize: 13,
                 color: Colors.black54,
               ),
@@ -797,7 +797,7 @@ class _StoryPreviewSheetState extends State<_StoryPreviewSheet> {
                   ),
                   const SizedBox(width: 6),
                   Text(
-                    'Прибрати пусті дані?',
+                    S.statsHabitsFilterLabel,
                     style: TextStyle(
                       fontSize: 15,
                       color: _excludedHabits.isEmpty
@@ -997,7 +997,7 @@ class _HabitStoryWidget extends StatelessWidget {
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Text(
-                            DateFormat('d MMMM', 'uk').format(DateTime.now()),
+                            DateFormat('d MMMM', S.dateLocale).format(DateTime.now()),
                             style: const TextStyle(
                               fontFamily: 'FixelText',
                               fontSize: 9,
@@ -1005,7 +1005,7 @@ class _HabitStoryWidget extends StatelessWidget {
                             ),
                           ),
                           Text(
-                            DateFormat('yyyy', 'uk').format(DateTime.now()),
+                            DateFormat('yyyy', S.dateLocale).format(DateTime.now()),
                             style: const TextStyle(
                               fontFamily: 'FixelText',
                               fontSize: 9,
@@ -1103,7 +1103,7 @@ class _HabitStoryRow extends StatelessWidget {
                   const Icon(Icons.arrow_upward, size: 9, color: Colors.black),
                   const SizedBox(width: 2),
                   Text(
-                    '$currentStreak ${S.statsDaysSuffix} поспіль',
+                    '$currentStreak ${S.statsDaysSuffix}${S.statsStreakSuffix}',
                     style: const TextStyle(
                       fontFamily: 'FixelText',
                       fontSize: 9,
@@ -1116,7 +1116,7 @@ class _HabitStoryRow extends StatelessWidget {
                       size: 9, color: Colors.black),
                   const SizedBox(width: 2),
                   Text(
-                    '$maxStreak ${S.statsDaysSuffix} поспіль',
+                    '$maxStreak ${S.statsDaysSuffix}${S.statsStreakSuffix}',
                     style: const TextStyle(
                       fontFamily: 'FixelText',
                       fontSize: 9,

@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../l10n/strings.dart';
 import '../models/daily_entry.dart';
 import '../services/notification_service.dart';
 
@@ -12,6 +13,8 @@ class AppProvider extends ChangeNotifier {
   String _username = '';
   bool _remindersEnabled = false;
   TimeOfDay _reminderTime = const TimeOfDay(hour: 20, minute: 0);
+  String _locale = 'uk';
+  int _localeRequestToken = 0;
 
   SharedPreferences? _prefs;
   bool _isInitialized = false;
@@ -21,6 +24,7 @@ class AppProvider extends ChangeNotifier {
   static const _remindersKey = 'atensia_reminders';
   static const _reminderTimeKey = 'atensia_reminder_time';
   static const _launchedKey = 'atensia_launched';
+  static const _localeKey = 'atensia_locale';
 
   // Old keys from when the app was named Proso — used for one-time migration
   static const _oldKeys = {
@@ -37,6 +41,10 @@ class AppProvider extends ChangeNotifier {
   String get username => _username;
   bool get remindersEnabled => _remindersEnabled;
   TimeOfDay get reminderTime => _reminderTime;
+  String get locale => _locale;
+  Locale get flutterLocale => _locale == 'en'
+      ? const Locale('en', 'US')
+      : const Locale('uk', 'UA');
   // Return false (not first launch) when _prefs is null: SharedPreferences
   // failed to initialize, so we must not trigger onboarding and make
   // markLaunched() a no-op — that would trap the user in an infinite loop.
@@ -86,6 +94,8 @@ class AppProvider extends ChangeNotifier {
       }
       _username = _prefs!.getString(_usernameKey) ?? '';
       _remindersEnabled = _prefs!.getBool(_remindersKey) ?? false;
+      _locale = await S.load(S.normalizeLocale(_prefs!.getString(_localeKey)));
+      await _prefs!.setString(_localeKey, _locale);
       final timeStr = _prefs!.getString(_reminderTimeKey);
       if (timeStr != null) {
         final parts = timeStr.split(':');
@@ -202,6 +212,35 @@ class AppProvider extends ChangeNotifier {
   void setUsername(String name) {
     _username = name;
     _prefs?.setString(_usernameKey, name);
+    notifyListeners();
+  }
+
+  Future<void> setLocale(String locale) async {
+    final target = S.normalizeLocale(locale);
+    if (_locale == target) return;
+
+    final token = ++_localeRequestToken;
+    final loadedLocale = await S.load(target);
+    if (token != _localeRequestToken) return;
+
+    if (loadedLocale != target) {
+      debugPrint(
+          "Warning: AppProvider.setLocale requested '$target' but loaded '$loadedLocale' (fallback likely applied due to missing/invalid locale asset).");
+    }
+
+    _locale = loadedLocale;
+    _prefs?.setString(_localeKey, _locale);
+
+    if (_remindersEnabled) {
+      try {
+        await NotificationService.instance
+            .schedule(_reminderTime, enabled: true);
+      } catch (e) {
+        debugPrint(
+            'Warning: AppProvider.setLocale failed to reschedule reminder on locale change ($e).');
+      }
+      if (token != _localeRequestToken) return;
+    }
     notifyListeners();
   }
 

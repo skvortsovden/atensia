@@ -6,6 +6,8 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
 
+import '../l10n/strings.dart';
+
 const _tzChannel = MethodChannel('com.texapp.atensia/timezone');
 
 class NotificationService {
@@ -145,15 +147,15 @@ class NotificationService {
       scheduled = scheduled.add(const Duration(days: 1));
     }
 
-    const details = NotificationDetails(
+    final details = NotificationDetails(
       android: AndroidNotificationDetails(
         _channelId,
-        'Щоденне нагадування',
-        channelDescription: 'Нагадування звернути увагу на себе',
+        S.notifChannelName,
+        channelDescription: S.notifChannelDesc,
         importance: Importance.high,
         priority: Priority.high,
       ),
-      iOS: DarwinNotificationDetails(
+      iOS: const DarwinNotificationDetails(
         presentAlert: true,
         presentBadge: true,
         presentSound: true,
@@ -163,8 +165,8 @@ class NotificationService {
     try {
       await _plugin.zonedSchedule(
         _notifId,
-        'Атенція',
-        'час звернути увагу на себе',
+        S.notifTitle,
+        S.notifBody,
         scheduled,
         details,
         androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
@@ -177,8 +179,8 @@ class NotificationService {
       debugPrint('NotificationService: exact alarm unavailable ($e), falling back to inexact.');
       await _plugin.zonedSchedule(
         _notifId,
-        'Атенція',
-        'час звернути увагу на себе',
+        S.notifTitle,
+        S.notifBody,
         scheduled,
         details,
         androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,

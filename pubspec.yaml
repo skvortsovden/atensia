@@ -1,6 +1,6 @@
 name: atensia
 description: Атенція - це увага до себе
-version: 1.7.6+5
+version: 1.8.0+1
 publish_to: 'none'
 
 environment:
@@ -60,6 +60,7 @@ flutter:
     - assets/atensia-logo.png
     - assets/fonts/
     - assets/l10n/uk.yaml
+    - assets/l10n/en.yaml
 
   fonts:
     - family: FixelDisplay

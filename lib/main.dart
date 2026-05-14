@@ -86,6 +86,7 @@ class AtensiaApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final provider = context.watch<AppProvider>();
     return MaterialApp(
       title: S.appTitle,
       debugShowCheckedModeBanner: false,
@@ -96,8 +97,8 @@ class AtensiaApp extends StatelessWidget {
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,
       ],
-      supportedLocales: const [Locale('uk', 'UA')],
-      locale: const Locale('uk', 'UA'),
+      supportedLocales: const [Locale('uk', 'UA'), Locale('en', 'US')],
+      locale: provider.flutterLocale,
 
       // ── Theme ─────────────────────────────────────────────────────────────
       theme: ThemeData(
@@ -190,6 +191,7 @@ class _MainScreenState extends State<MainScreen> {
 
   @override
   Widget build(BuildContext context) {
+    context.watch<AppProvider>(); // rebuild on locale change so tab labels update
     return Scaffold(
       body: IndexedStack(
         index: _index,

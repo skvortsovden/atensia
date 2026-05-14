@@ -40,7 +40,7 @@ class _HistoryViewState extends State<HistoryView> {
           Padding(
             padding: const EdgeInsets.fromLTRB(20, 20, 20, 8),
             child: Text(
-              'Календар',
+              S.calendarTitle,
               style: Theme.of(context).textTheme.headlineLarge,
             ),
           ),
@@ -51,7 +51,8 @@ class _HistoryViewState extends State<HistoryView> {
             child: Padding(
             padding: const EdgeInsets.fromLTRB(12, 0, 12, 10),
             child: TableCalendar(
-              locale: 'uk_UA',
+              key: ValueKey(S.dateLocale),
+              locale: S.dateLocale,
               firstDay: DateTime.utc(2020, 1, 1),
               lastDay: DateTime.utc(2030, 12, 31),
               focusedDay: _focusedDay,
@@ -239,7 +240,7 @@ class _DayDetail extends StatelessWidget {
     final isFuture = dateMidnight.isAfter(todayMidnight);
 
     if (isFuture) {
-      final dateLabel = DateFormat('d MMMM yyyy', 'uk_UA').format(date);
+      final dateLabel = DateFormat('d MMMM yyyy', S.dateLocale).format(date);
       return SingleChildScrollView(
         padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
         child: Column(
@@ -269,7 +270,7 @@ class _DayDetail extends StatelessWidget {
     final hasData = _hasData(entry);
 
     if (!hasData) {
-      final dateLabel = DateFormat('d MMMM yyyy', 'uk_UA').format(date);
+      final dateLabel = DateFormat('d MMMM yyyy', S.dateLocale).format(date);
       return SingleChildScrollView(
         padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
         child: Column(
@@ -322,10 +323,12 @@ class _DayDetail extends StatelessWidget {
       if (e.isSick) S.labelSick,
       if (e.hasPain) S.labelPain,
     ];
-    final doneHabits = e.habits.entries
-        .where((h) => h.value)
-        .map((h) => h.key)
-        .toList();
+    final storedKeys = e.habits.keys.toList();
+    final displayNames = S.defaultHabits;
+    final doneHabits = <String>[
+      for (int i = 0; i < storedKeys.length && i < displayNames.length; i++)
+        if (e.habits[storedKeys[i]] == true) displayNames[i],
+    ];
 
     final rows = <_InfoRow>[
       if (e.hasState)
@@ -337,7 +340,7 @@ class _DayDetail extends StatelessWidget {
     ];
     final comment = e.comment;
 
-    final dateLabel = DateFormat('d MMMM yyyy', 'uk_UA').format(date);
+    final dateLabel = DateFormat('d MMMM yyyy', S.dateLocale).format(date);
 
     return SingleChildScrollView(
       padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
