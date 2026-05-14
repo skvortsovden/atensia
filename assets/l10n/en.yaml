@@ -69,6 +69,7 @@ settings_name_label: "What should I call you?"
 settings_name_hint: "Enter name here…"
 settings_reminders: Reminders
 settings_reminder_time: Reminder time
+settings_section_backup: Backup
 settings_export_btn: Export data
 settings_export_title: Data export
 settings_export_message: "Privacy first.\nAll your data is stored only on your phone. Export lets you access this data and use it for your own purposes.\nData will be saved in CSV format."
