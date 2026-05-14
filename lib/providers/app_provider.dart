@@ -7,6 +7,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../l10n/strings.dart';
 import '../models/daily_entry.dart';
 import '../services/notification_service.dart';
+import '../services/widget_service.dart';
 
 class AppProvider extends ChangeNotifier {
   Map<String, DailyEntry> _entries = {};
@@ -128,6 +129,7 @@ class AppProvider extends ChangeNotifier {
     } finally {
       _isInitialized = true;
       notifyListeners();
+      _updateWidget();
     }
   }
 
@@ -160,6 +162,17 @@ class AppProvider extends ChangeNotifier {
     }
     _persistEntries();
     notifyListeners();
+    _updateWidget();
+  }
+
+  /// Pushes today's state to the native home screen widget.
+  void _updateWidget() {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    WidgetService.updateTodayWidget(
+      todayEntry: _entries[dateKey(today)],
+      streak: currentStreak,
+    );
   }
 
   void toggleHabit(DateTime date, String habit) {
