@@ -456,9 +456,13 @@ class _SettingsViewState extends State<SettingsView> {
   Widget build(BuildContext context) {
     final provider = context.watch<AppProvider>();
 
+    final bottomInset = MediaQuery.viewPaddingOf(context).bottom;
     return SafeArea(
+      bottom: false,
       child: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(20, 20, 20, 32),
+        // Dynamic bottom padding: base 80pt + home-indicator / gesture-bar
+        // height so the footer is never clipped behind the bottom nav.
+        padding: EdgeInsets.fromLTRB(20, 20, 20, bottomInset + 80),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -485,6 +489,24 @@ class _SettingsViewState extends State<SettingsView> {
               textCapitalization: TextCapitalization.words,
               maxLength: 30,
               style: Theme.of(context).textTheme.bodyLarge,
+              // Only show counter as user approaches the limit; hide on empty.
+              buildCounter: (
+                context, {
+                required int currentLength,
+                required bool isFocused,
+                int? maxLength,
+              }) {
+                final limit = maxLength ?? 30;
+                if (currentLength == 0) return null;
+                if (currentLength < limit - 5) return null;
+                return Text(
+                  '$currentLength/$limit',
+                  style: const TextStyle(
+                    color: Colors.black54,
+                    fontSize: 11,
+                  ),
+                );
+              },
               decoration: InputDecoration(
                 hintText: S.settingsNameHint,
                 hintStyle:
@@ -554,32 +576,37 @@ class _SettingsViewState extends State<SettingsView> {
             const SizedBox(height: 32),
 
             // ── Reminders ───────────────────────────────────────────────────
-            Container(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-              decoration: BoxDecoration(
-                border: Border.all(color: Colors.black, width: 2),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Row(
-                children: [
-                  Text(
-                    S.settingsReminders,
-                    style: Theme.of(context)
-                        .textTheme
-                        .bodyLarge
-                        ?.copyWith(fontWeight: FontWeight.w600),
-                  ),
-                  const Spacer(),
-                  Switch(
-                    value: provider.remindersEnabled,
-                    onChanged: (v) => provider.setReminders(v),
-                    activeColor: Colors.black,
-                    activeTrackColor: Colors.black26,
-                    inactiveThumbColor: Colors.black38,
-                    inactiveTrackColor: Colors.black12,
-                  ),
-                ],
+            GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: () =>
+                  provider.setReminders(!provider.remindersEnabled),
+              child: Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                decoration: BoxDecoration(
+                  border: Border.all(color: Colors.black, width: 2),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  children: [
+                    Text(
+                      S.settingsReminders,
+                      style: Theme.of(context)
+                          .textTheme
+                          .bodyLarge
+                          ?.copyWith(fontWeight: FontWeight.w600),
+                    ),
+                    const Spacer(),
+                    Switch(
+                      value: provider.remindersEnabled,
+                      onChanged: (v) => provider.setReminders(v),
+                      activeColor: Colors.black,
+                      activeTrackColor: Colors.black54,
+                      inactiveThumbColor: Colors.black54,
+                      inactiveTrackColor: Colors.black26,
+                    ),
+                  ],
+                ),
               ),
             ),
 
@@ -626,9 +653,11 @@ class _SettingsViewState extends State<SettingsView> {
               ),
             ],
 
-            const SizedBox(height: 48),
+            const SizedBox(height: 40),
 
-            // ── Export ───────────────────────────────────────────────────────
+            // ── Backup (Export + Import) ────────────────────────────────────
+            _SectionLabel(S.settingsSectionBackup),
+            const SizedBox(height: 8),
             GestureDetector(
               key: _exportKey,
               onTap: () => _showExportDialog(context),
@@ -657,7 +686,6 @@ class _SettingsViewState extends State<SettingsView> {
 
             const SizedBox(height: 8),
 
-            // ── Import ───────────────────────────────────────────────────────
             GestureDetector(
               onTap: () => _showImportDialog(context),
               child: Container(
@@ -683,120 +711,40 @@ class _SettingsViewState extends State<SettingsView> {
               ),
             ),
 
-            const SizedBox(height: 8),
+            const SizedBox(height: 16),
 
-            // ── Clear data ──────────────────────────────────────────────────
+            // ── Clear data (quietly separated) ───────────────────────────────
             GestureDetector(
               onTap: () => _showClearDataDialog(context),
               child: Container(
                 padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 decoration: BoxDecoration(
-                  border: Border.all(color: Colors.black, width: 2),
+                  border: Border.all(color: Colors.black, width: 1),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Row(
                   children: [
                     Text(
                       S.settingsClearBtn,
-                      style: Theme.of(context)
-                          .textTheme
-                          .bodyLarge
-                          ?.copyWith(fontWeight: FontWeight.w600),
+                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                            fontWeight: FontWeight.w500,
+                            color: Colors.black87,
+                          ),
                     ),
                     const Spacer(),
-                    const Icon(Icons.delete_outline, size: 18),
+                    const Icon(Icons.delete_outline,
+                        size: 18, color: Colors.black87),
                   ],
                 ),
               ),
             ),
 
+            const SizedBox(height: 40),
+            const Divider(color: Color(0xFFEEEEEE), thickness: 1, height: 1),
             const SizedBox(height: 32),
 
-            // ── Guide ───────────────────────────────────────────────────────
-            GestureDetector(
-              onTap: () => showModalBottomSheet(
-                context: context,
-                isScrollControlled: true,
-                backgroundColor: Colors.white,
-                shape: const RoundedRectangleBorder(
-                  borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-                ),
-                builder: (_) => Padding(
-                  padding: const EdgeInsets.fromLTRB(24, 28, 24, 40),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        S.onboardingGuideTitle,
-                        style: const TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      Text(
-                        S.onboardingGuideText,
-                        style: const TextStyle(
-                          fontSize: 15,
-                          height: 1.6,
-                          color: Colors.black87,
-                        ),
-                      ),
-                      const SizedBox(height: 24),
-                      SizedBox(
-                        width: double.infinity,
-                        height: 52,
-                        child: ElevatedButton(
-                          onPressed: () => Navigator.of(context).pop(),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.black,
-                            foregroundColor: Colors.white,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(14),
-                            ),
-                            elevation: 0,
-                          ),
-                          child: Text(
-                            S.onboardingGuideBtn,
-                            style: const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              child: Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                decoration: BoxDecoration(
-                  border: Border.all(color: Colors.black, width: 2),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Row(
-                  children: [
-                    Text(
-                      S.onboardingGuideTitle,
-                      style: Theme.of(context)
-                          .textTheme
-                          .bodyLarge
-                          ?.copyWith(fontWeight: FontWeight.w600),
-                    ),
-                    const Spacer(),
-                    const Icon(Icons.info_outline, size: 18),
-                  ],
-                ),
-              ),
-            ),
-
-            const SizedBox(height: 48),
-
-            // ── App info ────────────────────────────────────────────────────
+            // ── App info (footer) ───────────────────────────────────────────
             Center(
               child: Column(
                 children: [
@@ -811,6 +759,90 @@ class _SettingsViewState extends State<SettingsView> {
                   Text(
                     S.appTagline,
                     style: const TextStyle(color: Colors.black54, fontSize: 13),
+                  ),
+                  const SizedBox(height: 16),
+                  // Help link — grouped with footer metadata, centered.
+                  GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    onTap: () => showModalBottomSheet(
+                      context: context,
+                      isScrollControlled: true,
+                      backgroundColor: Colors.white,
+                      shape: const RoundedRectangleBorder(
+                        borderRadius:
+                            BorderRadius.vertical(top: Radius.circular(16)),
+                      ),
+                      builder: (_) => Padding(
+                        padding: const EdgeInsets.fromLTRB(24, 28, 24, 40),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              S.onboardingGuideTitle,
+                              style: const TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+                            Text(
+                              S.onboardingGuideText,
+                              style: const TextStyle(
+                                fontSize: 15,
+                                height: 1.6,
+                                color: Colors.black87,
+                              ),
+                            ),
+                            const SizedBox(height: 24),
+                            SizedBox(
+                              width: double.infinity,
+                              height: 52,
+                              child: ElevatedButton(
+                                onPressed: () => Navigator.of(context).pop(),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.black,
+                                  foregroundColor: Colors.white,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(14),
+                                  ),
+                                  elevation: 0,
+                                ),
+                                child: Text(
+                                  S.onboardingGuideBtn,
+                                  style: const TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 6),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            S.onboardingGuideTitle,
+                            style: const TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.black87,
+                              decoration: TextDecoration.underline,
+                              decorationColor: Colors.black38,
+                            ),
+                          ),
+                          const SizedBox(width: 2),
+                          const Icon(Icons.chevron_right,
+                              size: 14, color: Colors.black54),
+                        ],
+                      ),
+                    ),
                   ),
                   const SizedBox(height: 16),
                   Text(
@@ -833,6 +865,25 @@ class _SettingsViewState extends State<SettingsView> {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+// ── Section label (small-caps gray) — shared with name/language labels ──────
+class _SectionLabel extends StatelessWidget {
+  final String text;
+  const _SectionLabel(this.text);
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      text.toUpperCase(),
+      style: const TextStyle(
+        fontSize: 11,
+        fontWeight: FontWeight.w700,
+        letterSpacing: 1.4,
+        color: Colors.black54,
       ),
     );
   }
