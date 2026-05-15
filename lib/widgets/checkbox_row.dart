@@ -18,7 +18,6 @@ class CheckboxRow extends StatelessWidget {
   Widget build(BuildContext context) {
     return Semantics(
       label: label,
-      selected: checked,
       checked: checked,
       button: true,
       child: GestureDetector(
