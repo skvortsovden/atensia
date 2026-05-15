@@ -191,7 +191,14 @@ class _MainScreenState extends State<MainScreen> {
 
   @override
   Widget build(BuildContext context) {
-    context.watch<AppProvider>(); // rebuild on locale change so tab labels update
+    final provider = context.watch<AppProvider>(); // rebuild on locale/data change
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final todayEntry = provider.getOrCreateEntry(today);
+    final todayHasEntry = todayEntry.hasState ||
+        todayEntry.isSick ||
+        todayEntry.hasPain ||
+        todayEntry.habits.values.any((v) => v);
     return Scaffold(
       body: IndexedStack(
         index: _index,
@@ -234,7 +241,9 @@ class _MainScreenState extends State<MainScreen> {
                 label: S.tabCalendar,
               ),
               BottomNavigationBarItem(
-                icon: const Icon(Icons.wb_sunny_outlined),
+                icon: todayHasEntry
+                    ? const _NavDot(Icons.wb_sunny_outlined)
+                    : const Icon(Icons.wb_sunny_outlined),
                 activeIcon: const Icon(Icons.wb_sunny),
                 label: S.tabToday,
               ),
@@ -252,6 +261,34 @@ class _MainScreenState extends State<MainScreen> {
           ),
         ],
       ),
+    );
+  }
+}
+
+// Small dot badge overlaid on a bottom-nav icon to signal pending/filled state.
+class _NavDot extends StatelessWidget {
+  final IconData icon;
+  const _NavDot(this.icon);
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        Icon(icon),
+        Positioned(
+          right: -3,
+          top: -1,
+          child: Container(
+            width: 6,
+            height: 6,
+            decoration: const BoxDecoration(
+              color: Colors.black,
+              shape: BoxShape.circle,
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

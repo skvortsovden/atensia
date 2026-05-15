@@ -223,6 +223,73 @@ class _SectionLabel extends StatelessWidget {
       );
 }
 
+// ── Shared checkbox row ───────────────────────────────────────────────────────
+
+class _CheckboxRow extends StatelessWidget {
+  final String label;
+  final bool checked;
+  final VoidCallback onTap;
+
+  const _CheckboxRow({
+    required this.label,
+    required this.checked,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      label: label,
+      selected: checked,
+      button: true,
+      child: GestureDetector(
+        onTap: onTap,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 140),
+          margin: const EdgeInsets.only(bottom: 8),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          decoration: BoxDecoration(
+            color: checked ? const Color(0xFFE8E8E8) : Colors.white,
+            border: Border.all(color: Colors.black, width: 2),
+            borderRadius: const BorderRadius.all(Radius.circular(14)),
+          ),
+          child: Row(
+            children: [
+              AnimatedContainer(
+                duration: const Duration(milliseconds: 140),
+                width: 22,
+                height: 22,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(4),
+                  color: checked ? Colors.black : Colors.transparent,
+                  border: Border.all(
+                    color: checked ? Colors.transparent : Colors.black,
+                    width: 2,
+                  ),
+                ),
+                child: checked
+                    ? const Icon(Icons.check, size: 14, color: Colors.white)
+                    : null,
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  label,
+                  style: const TextStyle(
+                    color: Colors.black,
+                    fontWeight: FontWeight.w400,
+                    fontSize: 16,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 // ── Health row ────────────────────────────────────────────────────────────────
 
 class _HealthRow extends StatelessWidget {
@@ -253,66 +320,21 @@ class _HealthRow extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 8),
-        Container(
-          decoration: BoxDecoration(
-            border: Border.all(color: Colors.black, width: 2),
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(6),
-            child: IntrinsicHeight(
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Expanded(
-                    child: GestureDetector(
-                      onTap: () {
-                        HapticFeedback.mediumImpact();
-                        onSickTap();
-                      },
-                      child: AnimatedContainer(
-                        duration: const Duration(milliseconds: 140),
-                        color: isSick ? Colors.black : Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 13),
-                        alignment: Alignment.center,
-                        child: Text(
-                          S.labelSick,
-                          style: TextStyle(
-                            color: isSick ? Colors.white : Colors.black,
-                            fontWeight: FontWeight.w600,
-                            fontSize: 14,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                  Container(width: 2, color: Colors.black),
-                  Expanded(
-                    child: GestureDetector(
-                      onTap: () {
-                        HapticFeedback.mediumImpact();
-                        onPainTap();
-                      },
-                      child: AnimatedContainer(
-                        duration: const Duration(milliseconds: 140),
-                        color: hasPain ? Colors.black : Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 13),
-                        alignment: Alignment.center,
-                        child: Text(
-                          S.labelPain,
-                          style: TextStyle(
-                            color: hasPain ? Colors.white : Colors.black,
-                            fontWeight: FontWeight.w600,
-                            fontSize: 14,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
+        _CheckboxRow(
+          label: S.labelSick,
+          checked: isSick,
+          onTap: () {
+            HapticFeedback.mediumImpact();
+            onSickTap();
+          },
+        ),
+        _CheckboxRow(
+          label: S.labelPain,
+          checked: hasPain,
+          onTap: () {
+            HapticFeedback.mediumImpact();
+            onPainTap();
+          },
         ),
       ],
     );
@@ -337,52 +359,13 @@ class _HabitList extends StatelessWidget {
         final storedKey = i < storedKeys.length ? storedKeys[i] : displayNames[i];
         final checked = entry.habits[storedKey] ?? false;
 
-        return GestureDetector(
+        return _CheckboxRow(
+          label: displayNames[i],
+          checked: checked,
           onTap: () {
             HapticFeedback.mediumImpact();
             onHabitChanged(storedKey, !checked);
           },
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 140),
-            margin: const EdgeInsets.only(bottom: 8),
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-            decoration: BoxDecoration(
-              color: checked ? Colors.black : Colors.white,
-              border: Border.all(color: Colors.black, width: 2),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Row(
-              children: [
-                AnimatedContainer(
-                  duration: const Duration(milliseconds: 140),
-                  width: 20,
-                  height: 20,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(4),
-                    color: checked ? Colors.white : Colors.transparent,
-                    border: Border.all(
-                      color: checked ? Colors.transparent : Colors.black,
-                      width: 2,
-                    ),
-                  ),
-                  child: checked
-                      ? const Icon(Icons.check, size: 14, color: Colors.black)
-                      : null,
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    displayNames[i],
-                    style: TextStyle(
-                      color: checked ? Colors.white : Colors.black,
-                      fontWeight: FontWeight.w600,
-                      fontSize: 16,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
         );
       }),
     );
