@@ -167,7 +167,6 @@ class S {
   static String get settingsImportErrorEncoding => _s('settings_import_error_encoding');
   static String get settingsPrivacy => _s('settings_privacy');
   static String get settingsLanguageLabel => _s('settings_language_label');
-  static String get settingsSectionBackup => _s('settings_section_backup');
   static String get settingsSectionDanger => _s('settings_section_danger');
   static String get settingsSectionAbout => _s('settings_section_about');
   static String get settingsVersion => _s('settings_version');
