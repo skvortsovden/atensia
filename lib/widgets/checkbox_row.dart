@@ -19,6 +19,7 @@ class CheckboxRow extends StatelessWidget {
     return Semantics(
       label: label,
       selected: checked,
+      checked: checked,
       button: true,
       child: GestureDetector(
         onTap: onTap,
