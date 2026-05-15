@@ -29,8 +29,8 @@ today_greeting_named: "Вітаю, {name}!"
 today_greeting_default: "Вітаю, друже!"
 today_date_prefix: Сьогодні
 today_subtitle: Як почуваєшся?
-today_section_health: Що турбує?
-today_section_leisure: Дозвілля
+today_section_health: Щось турбує?
+today_section_leisure: "Дозвілля"
 today_valence_label: "настрій"
 today_arousal_label: "енергія"
 today_valence_min: Неприємно
@@ -46,8 +46,8 @@ today_arousal_high: Бадьоро
 
 # ── Edit day screen (past tense) ──────────────────────────────────────────────
 edit_subtitle: Як почуваєшся?
-edit_section_health: Що турбує?
-edit_section_leisure: Дозвілля
+edit_section_health: Щось турбує?
+edit_section_leisure: "Дозвілля"
 edit_section_note: Нотатка
 edit_note_hint: Що сталося важливого сьогодні?
 edit_btn_save: Зберегти
@@ -69,13 +69,13 @@ settings_name_label: "Як до тебе звертатися?"
 settings_name_hint: "Введи ім'я тут…"
 settings_reminders: Нагадування
 settings_reminder_time: Час нагадування
-settings_section_backup: Резервна копія
 settings_export_btn: Експортувати дані
 settings_export_title: Експорт даних
 settings_export_message: "Приватність перш за все.\nВсі твої дані зберігаються лише на твоєму телефоні, за допомогою експорту ти можеш отримати доступ до цих даних та використати у власних цілях.\nДані буде збережено у форматі CSV."
 settings_export_save: Зберегти
 settings_export_cancel: Скасувати
 settings_clear_btn: Видалити дані
+settings_clear_caption: Безповоротно видаляє усі записи
 settings_clear_title: Видалити всі дані?
 settings_clear_message: "Усі твої записи буде видалено безповоротно.\nБажаєш спочатку зберегти їх у файл?"
 settings_clear_export: Зберегти та видалити
@@ -99,6 +99,9 @@ settings_import_error_btn: Зрозуміло
 settings_import_error_encoding: "Вибраний файл не є коректним UTF-8. Збережіть його у кодуванні UTF-8 та спробуйте ще раз."
 settings_privacy: Усі дані зберігаються лише на цьому пристрої.
 settings_language_label: Мова
+settings_section_backup: Резервна копія
+settings_section_danger: Небезпечна зона
+settings_section_about: Про додаток
 settings_version: Версія
 
 # ── Date formatting ───────────────────────────────────────────────────────────
@@ -109,6 +112,7 @@ today_streak_before: "Твій "
 today_streak_day: "{n}-й день"
 today_streak_after: " записів."
 today_streak_after_streak: " записів поспіль."
+today_state_prefix: "Твоє самопочуття "
 
 # ── Stats period label ────────────────────────────────────────────────────────
 stats_period_week_prefix: "тиждень "
@@ -136,13 +140,15 @@ stats_pick_dates: Обрати дати
 stats_streak_suffix: " поспіль"
 stats_habits_all_have_data: "Всі звички мають дані за цей період."
 stats_habits_filter_label: "Прибрати пусті дані?"
-stats_habits_filter_no: "Ні"
+stats_habits_filter_no: "Нічого"
 stats_habits_filter_yes: "Так"
 stats_share_image_hint: "згенерована картинка, якою можна поділитись в соц.мережах або надіслати друзям"
 
 # ── Shared labels ─────────────────────────────────────────────────────────────
 label_sick: Хвороба
 label_pain: Біль
+label_nothing: Нічого
+today_saved: Збережено
 
 # ── Moods (kept for backward-compat migration of old saved data) ──────────────
 mood_exhausted: Виснажено

@@ -10,6 +10,7 @@ class CircumplexButtons extends StatefulWidget {
   const CircumplexButtons({
     super.key,
     this.title,
+    this.showStateLabel = true,
     required this.valence,
     required this.arousal,
     required this.onValenceChanged,
@@ -20,6 +21,9 @@ class CircumplexButtons extends StatefulWidget {
 
   /// Optional section title drawn as a row with the result pill on the right.
   final String? title;
+  /// When false the animated state label (e.g. "в рівновазі") is suppressed.
+  /// Set to false on the Today screen where the label lives in the header.
+  final bool showStateLabel;
   final double? valence;
   final double? arousal;
   final ValueChanged<double> onValenceChanged;
@@ -52,19 +56,20 @@ class _CircumplexButtonsState extends State<CircumplexButtons> {
       children: [
         if (widget.title != null) ...[
           Text(widget.title!, style: Theme.of(context).textTheme.headlineLarge),
-          AnimatedOpacity(
-            duration: const Duration(milliseconds: 200),
-            opacity: label != null ? 1.0 : 0.0,
-            child: Text(
-              (_lastLabel ?? '').toLowerCase(),
-              style: const TextStyle(
-                fontSize: 18,
-                fontFamily: 'FixelDisplay',
-                fontWeight: FontWeight.w400,
-                color: Colors.black45,
+          if (widget.showStateLabel)
+            AnimatedOpacity(
+              duration: const Duration(milliseconds: 200),
+              opacity: label != null ? 1.0 : 0.0,
+              child: Text(
+                (_lastLabel ?? '').toLowerCase(),
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontFamily: 'FixelDisplay',
+                  fontWeight: FontWeight.w400,
+                  color: Colors.black45,
+                ),
               ),
             ),
-          ),
           const SizedBox(height: 12),
         ],
         _TripleSelector(
@@ -150,7 +155,8 @@ class _TripleSelector extends StatelessWidget {
                           color: selectedIndex == i
                               ? Colors.black
                               : Colors.white,
-                          padding: const EdgeInsets.symmetric(vertical: 13),
+                          padding: const EdgeInsets.symmetric(
+                              vertical: 13, horizontal: 4),
                           alignment: Alignment.center,
                           child: Text(
                             options[i],
@@ -161,6 +167,9 @@ class _TripleSelector extends StatelessWidget {
                               fontWeight: FontWeight.w600,
                               fontSize: 14,
                             ),
+                            textAlign: TextAlign.center,
+                            overflow: TextOverflow.ellipsis,
+                            maxLines: 2,
                           ),
                         ),
                       ),

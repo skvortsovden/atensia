@@ -143,6 +143,7 @@ class S {
   static String get settingsExportSave => _s('settings_export_save');
   static String get settingsExportCancel => _s('settings_export_cancel');
   static String get settingsClearBtn => _s('settings_clear_btn');
+  static String get settingsClearCaption => _s('settings_clear_caption');
   static String get settingsClearTitle => _s('settings_clear_title');
   static String get settingsClearMessage => _s('settings_clear_message');
   static String get settingsClearExport => _s('settings_clear_export');
@@ -166,6 +167,8 @@ class S {
   static String get settingsImportErrorEncoding => _s('settings_import_error_encoding');
   static String get settingsPrivacy => _s('settings_privacy');
   static String get settingsLanguageLabel => _s('settings_language_label');
+  static String get settingsSectionDanger => _s('settings_section_danger');
+  static String get settingsSectionAbout => _s('settings_section_about');
   static String get settingsVersion => _s('settings_version');
 
   // ── Stats ────────────────────────────────────────────────────────────────
@@ -198,6 +201,8 @@ class S {
   // ── Shared labels ────────────────────────────────────────────────────────
   static String get labelSick => _s('label_sick');
   static String get labelPain => _s('label_pain');
+  static String get labelNothing => _s('label_nothing');
+  static String get todaySaved => _s('today_saved');
 
   // ── Moods (kept for backward-compat migration) ────────────────────────────
   static String get moodExhausted => _s('mood_exhausted');
@@ -234,6 +239,7 @@ class S {
       _s('today_streak_day').replaceFirst('{n}', '$n');
   static String get todayStreakAfter => _s('today_streak_after');
   static String get todayStreakAfterStreak => _s('today_streak_after_streak');
+  static String get todayStatePrefix => _s('today_state_prefix');
 
   // ── Stats period label ────────────────────────────────────────────────────
   static String get statsPeriodWeekPrefix => _s('stats_period_week_prefix');

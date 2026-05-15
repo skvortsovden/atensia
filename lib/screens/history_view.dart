@@ -78,6 +78,24 @@ class _HistoryViewState extends State<HistoryView> {
                     child: _DayMarker(entry: entry),
                   );
                 },
+                // Custom header: "Травень 2026" — capitalized standalone
+                // month name, no "р." abbreviation.
+                headerTitleBuilder: (context, day) {
+                  final monthRaw =
+                      DateFormat('LLLL', S.dateLocale).format(day);
+                  final month = monthRaw.isEmpty
+                      ? monthRaw
+                      : '${monthRaw[0].toUpperCase()}${monthRaw.substring(1)}';
+                  return Center(
+                    child: Text(
+                      '$month ${day.year}',
+                      style: Theme.of(context).textTheme.titleMedium!.copyWith(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 15,
+                          ),
+                    ),
+                  );
+                },
               ),
               calendarStyle: CalendarStyle(
                 // Today: outlined circle
@@ -139,7 +157,7 @@ class _HistoryViewState extends State<HistoryView> {
           ),
           ),
 
-          const Divider(color: Colors.black, thickness: 2, height: 2),
+          const Divider(color: Color(0xFFE5E5E5), thickness: 1, height: 1),
           const SizedBox(height: 12),
 
           // ── Day detail ────────────────────────────────────────────────────
@@ -330,130 +348,118 @@ class _DayDetail extends StatelessWidget {
         if (e.habits[storedKeys[i]] == true) displayNames[i],
     ];
 
-    final rows = <_InfoRow>[
-      if (e.hasState)
-        _InfoRow(S.calendarRowFeel, S.circumplexQuadrant(e.valence!, e.arousal!)),
-      if (healthItems.isNotEmpty)
-        _InfoRow(S.calendarRowHealth, healthItems.join(', ')),
-      if (doneHabits.isNotEmpty)
-        _InfoRow(S.calendarRowLeisure, doneHabits.join(', ')),
-    ];
     final comment = e.comment;
-
     final dateLabel = DateFormat('d MMMM yyyy', S.dateLocale).format(date);
 
     return SingleChildScrollView(
       padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // centered date
-          Text(
-            dateLabel,
-            textAlign: TextAlign.center,
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w700,
+          // ── Date + edit link ────────────────────────────────────────────
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.baseline,
+            textBaseline: TextBaseline.alphabetic,
+            children: [
+              Expanded(
+                child: Text(
+                  dateLabel,
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
                 ),
-          ),
-          const SizedBox(height: 16),
-
-          // grouped rows
-          ...rows.map(
-            (row) => Padding(
-              padding: const EdgeInsets.only(bottom: 10),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  SizedBox(
-                    width: 110,
-                    child: Text(
-                      '${row.key}:',
-                      style: const TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w700,
-                        color: Colors.black54,
-                        letterSpacing: 0.2,
-                      ),
-                    ),
-                  ),
-                  Expanded(
-                    child: Text(
-                      row.value,
-                      style: const TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.black,
-                      ),
-                    ),
-                  ),
-                ],
               ),
-            ),
-          ),
-
-          if (comment != null && comment.isNotEmpty) ...
-            [
-              const SizedBox(height: 4),
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  SizedBox(
-                    width: 110,
-                    child: Text(
-                      '${S.calendarRowNote}:',
-                      style: const TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w700,
-                        color: Colors.black54,
-                        letterSpacing: 0.2,
-                      ),
+              GestureDetector(
+                onTap: () => _openEdit(context),
+                behavior: HitTestBehavior.opaque,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                      vertical: 8, horizontal: 4),
+                  child: Text(
+                    S.calendarBtnEdit,
+                    style: const TextStyle(
+                      color: Colors.black,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 14,
+                      decoration: TextDecoration.underline,
                     ),
                   ),
-                  Expanded(
-                    child: Text(
-                      comment,
-                      style: const TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w400,
-                        color: Colors.black87,
-                        fontStyle: FontStyle.italic,
-                      ),
-                    ),
-                  ),
-                ],
+                ),
               ),
             ],
+          ),
 
-          const SizedBox(height: 16),
+          // ── State heading (derived from valence/arousal) ─────────────────
+          if (e.hasState) ...[
+            const SizedBox(height: 12),
+            Text(
+              S.circumplexQuadrant(e.valence!, e.arousal!),
+              style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                    color: Colors.black,
+                    fontWeight: FontWeight.w700,
+                  ),
+            ),
+          ],
 
-          // edit button full-width below list
-          GestureDetector(
-            onTap: () => _openEdit(context),
-            child: Container(
-              padding: const EdgeInsets.symmetric(vertical: 13),
-              alignment: Alignment.center,
-              decoration: BoxDecoration(
-                border: Border.all(color: Colors.black, width: 2),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Text(
-                S.calendarBtnEdit,
-                style: const TextStyle(
-                  color: Colors.black,
-                  fontWeight: FontWeight.w700,
-                  fontSize: 14,
-                ),
+          // ── Concerns ─────────────────────────────────────────────────────
+          if (healthItems.isNotEmpty) ...[
+            const SizedBox(height: 20),
+            _SummaryLabel(S.calendarRowHealth),
+            const SizedBox(height: 4),
+            Text(healthItems.join(', '), style: _kSummaryValueStyle),
+          ],
+
+          // ── Leisure ──────────────────────────────────────────────────────
+          if (doneHabits.isNotEmpty) ...[
+            const SizedBox(height: 16),
+            _SummaryLabel(S.calendarRowLeisure),
+            const SizedBox(height: 4),
+            Text(doneHabits.join(', '), style: _kSummaryValueStyle),
+          ],
+
+          // ── Note ─────────────────────────────────────────────────────────
+          if (comment != null && comment.isNotEmpty) ...[
+            const SizedBox(height: 16),
+            _SummaryLabel(S.calendarRowNote),
+            const SizedBox(height: 4),
+            Text(
+              comment,
+              style: _kSummaryValueStyle.copyWith(
+                fontStyle: FontStyle.italic,
+                color: Colors.black87,
+                fontWeight: FontWeight.w400,
               ),
             ),
-          ),
+          ],
         ],
       ),
     );
   }
 }
 
-class _InfoRow {
-  final String key;
-  final String value;
-  const _InfoRow(this.key, this.value);
+// ── Summary section helpers ──────────────────────────────────────────────────
+
+const _kSummaryValueStyle = TextStyle(
+  fontSize: 15,
+  fontWeight: FontWeight.w500,
+  color: Colors.black,
+  height: 1.35,
+);
+
+class _SummaryLabel extends StatelessWidget {
+  final String text;
+  const _SummaryLabel(this.text);
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      text.toUpperCase(),
+      style: const TextStyle(
+        fontSize: 10,
+        fontWeight: FontWeight.w700,
+        letterSpacing: 1.2,
+        color: Colors.black54,
+      ),
+    );
+  }
 }

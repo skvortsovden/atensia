@@ -6,7 +6,10 @@ import 'package:provider/provider.dart';
 import '../l10n/strings.dart';
 import '../models/daily_entry.dart';
 import '../providers/app_provider.dart';
+import '../widgets/checkbox_row.dart';
 import 'circumplex_buttons.dart';
+
+const _kGuideButtonRadius = BorderRadius.all(Radius.circular(14));
 
 class TodayView extends StatefulWidget {
   const TodayView({super.key});
@@ -18,6 +21,7 @@ class TodayView extends StatefulWidget {
 class _TodayViewState extends State<TodayView> {
   late final TextEditingController _commentCtrl;
   String? _lastLoadedComment;
+  String? _lastCircumplex;
 
   static DateTime _today() {
     final now = DateTime.now();
@@ -71,9 +75,7 @@ class _TodayViewState extends State<TodayView> {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.black,
                   foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(14),
-                  ),
+                  shape: const RoundedRectangleBorder(borderRadius: _kGuideButtonRadius),
                   elevation: 0,
                 ),
                 child: Text(
@@ -109,6 +111,11 @@ class _TodayViewState extends State<TodayView> {
         entry.habits.values.any((v) => v);
     final displayN = provider.totalFilledDays + (todayFilled ? 0 : 1);
 
+    final circumplex = entry.hasState
+        ? S.circumplexQuadrant(entry.valence!, entry.arousal!)
+        : null;
+    if (circumplex != null) _lastCircumplex = circumplex;
+
     return GestureDetector(
       behavior: HitTestBehavior.translucent,
       onTap: () => FocusScope.of(context).unfocus(),
@@ -116,110 +123,137 @@ class _TodayViewState extends State<TodayView> {
         child: SingleChildScrollView(
           padding: const EdgeInsets.fromLTRB(20, 20, 20, 32),
           child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        provider.username.isNotEmpty
-                            ? S.greetingNamed(provider.username)
-                            : S.greetingDefault,
-                        style: Theme.of(context).textTheme.headlineLarge,
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        '${S.todayDatePrefix} ${DateFormat('EEEE, d MMMM', S.dateLocale).format(today)}.',
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: Colors.black54,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          provider.username.isNotEmpty
+                              ? S.greetingNamed(provider.username)
+                              : S.greetingDefault,
+                          style: Theme.of(context).textTheme.headlineLarge,
                         ),
-                      ),
-                      if (displayN >= 1)
-                        Text.rich(
-                          TextSpan(
-                            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                              color: Colors.black54,
-                            ),
-                            children: [
-                              TextSpan(text: S.todayStreakBefore),
-                              TextSpan(
-                                text: S.todayStreakDay(displayN),
-                                style: const TextStyle(fontWeight: FontWeight.bold),
-                              ),
-                              TextSpan(
-                                text: streak >= 2
-                                    ? S.todayStreakAfterStreak
-                                    : S.todayStreakAfter,
-                              ),
-                            ],
+                        const SizedBox(height: 4),
+                        Text(
+                          '${S.todayDatePrefix} ${DateFormat('EEEE, d MMMM', S.dateLocale).format(today)}',
+                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            color: const Color(0xFF595959),
                           ),
                         ),
-                    ],
+                        if (displayN >= 1)
+                          Text.rich(
+                            TextSpan(
+                              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                color: const Color(0xFF595959),
+                              ),
+                              children: [
+                                TextSpan(text: S.todayStreakBefore),
+                                TextSpan(
+                                  text: S.todayStreakDay(displayN),
+                                  style: const TextStyle(fontWeight: FontWeight.bold),
+                                ),
+                                TextSpan(
+                                  text: streak >= 2
+                                      ? S.todayStreakAfterStreak
+                                      : S.todayStreakAfter,
+                                ),
+                              ],
+                            ),
+                          ),
+                        AnimatedOpacity(
+                          duration: const Duration(milliseconds: 200),
+                          opacity: circumplex != null ? 1.0 : 0.0,
+                          child: Text.rich(
+                            TextSpan(
+                              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                color: const Color(0xFF595959),
+                              ),
+                              children: [
+                                TextSpan(text: S.todayStatePrefix),
+                                TextSpan(
+                                  text: (_lastCircumplex ?? '').toLowerCase(),
+                                  style: const TextStyle(fontWeight: FontWeight.bold),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-                GestureDetector(
-                  onTap: () => _showGuide(context),
-                  child: Image.asset(
-                    'assets/atensia-logo.png',
-                    height: 32,
-                    fit: BoxFit.contain,
+                  GestureDetector(
+                    onTap: () => _showGuide(context),
+                    child: Image.asset(
+                      'assets/atensia-logo.png',
+                      height: 32,
+                      fit: BoxFit.contain,
+                    ),
                   ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 20),
-            CircumplexButtons(
-              title: S.todaySubtitle,
-              valence: entry.valence,
-              arousal: entry.arousal,
-              onValenceChanged: (v) => provider.setValence(today, v),
-              onArousalChanged: (a) => provider.setArousal(today, a),
-              onValenceCleared: () => provider.clearValence(today),
-              onArousalCleared: () => provider.clearArousal(today),
-            ),
-
-            const SizedBox(height: 28),
-            _HealthRow(entry: entry, date: today),
-
-            const SizedBox(height: 28),
-            _SectionLabel(S.todaySectionLeisure),
-            const SizedBox(height: 10),
-            _HabitList(entry: entry, date: today),
-
-            const SizedBox(height: 28),
-            _SectionLabel(S.editSectionNote),
-            const SizedBox(height: 10),
-            TextField(
-              controller: _commentCtrl,
-              maxLines: null,
-              maxLength: 140,
-              textCapitalization: TextCapitalization.sentences,
-              onChanged: (val) => provider.setComment(today, val),
-              decoration: InputDecoration(
-                hintText: S.editNoteHint,
-                hintStyle:
-                    const TextStyle(color: Colors.black38, fontSize: 14),
-                filled: true,
-                fillColor: Colors.black.withValues(alpha: 0.04),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(10),
-                  borderSide: BorderSide.none,
-                ),
-                contentPadding:
-                    const EdgeInsets.fromLTRB(14, 12, 14, 12),
-                counterStyle:
-                    const TextStyle(color: Colors.black38, fontSize: 11),
+                ],
               ),
-              style: const TextStyle(fontSize: 14),
-            ),
-          ],
+              const SizedBox(height: 20),
+              CircumplexButtons(
+                title: S.todaySubtitle,
+                showStateLabel: false,
+                valence: entry.valence,
+                arousal: entry.arousal,
+                onValenceChanged: (v) => provider.setValence(today, v),
+                onArousalChanged: (a) => provider.setArousal(today, a),
+                onValenceCleared: () => provider.clearValence(today),
+                onArousalCleared: () => provider.clearArousal(today),
+              ),
+
+              const SizedBox(height: 28),
+              _SectionLabel(S.todaySectionHealth),
+              const SizedBox(height: 10),
+              _HealthRow(
+                entry: entry,
+                date: today,
+              ),
+
+              const SizedBox(height: 28),
+              _SectionLabel(S.todaySectionLeisure),
+              const SizedBox(height: 10),
+              _HabitList(
+                entry: entry,
+                date: today,
+              ),
+
+              const SizedBox(height: 28),
+              _SectionLabel(S.editSectionNote),
+              const SizedBox(height: 10),
+              TextField(
+                controller: _commentCtrl,
+                maxLines: null,
+                maxLength: 140,
+                textCapitalization: TextCapitalization.sentences,
+                onChanged: (val) => provider.setComment(today, val),
+                decoration: InputDecoration(
+                  hintText: S.editNoteHint,
+                  hintStyle:
+                      const TextStyle(color: Colors.black38, fontSize: 14),
+                  filled: true,
+                  fillColor: Colors.black.withValues(alpha: 0.04),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                    borderSide: BorderSide.none,
+                  ),
+                  contentPadding:
+                      const EdgeInsets.fromLTRB(14, 12, 14, 12),
+                  counterStyle:
+                      const TextStyle(color: Colors.black38, fontSize: 11),
+                ),
+                style: const TextStyle(fontSize: 14),
+              ),
+            ],
+          ),
         ),
       ),
-    ),
     );
   }
 }
@@ -244,86 +278,37 @@ class _SectionLabel extends StatelessWidget {
 class _HealthRow extends StatelessWidget {
   final DailyEntry entry;
   final DateTime date;
+  final VoidCallback? onChanged;
 
-  const _HealthRow({required this.entry, required this.date});
+  const _HealthRow({
+    required this.entry,
+    required this.date,
+    this.onChanged,
+  });
 
   @override
   Widget build(BuildContext context) {
     final provider = context.read<AppProvider>();
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          S.todaySectionHealth.toUpperCase(),
-          style: const TextStyle(
-            fontSize: 10,
-            fontWeight: FontWeight.w700,
-            letterSpacing: 1.2,
-            color: Colors.black54,
-          ),
+        CheckboxRow(
+          label: S.labelSick,
+          checked: entry.isSick,
+          onTap: () {
+            HapticFeedback.mediumImpact();
+            provider.toggleSick(date);
+            onChanged?.call();
+          },
         ),
-        const SizedBox(height: 8),
-        Container(
-          decoration: BoxDecoration(
-            border: Border.all(color: Colors.black, width: 2),
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(6),
-            child: IntrinsicHeight(
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Expanded(
-                    child: GestureDetector(
-                      onTap: () {
-                        HapticFeedback.mediumImpact();
-                        provider.toggleSick(date);
-                      },
-                      child: AnimatedContainer(
-                        duration: const Duration(milliseconds: 140),
-                        color: entry.isSick ? Colors.black : Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 13),
-                        alignment: Alignment.center,
-                        child: Text(
-                          S.labelSick,
-                          style: TextStyle(
-                            color: entry.isSick ? Colors.white : Colors.black,
-                            fontWeight: FontWeight.w600,
-                            fontSize: 14,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                  Container(width: 2, color: Colors.black),
-                  Expanded(
-                    child: GestureDetector(
-                      onTap: () {
-                        HapticFeedback.mediumImpact();
-                        provider.togglePain(date);
-                      },
-                      child: AnimatedContainer(
-                        duration: const Duration(milliseconds: 140),
-                        color: entry.hasPain ? Colors.black : Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 13),
-                        alignment: Alignment.center,
-                        child: Text(
-                          S.labelPain,
-                          style: TextStyle(
-                            color: entry.hasPain ? Colors.white : Colors.black,
-                            fontWeight: FontWeight.w600,
-                            fontSize: 14,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
+        CheckboxRow(
+          label: S.labelPain,
+          checked: entry.hasPain,
+          onTap: () {
+            HapticFeedback.mediumImpact();
+            provider.togglePain(date);
+            onChanged?.call();
+          },
         ),
       ],
     );
@@ -335,8 +320,13 @@ class _HealthRow extends StatelessWidget {
 class _HabitList extends StatelessWidget {
   final DailyEntry entry;
   final DateTime date;
+  final VoidCallback? onChanged;
 
-  const _HabitList({required this.entry, required this.date});
+  const _HabitList({
+    required this.entry,
+    required this.date,
+    this.onChanged,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -349,52 +339,14 @@ class _HabitList extends StatelessWidget {
         final storedKey = i < storedKeys.length ? storedKeys[i] : displayNames[i];
         final checked = entry.habits[storedKey] ?? false;
 
-        return GestureDetector(
+        return CheckboxRow(
+          label: displayNames[i],
+          checked: checked,
           onTap: () {
             HapticFeedback.mediumImpact();
             provider.toggleHabit(date, storedKey);
+            onChanged?.call();
           },
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 140),
-            margin: const EdgeInsets.only(bottom: 8),
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-            decoration: BoxDecoration(
-              color: checked ? Colors.black : Colors.white,
-              border: Border.all(color: Colors.black, width: 2),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Row(
-              children: [
-                AnimatedContainer(
-                  duration: const Duration(milliseconds: 140),
-                  width: 20,
-                  height: 20,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(4),
-                    color: checked ? Colors.white : Colors.transparent,
-                    border: Border.all(
-                      color: checked ? Colors.transparent : Colors.black,
-                      width: 2,
-                    ),
-                  ),
-                  child: checked
-                      ? const Icon(Icons.check, size: 14, color: Colors.black)
-                      : null,
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    displayNames[i],
-                    style: TextStyle(
-                      color: checked ? Colors.white : Colors.black,
-                      fontWeight: FontWeight.w600,
-                      fontSize: 16,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
         );
       }),
     );
